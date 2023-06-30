@@ -1,9 +1,9 @@
 import cv2
-import lan
 import numpy as np
 import time
 import pygame
 import sys
+from . import lan
 
 class RemoteInterface:
   def __init__(self, name="test-robot"):
