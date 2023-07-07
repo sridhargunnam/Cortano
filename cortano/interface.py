@@ -27,13 +27,16 @@ class RemoteInterface:
     self.free_frame1 = np.zeros((360, 640, 3), np.uint8)
     self.free_frame2 = np.zeros((360, 640, 3), np.uint8)
 
+  def __del__(self):
+    lan.stop()
+
   def disp1(self, frame):
     self.free_frame1 = frame
 
   def disp2(self, frame):
     self.free_frame2 = frame
 
-  def rgb2depth(self, frame):
+  def _decode_depth_frame(self, frame):
     R = np.left_shift(frame[:, :, 0].astype(np.uint16), 5)
     G = frame[:, :, 1].astype(np.uint16)
     B = np.left_shift(frame[:, :, 2].astype(np.uint16), 5)
@@ -46,6 +49,10 @@ class RemoteInterface:
   @property
   def motor(self):
     return self.motor_vals
+  
+  @property
+  def sensor(self, idx):
+    return self.sensor_vals[idx]
   
   def read(self):
     return self.color, self.depth, np.copy(self.sensor_vals)
@@ -69,7 +76,7 @@ class RemoteInterface:
 
     f = lan.get_frame()
     self.color, depth = f[:,:640], f[:,640:]
-    self.depth = self.rgb2depth(depth)
+    self.depth = self._decode_depth_frame(depth)
     depthrgb = self.depth2rgb(self.depth)
     if f is not None:
       a = (np.swapaxes(np.flip(self.free_frame1, axis=-1), 0, 1))
@@ -86,10 +93,9 @@ class RemoteInterface:
       self.screen.blit(b, (640, 360))
 
     lan.send({ "motor": self.motor_vals })
-    msg = lan.recv()
-    if msg and "sensor" in msg:
-      print(msg)
-      self.sensor_vals[:] = msg["sensor"]
+    sensors = lan.sensors()
+    if sensors:
+      self.sensor_vals = sensors
 
     pygame.display.flip()
 
