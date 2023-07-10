@@ -180,7 +180,6 @@ def _rxtx_worker(host, port, running: RawValue,
         txlock.release() # do nothing
         continue
       tx = bytearray(txbuf[:txlen.value]).decode()
-      print(tx)
       txlock.release()
 
       tx = pickle.dumps(tx, 0)
