@@ -2,3 +2,5 @@ numpy
 websockets
 requests
 scipy
+opencv-python
+pygame

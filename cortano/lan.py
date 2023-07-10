@@ -8,6 +8,9 @@ import threading
 import json
 import time
 import requests
+import select
+import signal
+import sys
 
 from multiprocessing import (
   Process,
@@ -20,114 +23,157 @@ from multiprocessing import (
 )
 import ctypes
 
-OVERLORD_IP = "http://192.168.1.34:3000"
+_source = False
 _frame_shape = (360, 640, 3)
 _frame = None
 _frame_lock = threading.Lock()
+_running = RawValue(ctypes.c_bool, False)
+_connected = RawValue(ctypes.c_bool, False)
+_encoding_parameters = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+_tx_ms_interval = .02 # 50Hz
 
-
-def _stream_sender(host, port,
-        buf: RawArray, lock: Lock, shape, encoding_params,
-        connected: RawValue, running: RawValue):
-  """
-  Streams data out
-  """
-  global _frame, _frame_lock, _frame_shape
-  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  sock.bind((host, port))
-  sock.listen()
-  while running.value:
-    connection, address = sock.accept()
-    connected.value = True
-    break
-
-  while running.value:
-    _frame_lock.acquire()
-    frame = _frame
-    _frame_lock.release()
-
-    # frame = np.asarray(frame, np.uint8).reshape(shape)
-    result, frame = cv2.imencode('.jpg', frame, encoding_params)
-    data = pickle.dumps(frame, 0)
-    size = len(data)
-
-    try:
-        connection.sendall(struct.pack('>L', size) + data)
-    except ConnectionResetError:
-        running.value = False
-    except ConnectionAbortedError:
-        running.value = False
-    except BrokenPipeError:
-        running.value = False
-
-  sock.close()
-            
-def _stream_receiver(host, port,
-        buf: RawArray, lock: Lock,
-        connected: RawValue, running: RawValue):
+def _stream_receiver(host, port):
   """
   Handles the connection and processes its stream data.
   """
-  global _frame, _frame_lock, _frame_shape
+  global _frame, _frame_lock, _frame_shape, _running, _connected
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  sock.connect((host, port))
-  connected.value = True
+  _connected.value = is_connected = False
+
   payload_size = struct.calcsize('>L')
   data = b""
+  gathering_payload = True
+  msg_size = 0
 
-  while running.value:
-    break_loop = False
+  while _running.value:
+    if not is_connected:
+      data = b""
+      gathering_payload = True
+      try:
+        sock.connect((host, port))
+        _connected.value = is_connected = True
+      except Exception as e:
+        print("Warning:", e)
+        time.sleep(1)
+        continue
 
-    while len(data) < payload_size:
-      received = sock.recv(4096)
-      if received == b'':
-        sock.close()
-        break_loop = True
-        break
-      data += received
+    try:
+      ready_to_read, ready_to_write, in_error = select.select(
+        [sock,], [sock,], [], 2
+      )
+      # example ready_to_read: [<socket.socket fd=1332, family=2, type=1, proto=0, laddr=('127.0.0.1', 59746), raddr=('127.0.0.1', 9990)>]
+      # example ready_to_write: [<socket.socket fd=1332, family=2, type=1, proto=0, laddr=('127.0.0.1', 59746), raddr=('127.0.0.1', 9990)>]
+      if len(ready_to_read) > 0:
+        received = sock.recv(4096)
+        if received == b'':
+          print("Warning: stream received empty bytes, closing and attempting reconnect...")
+          sock.close()
+          _connected.value = is_connected = False
+          continue
+        data += received
+    except select.error:
+      print("Warning: stream has been disconnected for 1.0 seconds, attempting reconnect...")
+      sock.shutdown(2)
+      sock.close()
+      _connected.value = is_connected = False
+      continue
 
-    if break_loop:
-      break
+    # retry connection...
+    if not is_connected: continue
 
-    packed_msg_size = data[:payload_size]
-    data = data[payload_size:]
+    if gathering_payload:
+      if len(data) >= payload_size:
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        gathering_payload = False
 
-    msg_size = struct.unpack(">L", packed_msg_size)[0]
+    else:
+      if len(data) >= msg_size:
+        frame_data = data[:msg_size]
+        data = data[msg_size:]
 
-    while len(data) < msg_size:
-      data += sock.recv(4096)
+        frame = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+        _frame_lock.acquire()
+        _frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        _frame_lock.release()
 
-    frame_data = data[:msg_size]
-    data = data[msg_size:]
-
-    frame = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
-    _frame_lock.acquire()
-    _frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)#.reshape((-1,))
-    _frame_lock.release()
+        gathering_payload = True
 
   sock.close()
 
-def _tx_worker(host, port,
-        txbuf: RawArray, txlen: RawValue, txlock: Lock, txinterval,
-        connected: RawValue, running: RawValue, source):
-  tx_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  if source:
-    tx_socket.bind((host, port))
-    tx_socket.listen()
-    while running.value:
-      tx_pipe, address = tx_socket.accept()
-      connected.value = True
-      break
-  else:
-    tx_socket.connect((host, port))
-    tx_pipe = tx_socket
+def _rxtx_worker(host, port, running: RawValue,
+        rxbuf: RawArray, rxlen: RawValue, rxlock: Lock, rxtime: RawValue,
+        txbuf: RawArray, txlen: RawValue, txlock: Lock, source):
+  is_connected = False
 
-  last_tx_timestamp = time.time()
+  sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+  payload_size = struct.calcsize('>L')
+  data = b""
+  gathering_payload = True # states: gathering_payload, gathering_msg
+  msg_size = 0
+  txtime = time.time()
 
   while running.value:
+    if not is_connected:
+      data = b""
+      gathering_payload = True
+      try:
+        sock.connect((host, port))
+        conn = sock
+        is_connected = True
+      except Exception as e:
+        print("Warning:", e)
+        time.sleep(1)
+        continue
+
     curr_time = time.time()
-    if curr_time - last_tx_timestamp >= txinterval:
-      last_tx_timestamp = curr_time
+
+    try:
+      ready_to_read, ready_to_write, in_error = select.select(
+        [conn,], [conn,], [], 2
+      )
+      if len(ready_to_read) > 0:
+        received = conn.recv(4096)
+        if received == b'':
+          print("Warning: RxTx received empty bytes, closing and attempting reconnect...")
+          conn.close()
+          is_connected = False
+          continue
+        data += received
+    except select.error:
+      print("Warning: RxTx has been disconnected for 1.0 seconds, attempting reconnect...")
+      conn.shutdown(2)
+      conn.close()
+      is_connected = False
+      continue
+    # retry connection...
+    if not is_connected: continue
+
+    if gathering_payload:
+      if len(data) >= payload_size:
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        gathering_payload = False
+    else:
+      if len(data) >= msg_size:
+        rx = data[:msg_size]
+        data = data[msg_size:]
+
+        rx = pickle.loads(rx, fix_imports=True, encoding="bytes")
+        rxlock.acquire()
+        bytearr = rx.encode()
+        rxlen.value = len(bytearr)
+        rxbuf[:len(rx)] = bytearr
+        rxtime.value = curr_time
+        rxlock.release()
+
+        gathering_payload = True
+
+    if (curr_time - txtime) >= _tx_ms_interval:
+      txtime = curr_time
 
       txlock.acquire()
       if txlen.value == 0:
@@ -140,76 +186,21 @@ def _tx_worker(host, port,
       size = len(tx)
 
       try:
-          tx_pipe.sendall(struct.pack('>L', size) + tx)
+          conn.sendall(struct.pack('>L', size) + tx)
       except ConnectionResetError:
-          running.value = False
+          is_connected = False
+          conn.close()
       except ConnectionAbortedError:
-          running.value = False
+          is_connected = False
+          conn.close()
       except BrokenPipeError:
-          running.value = False
+          is_connected = False
+          conn.close()
 
-  tx_socket.close()
-
-def _rx_worker(host, port,
-        rxbuf: RawArray, rxlen: RawValue, rxlock: Lock, rxtime: RawValue,
-        connected: RawValue, running: RawValue, source):
-  rx_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  if source:
-    rx_socket.bind((host, port))
-    rx_socket.listen()
-    while running.value:
-      rx_pipe, address = rx_socket.accept()
-      connected.value = True
-      break
-  else:
-    rx_socket.connect((host, port))
-    rx_pipe = rx_socket
-
-  payload_size = struct.calcsize('>L')
-  data = b""
-
-  while running.value:
-    break_loop = False
-
-    while len(data) < payload_size:
-      received = rx_pipe.recv(4096)
-      if received == b'':
-        rx_pipe.close()
-        break_loop = True
-        break
-      data += received
-
-    if break_loop: # transmission failed
-      break
-
-    packed_msg_size = data[:payload_size]
-    data = data[payload_size:]
-
-    msg_size = struct.unpack(">L", packed_msg_size)[0]
-
-    while len(data) < msg_size:
-      data += rx_pipe.recv(4096)
-
-    rx = data[:msg_size]
-    data = data[msg_size:]
-
-    rx = pickle.loads(rx, fix_imports=True, encoding="bytes")
-    rxlock.acquire()
-    bytearr = rx.encode()
-    rxlen.value = len(bytearr)
-    rxbuf[:len(rx)] = bytearr
-    rxtime.value = time.time()
-    rxlock.release()
-
-  rx_socket.close()
+  sock.close()
 
 _host = "0.0.0.0"
 _port = 9999
-_encoding_parameters = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-_tx_ms_interval = .02 # 50Hz
-
-_running = RawValue(ctypes.c_bool, False)
-_connected = RawValue(ctypes.c_bool, False)
 
 _tx_buf = RawArray(ctypes.c_uint8, 128)
 _tx_len = RawValue(ctypes.c_int32, 0)
@@ -222,65 +213,27 @@ _rx_timestamp = RawValue(ctypes.c_float, 0.0)
 _processes = []
 _stream_thread = None
 
-def query_overlord(hostname):
-  global OVERLORD_IP
-  for i in range(300): # try for 300 seconds
-    res = requests.get(f"{OVERLORD_IP}/get-robots").json()
-    for robot in res:
-      if robot["name"] == hostname:
-        return robot["ipv4"]
-    time.sleep(1)
-
-def publish_to_overlord(hostname):
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  s.settimeout(0)
-  s.connect(('10.254.254.254', 1))
-  IP = s.getsockname()[0]
-  
-  requests.post(f"{OVERLORD_IP}/heartbeat",
-    json={"name": hostname, "ipv4": IP})
-
-def start(host, port=9999, frame_shape=(360, 640, 3), source=False):
+def start(host, port=9999, frame_shape=(360, 640, 3)):
   global _frame_shape, _frame, _host, _port, _running, _stream_thread
-  if source:
-    publish_to_overlord(host)
+  if _source:
     _host = "0.0.0.0"
   else:
-    if not "." in host:
-      _host = query_overlord(host)
-    else:
-      _host = host
+    _host = host
   
   _port = port
   _frame_shape = frame_shape
   _frame = np.zeros((_frame_shape), np.uint8)
 
   if _running.value:
-    print("stream is already running")
+    print("Warning: stream is already running")
   else:
     _running.value = True
-    if source:
-      _stream_thread = threading.Thread(target=_stream_sender, args=(
-        _host, _port,
-        _frame, _frame_lock, _frame_shape, _encoding_parameters,
-        _connected, _running
-      ))
-    else:
-      _stream_thread = threading.Thread(target=_stream_receiver, args=(
-        _host, _port,
-        _frame, _frame_lock,
-        _connected, _running
-      ))
+    _stream_thread = threading.Thread(target=_stream_receiver, args=(_host, _port))
 
-    _processes.append(Process(target=_tx_worker, args=(
-      _host, _port + (1 if source else 2),
-      _tx_buf, _tx_len, _tx_lock, _tx_ms_interval,
-      _connected, _running, source
-    )))
-    _processes.append(Process(target=_rx_worker, args=(
-      _host, _port + (2 if source else 1),
+    _processes.append(Process(target=_rxtx_worker, args=(
+      _host, _port + 1, _running,
       _rx_buf, _rx_len, _rx_lock, _rx_timestamp,
-      _connected, _running, source
+      _tx_buf, _tx_len, _tx_lock, _source
     )))
 
     _stream_thread.start()
@@ -295,12 +248,14 @@ def stop():
     for p in _processes:
       p.kill()
 
-def set_frame(frame: np.ndarray):
-  global _frame_lock, _frame
-  _frame_lock.acquire()
-  _frame = frame
-  _frame_lock.release()
-  
+def sig_handler(signum, frame):
+  if signum == signal.SIGINT or signum == signal.SIGTERM:
+    stop()
+  sys.exit()
+
+signal.signal(signal.SIGINT, sig_handler)
+signal.signal(signal.SIGTERM, sig_handler)
+
 def get_frame():
   global _frame_lock, _frame
   _frame_lock.acquire()
