@@ -23,14 +23,12 @@ from multiprocessing import (
 )
 import ctypes
 
-_source = False
 _frame_shape = (360, 640, 3)
 _frame = None
 _frame_lock = threading.Lock()
-_running = RawValue(ctypes.c_bool, False)
+_running = Value(ctypes.c_bool, False)
 _connected = RawValue(ctypes.c_bool, False)
-_encoding_parameters = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-_tx_ms_interval = .02 # 50Hz
+_tx_ms_interval = .0125 # 80Hz
 
 def _stream_receiver(host, port):
   """
@@ -104,7 +102,7 @@ def _stream_receiver(host, port):
 
 def _rxtx_worker(host, port, running: RawValue,
         rxbuf: RawArray, rxlen: RawValue, rxlock: Lock, rxtime: RawValue,
-        txbuf: RawArray, txlen: RawValue, txlock: Lock, source):
+        txbuf: RawArray, txlen: RawValue, txlock: Lock):
   is_connected = False
 
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,7 +122,7 @@ def _rxtx_worker(host, port, running: RawValue,
         conn = sock
         is_connected = True
       except Exception as e:
-        print("Warning:", e)
+        print("[RxTx Exception]:", e)
         time.sleep(1)
         continue
 
@@ -210,16 +208,12 @@ _rx_len = RawValue(ctypes.c_int32, 0)
 _rx_lock = Lock()
 
 _rx_timestamp = RawValue(ctypes.c_float, 0.0)
-_processes = []
-_stream_thread = None
+_rx_tx_worker = None
+_video_worker = None
 
 def start(host, port=9999, frame_shape=(360, 640, 3)):
-  global _frame_shape, _frame, _host, _port, _running, _stream_thread
-  if _source:
-    _host = "0.0.0.0"
-  else:
-    _host = host
-  
+  global _frame_shape, _frame, _host, _port, _running, _video_worker, _rx_tx_worker
+  _host = host
   _port = port
   _frame_shape = frame_shape
   _frame = np.zeros((_frame_shape), np.uint8)
@@ -228,30 +222,36 @@ def start(host, port=9999, frame_shape=(360, 640, 3)):
     print("Warning: stream is already running")
   else:
     _running.value = True
-    _stream_thread = threading.Thread(target=_stream_receiver, args=(_host, _port))
+    _video_worker = threading.Thread(target=_stream_receiver, args=(_host, _port))
 
-    _processes.append(Process(target=_rxtx_worker, args=(
+    _rx_tx_worker = Process(target=_rxtx_worker, args=(
       _host, _port + 1, _running,
       _rx_buf, _rx_len, _rx_lock, _rx_timestamp,
-      _tx_buf, _tx_len, _tx_lock, _source
-    )))
+      _tx_buf, _tx_len, _tx_lock
+    ))
 
-    _stream_thread.start()
-    for p in _processes:
-      p.start()
+    _video_worker.start()
+    _rx_tx_worker.start()
 
 def stop():
-  global _running, _processes
-  if _running.value:
-    _running.value = False
-    time.sleep(1)
-    for p in _processes:
-      p.kill()
+  global _running, _rx_tx_worker
+  _running.acquire()
+  running = _running.value
+  _running.value = False
+  _running.release()
+  if running:
+    if sys.platform.startswith('win') and _rx_tx_worker:
+      time.sleep(0.5)
+      _rx_tx_worker.kill()
+      _rx_tx_worker = None
+      time.sleep(0.5)
+    else:
+      time.sleep(1) # cant kill the process because linux is strange
 
 def sig_handler(signum, frame):
   if signum == signal.SIGINT or signum == signal.SIGTERM:
     stop()
-    sys.exit()
+    sys.exit(0)
 
 signal.signal(signal.SIGINT, sig_handler)
 signal.signal(signal.SIGTERM, sig_handler)
