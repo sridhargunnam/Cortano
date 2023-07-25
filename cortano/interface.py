@@ -25,9 +25,12 @@ class RemoteInterface:
     self.depth = None
 
     self.keys = {k[2:]: 0 for k in dir(pygame) if k.startswith("K_")}
+    self.keynames = list(self.keys.keys())
 
     self.free_frame1 = np.zeros((360, 640, 3), np.uint8)
     self.free_frame2 = np.zeros((360, 640, 3), np.uint8)
+
+    # open3d to viz rgb and depth
 
   def __del__(self):
     lan.stop()
@@ -49,10 +52,9 @@ class RemoteInterface:
     self.free_frame2 = frame
 
   def _decode_depth_frame(self, frame):
-    R = np.left_shift(frame[:, :, 0].astype(np.uint16), 5)
-    G = frame[:, :, 1].astype(np.uint16)
-    B = np.left_shift(frame[:, :, 2].astype(np.uint16), 5)
-    I = np.bitwise_or(R, G, B)
+    x1 = np.left_shift(frame[:, :, 1].astype(np.uint16), 8)
+    x2 = frame[:, :, 2].astype(np.uint16)
+    I = np.bitwise_or(x1, x2)
     return I
   
   def depth2rgb(self, depth):
@@ -64,7 +66,7 @@ class RemoteInterface:
     Returns:
         np.ndarray: depth frame as color
     """
-    return cv2.applyColorMap(np.sqrt(depth).astype(np.uint8), cv2.COLORMAP_HSV)
+    return cv2.applyColorMap(np.sqrt(depth).astype(np.uint8), cv2.COLORMAP_JET)
   
   @property
   def motor(self):
