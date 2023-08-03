@@ -125,9 +125,8 @@ _video_worker = None
 
 def _rxtx_worker(host, port, running, wlock, rlock, motor_values, sensor_values, nsensors, rxtime):
   global _tx_ms_interval
-  rxtime.value = time.time()
   connected = False
-  last_tx_time = time.time()
+  start_time = rxtime.value = last_tx_time = time.time()
 
   while running.value:
     if not connected:
@@ -157,7 +156,7 @@ def _rxtx_worker(host, port, running, wlock, rlock, motor_values, sensor_values,
         rlock.acquire()
         ns = nsensors.value = len(sensors)
         sensor_values[:ns] = sensors
-        rxtime.value = last_tx_time
+        rxtime.value = last_tx_time - start_time
         rlock.release()
 
     except Exception as e:
