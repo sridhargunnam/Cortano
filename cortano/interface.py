@@ -12,8 +12,8 @@ class RemoteInterface:
     Args:
         host (str, optional): host ip of the robot. Defaults to "0.0.0.0".
     """
-    lan.start(host, port, frame_shape=(360, 1280, 3))
-    self.motor_vals = [0] * 10
+    lan.start(host, port, frame_shape=(360, 640))
+    self.motor_vals = np.zeros((10,), np.int32)
     self.sensor_vals = np.zeros((20,), np.int32)
 
     pygame.init()
@@ -50,12 +50,6 @@ class RemoteInterface:
         frame (np.ndarray): frame sized (360, 640, 3) that can be displayed in real time
     """
     self.free_frame2 = frame
-
-  def _decode_depth_frame(self, frame):
-    x1 = np.left_shift(frame[:, :, 1].astype(np.uint16), 8)
-    x2 = frame[:, :, 2].astype(np.uint16)
-    I = np.bitwise_or(x1, x2)
-    return I
   
   def depth2rgb(self, depth):
     """Turn a depth frame into a viewable rgb frame
@@ -100,11 +94,9 @@ class RemoteInterface:
           if event.key == getattr(pygame, f"K_{keycode}"):
             self.keys[keycode] = 0
 
-    f = lan.get_frame()
-    self.color, depth = f[:,:640], f[:,640:]
-    self.depth = self._decode_depth_frame(depth)
-    depthrgb = self.depth2rgb(self.depth)
-    if f is not None:
+    self.color, self.depth = lan.get_frame()
+    if self.color is not None and self.depth is not None:
+      depthrgb = self.depth2rgb(self.depth)
       a = (np.swapaxes(np.flip(self.free_frame1, axis=-1), 0, 1))
       b = (np.swapaxes(np.flip(self.free_frame2, axis=-1), 0, 1))
       c = (np.swapaxes(np.flip(self.color, axis=-1), 0, 1))
@@ -118,10 +110,8 @@ class RemoteInterface:
       self.screen.blit(a, (0, 360))
       self.screen.blit(b, (640, 360))
 
-    lan.send({ "motor": self.motor_vals })
-    msg = lan.recv()
-    if msg and isinstance(msg, dict) and "sensor" in msg:
-      self.sensor_vals = msg["sensor"]
+    lan.write(self.motor_vals)
+    self.sensor_vals = lan.read()
 
     pygame.display.flip()
 
