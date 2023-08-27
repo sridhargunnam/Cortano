@@ -2,15 +2,66 @@ import numpy as np
 import pyrealsense2 as rs
 from typing import Tuple
 import cv2
+'''
 
+Intrinsic of "Depth" / 640x360 / {Z16}
+ Width:      	640
+ Height:     	360
+ PPX:        	321.082885742188
+ PPY:        	177.282165527344
+ Fx:         	319.841674804688
+ Fy:         	319.841674804688
+ Distortion: 	Brown Conrady
+ Coeffs:     	0  	0  	0  	0  	0  
+ FOV (deg):  	90.03 x 58.74
+
+Intrinsic of "Color" / 640x360 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
+ Width:      	640
+ Height:     	360
+ PPX:        	325.301666259766
+ PPY:        	180.465133666992
+ Fx:         	456.511993408203
+ Fy:         	456.716552734375
+ Distortion: 	Inverse Brown Conrady
+ Coeffs:     	0  	0  	0  	0  	0  
+ FOV (deg):  	70.05 x 43.02
+
+ Intrinsic of "Color" / 640x480 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
+  Width:      	640
+  Height:     	480
+  PPX:        	327.068908691406
+  PPY:        	240.620178222656
+  Fx:         	608.682678222656
+  Fy:         	608.955383300781
+  Distortion: 	Inverse Brown Conrady
+  Coeffs:     	0  	0  	0  	0  	0  
+  FOV (deg):  	55.46 x 43.02
+
+#    Translation Vector: 0.00552000012248755  -0.00510000018402934  -0.011739999987185  
+
+# Extrinsic from "Accel"	  To	  "Color" :
+#  Rotation Matrix:
+#    0.99982          0.0182547        0.00521857    
+#   -0.0182514        0.999833        -0.000682113   
+#   -0.00523015       0.000586744      0.999986   
+'''
 class RealsenseCamera:
   def __init__(self, width=640, height=360):
     self.width = width
     self.height = height
     self.shape = (height, width)
 
-    self.pipeline = rs.pipeline()
+    try:
+      # Create a context object
+      ctx = rs.context()
+      # Get a device
+      dev = ctx.devices[0]
+      # Reset the camera
+      dev.hardware_reset()
+    except:
+      print("No realsense camera found, or failed to reset.")
     
+    self.pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, 30)
@@ -25,46 +76,16 @@ class RealsenseCamera:
 
     # self.intrinsic_matrix = self.metadata.intrinsics.intrinsic_matrix
     # used for USB 2.1 as found on the jetson nano
-    
-#  Intrinsic of "Depth" / 640x360 / {Z16}
-#   Width:      	640
-#   Height:     	360
-#   PPX:        	321.082885742188
-#   PPY:        	177.282165527344
-#   Fx:         	319.841674804688
-#   Fy:         	319.841674804688
-#   Distortion: 	Brown Conrady
-#   Coeffs:     	0  	0  	0  	0  	0  
-#   FOV (deg):  	90.03 x 58.74
-
-  #  Intrinsic of "Color" / 640x360 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
-  # Width:      	640
-  # Height:     	360
-  # PPX:        	325.301666259766
-  # PPY:        	180.465133666992
-  # Fx:         	456.511993408203
-  # Fy:         	456.716552734375
-  # Distortion: 	Inverse Brown Conrady
-  # Coeffs:     	0  	0  	0  	0  	0  
-  # FOV (deg):  	70.05 x 43.02
-
-#    Translation Vector: 0.00552000012248755  -0.00510000018402934  -0.011739999987185  
-
-# Extrinsic from "Accel"	  To	  "Color" :
-#  Rotation Matrix:
-#    0.99982          0.0182547        0.00521857    
-#   -0.0182514        0.999833        -0.000682113   
-#   -0.00523015       0.000586744      0.999986   
     if height == 480:
-      self.fx = 614.5665893554688
-      self.fy = 614.4674682617188
-      self.cx = 313.47930908203125
-      self.cy = 235.6346435546875
+      self.fx = 608.6826782226562
+      self.fy = 608.9553833007812
+      self.cx = 327.06890869140625
+      self.cy = 240.62017822265625
     elif height == 360:
-      self.fx = 460.92495728
-      self.fy = 460.85058594
-      self.cx = 315.10949707
-      self.cy = 176.72598267
+      self.fx = 456.511993408203
+      self.fy = 456.716552734375
+      self.cx = 325.301666259766
+      self.cy = 180.465133666992
 
     self.hfov = np.degrees(np.arctan2(self.width  / 2, self.fx)) * 2
     self.vfov = np.degrees(np.arctan2(self.height / 2, self.fy)) * 2

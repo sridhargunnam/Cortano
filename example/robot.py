@@ -31,6 +31,13 @@ def get_XYZ(depth_image):
     return XYZ
 
 if __name__ == "__main__":
+    # parse arguments
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true", help="debug mode")
+    args = parser.parse_args()
+    debug_mode = args.debug
+
     # robot = RemoteInterface("...")
     cam = camera.RealsenseCamera() # because this is a locally run camera, but you don't need
 
@@ -68,8 +75,51 @@ if __name__ == "__main__":
         num_pixels = np.sum(ball_depth > 0)
         if num_pixels > 0:
             average_xyz = np.sum(xyz, axis=0) / num_pixels
+        
+        if debug_mode:
+            if num_pixels > 0:
+                print(average_xyz)
+            #draw the bounding boxes and masks  on the image
+            
+            # run this in debug mode only once
+            exit_flag = False
+            if not exit_flag:    
+                for i in range(len(indeces_found)):
+                    mask = masks[i].reshape((360, 640))
+                    color[mask > 0] = (0, 255, 0)
+                    cv2.rectangle(color, (int(boxes[i][0]), int(boxes[i][1])), (int(boxes[i][2]), int(boxes[i][3])), (0, 0, 255), 2)
+                    cv2.putText(color, str(labels[i]), (int(boxes[i][0]), int(boxes[i][1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.imshow("color", color)
+                    # cv2.waitKey(1)
+                    if cv2.waitKey(0) in [27, ord('q'), ord('Q')]:
+                        exit_flag = True
+                        debug_mode = False
+                        break
+                cv2.destroyAllWindows()
+            """
+            # calculate the average fps = ~1000 fps on desktop(4060+amd 3600)
+            import time
+            start = time.time()
+            for i in range(100):
+                with torch.no_grad():
+                    output = model(input_batch)[0]
+                    end = time.time()
+                    print("FPS:", 100 / (end - start))
+                    start = end
+            
+            # calculate the average inference time = ~100 fps on desktop(4060)
+            start = time.time()
+            for i in range(100):
+                with torch.no_grad():
+                    output = model(input_batch)[0]
+                    end = time.time()
+                    print("Inference time:", (end - start) * 1000, "ms")
+                    start = end
+            """
 
-        if num_pixels > 0:
-            print(average_xyz)
-        cv2.imshow("color", color)
-        cv2.waitKey(1)
+
+
+
+        
+
+
