@@ -15,6 +15,8 @@ pip install pyrealsense2
 https://developer.nvidia.com/cuda-zone
 pip install torch torchvision torchaudio
 
+Here is the repository that I am grabbing the tags from as well:
+https://github.com/AprilRobotics/apriltag-imgs
 ```
 
 ## Example Program
