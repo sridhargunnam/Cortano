@@ -4,17 +4,19 @@ Remote Interface for CortexNanoBridge
 To install on your laptop/desktop:
 
 ```bash
-python3 -m venv
+# python3 -m venv
 sudo apt install python3-venv
 python3 -m venv clawbot
 source clawbot/bin/activate
 python3 -m pip install .
-python3 -m pip install . -r /home/sgunnam/sgunnam/clawbot/workshop2/CortexNanoBridge/jetson_nano/requirements.txt
+python3 -m pip install . -r /home/sgunnam/sgunnam/clawbot/workshop2/CortexNanoBridge/jetson_nano/requirements.txt # on my desktop
+python3 -m pip install . -r /home/nvidia/wsp/CortexNanoBridge/jetson_nano/requirements.txt # on jetson
 pip install pyrealsense2
 #install cuda
 https://developer.nvidia.com/cuda-zone
 pip install torch torchvision torchaudio
 
+pip install open3d     
 Here is the repository that I am grabbing the tags from as well:
 https://github.com/AprilRobotics/apriltag-imgs
 ```
