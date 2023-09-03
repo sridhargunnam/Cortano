@@ -21,6 +21,9 @@ Here is the repository that I am grabbing the tags from as well:
 https://github.com/AprilRobotics/apriltag-imgs
 ```
 
+pip install pytransform3d # visualization
+
+
 ## Example Program
 To start a program to connect to your robot, first get the ip address from your Jetson Nano.
 This can be done by first going to the Jetson Nano and typing the following into a new terminal:
