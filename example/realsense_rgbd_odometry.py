@@ -1,5 +1,7 @@
 # example from https://github.com/neka-nat/cupoch/tree/master/examples/python/realsense/realsense_rgbd_odometry.py
 # it works using realsense camera. 
+# Issues :
+
 import sys
 import pyrealsense2 as rs
 import numpy as np
