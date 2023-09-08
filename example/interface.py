@@ -35,7 +35,7 @@ class SimInterface:
 
     self.keys = {k[2:]: 0 for k in dir(pygame) if k.startswith("K_")}
 
-    # cam = camera.RealsenseCamera()
+    # cam = camera.RealSenseCamera()
 
     self.angle = 0.0
     self.position = np.array([0, 36, 8], np.float64)

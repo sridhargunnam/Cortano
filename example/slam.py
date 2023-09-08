@@ -7,7 +7,7 @@ from pyapriltags import Detector
 
 if __name__ == "__main__":
   # robot = RemoteInterface("...")
-  cam = camera.RealsenseCamera()
+  cam = camera.RealSenseCamera()
 
   prev_rgbd_image = None
   option = open3d.pipelines.odometry.OdometryOption()
@@ -68,3 +68,8 @@ if __name__ == "__main__":
     filtered_color = np.where(np.tile(mask.reshape(360, 640, 1), (1, 1, 3)), color, 0)
     cv2.imshow("color", filtered_color)
     cv2.waitKey(1)
+
+    # Use custom_draw_geometry_with_camera_trajectory to visualize the camera trajectory
+    # and geometry. Press 'Q' to exit.
+    
+

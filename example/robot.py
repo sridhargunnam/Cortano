@@ -39,7 +39,7 @@ if __name__ == "__main__":
     debug_mode = args.debug
 
     # robot = RemoteInterface("...")
-    cam = camera.RealsenseCamera() # because this is a locally run camera, but you don't need
+    cam = camera.RealSenseCamera() # because this is a locally run camera, but you don't need
 
     # object detection model
     model = maskrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)

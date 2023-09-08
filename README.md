@@ -23,6 +23,10 @@ https://github.com/AprilRobotics/apriltag-imgs
 
 pip install pytransform3d # visualization
 
+#installation for visualizing the rs camera, decompressing the obj
+pip install PyOpenGL
+pip install py-lz4framed
+pip install lz4
 
 ## Example Program
 To start a program to connect to your robot, first get the ip address from your Jetson Nano.

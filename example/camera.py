@@ -45,7 +45,7 @@ Intrinsic of "Color" / 640x360 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
 #   -0.0182514        0.999833        -0.000682113   
 #   -0.00523015       0.000586744      0.999986   
 '''
-class RealsenseCamera:
+class RealSenseCamera:
   def __init__(self, width=640, height=360):
     self.width = width
     self.height = height
@@ -122,6 +122,7 @@ class RealsenseCamera:
     if self.pipeline:
       self.pipeline.stop()
       self.pipeline = None
+      cv2.destroyAllWindows()
 
   def read(self, scale=False): # will also store in buffer to be read
     ret, color, depth = self.capture()
@@ -144,4 +145,12 @@ class RealsenseCamera:
     color, depth = self.read()
     combined = np.hstack((color, self.depth2rgb(depth)))
     cv2.imshow("combined", combined)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) == 27:
+      exit(0)
+
+# if the file is run directly
+if __name__ == "__main__":
+  cam = RealSenseCamera()
+  while True:
+    cam.view()
+    

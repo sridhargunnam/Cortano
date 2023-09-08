@@ -7,7 +7,8 @@
 # 6. Use the camera, accel and gyro to calculate the camera pose
 # 7. Use the camera pose to create a trajectory
 # 8. Visualize the trajectory and the mesh
-
+print("The script doesn't work yet")
+exit(0)
 
 import pyrealsense2 as rs
 import numpy as np
