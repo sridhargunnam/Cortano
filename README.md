@@ -28,6 +28,12 @@ pip install PyOpenGL
 pip install py-lz4framed
 pip install lz4
 
+## TODO
+1. Integrate IMU + RGBD odometry
+2. Integrate april tags based pose correction
+3. PID testing
+
+
 ## Example Program
 To start a program to connect to your robot, first get the ip address from your Jetson Nano.
 This can be done by first going to the Jetson Nano and typing the following into a new terminal:
