@@ -23,6 +23,13 @@ https://github.com/AprilRobotics/apriltag-imgs
 
 pip install pytransform3d # visualization
 
+#cupoch
+sudo apt-get install libxinerama-dev libxcursor-dev libglu1-mesa-dev
+pip3 install cupoch
+pip install matplotlib
+
+
+
 #installation for visualizing the rs camera, decompressing the obj
 pip install PyOpenGL
 pip install py-lz4framed
@@ -33,6 +40,8 @@ pip install lz4
 2. Integrate april tags based pose correction
 3. PID testing
 
+# for stats
+ tegrastats --interval 1 --logfile tegrastats.txt 
 
 ## Example Program
 To start a program to connect to your robot, first get the ip address from your Jetson Nano.
