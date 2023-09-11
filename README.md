@@ -19,6 +19,7 @@ pip install torch torchvision torchaudio
 pip install open3d     
 Here is the repository that I am grabbing the tags from as well:
 https://github.com/AprilRobotics/apriltag-imgs
+pip install pyapriltags
 ```
 
 pip install pytransform3d # visualization
@@ -40,8 +41,9 @@ pip install lz4
 2. Integrate april tags based pose correction
 3. PID testing
 
-# for stats
+# for GPU and CPU stats
  tegrastats --interval 1 --logfile tegrastats.txt 
+slam.py is ~1 fps, gpu slam is ~3 fps
 
 ## Example Program
 To start a program to connect to your robot, first get the ip address from your Jetson Nano.

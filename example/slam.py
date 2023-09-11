@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from pyapriltags import Detector
+from datetime import datetime
 
 if __name__ == "__main__":
   # robot = RemoteInterface("...")
@@ -29,6 +30,7 @@ if __name__ == "__main__":
   global_T = np.identity(4)
   # while robot.running():
   while True:
+    dt = datetime.now()
     # color, depth, sensor = robot.read()
     color, depth = cam.read()
 
@@ -68,6 +70,9 @@ if __name__ == "__main__":
     filtered_color = np.where(np.tile(mask.reshape(360, 640, 1), (1, 1, 3)), color, 0)
     cv2.imshow("color", filtered_color)
     cv2.waitKey(1)
+
+    process_time = datetime.now() - dt
+    print("FPS: " + str(1 / process_time.total_seconds()))
 
     # Use custom_draw_geometry_with_camera_trajectory to visualize the camera trajectory
     # and geometry. Press 'Q' to exit.
