@@ -1,17 +1,17 @@
 # installing ssd on jetson agx xavier
 on the jetson device
 https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/FlashingSupport.html#to-set-up-an-nvme-drive-manually-for-booting
+
 lsblk -d -p | grep nvme | cut -d\  -f 1
- sudo parted /dev/nvme0n1 mklabel gpt
- sudo parted /dev/nvme0n1 mkpart APP 0GB 999GB
+sudo parted /dev/nvme0n1 mklabel gpt
+sudo parted /dev/nvme0n1 mkpart APP 0GB 999GB
 
- on host:
- https://github.com/jetsonhacks/bootFromExternalStorage
- ./get_jetson_files.sh
+on host:
+https://github.com/jetsonhacks/bootFromExternalStorage
+./get_jetson_files.sh
+
+https://forums.developer.nvidia.com/t/controlling-app-size-partition-jetpack-5-1-2/265484
 cd bootFromExternalStorage/R35.4.1/Linux_for_Tegra
-sudo ./tools/kernel_flash/l4t_initrd_flash.sh --external-device nvme0n1p1 -c ./tools/kernel_flash/flash_l4t_external.xml  --showlogs --network usb0 jetson-agx-xavier-devkit internal
-
-
 sudo ./tools/kernel_flash/l4t_initrd_flash.sh --external-device nvme0n1p1 -c ./tools/kernel_flash/flash_l4t_external.xml  --showlogs --network usb0 jetson-agx-xavier-devkit internal
 
 # Cortano
