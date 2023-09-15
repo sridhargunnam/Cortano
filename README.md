@@ -37,10 +37,10 @@ pip install pyrealsense2
 https://developer.nvidia.com/cuda-zone
 pip install torch torchvision torchaudio
 
-pip install open3d     
+pip install open3d     # this won't install with cuda support on arm64, I will need to manually comiple 
 Here is the repository that I am grabbing the tags from as well:
 https://github.com/AprilRobotics/apriltag-imgs
-pip install pyapriltags
+pip install pyapriltagssource /home/nvidia/wsp/clawbot/sudo pip3 install -U jetson-statsclawbot/bin/activate
 ```
 
 pip install pytransform3d # visualization
@@ -57,6 +57,18 @@ pip install PyOpenGL
 pip install py-lz4framed
 pip install lz4
 
+
+docker:
+sudo docker pull nvcr.io/nvidia/l4t-ml:r35.2.1-py3
+sudo docker run -it --rm --runtime nvidia --network host -v /home/nvidia/wsp/clawbot:/home/nvidia/wsp/clawbot nvcr.io/nvidia/l4t-ml:r35.2.1-py3
+xhost +local:root
+sudo docker run -it --privileged --rm --device-cgroup-rule "c 81:* rmw"  --device-cgroup-rule "c 189:* rmw" --runtime nvidia --network host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all  -v /dev:/dev  -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /tmp/.docker.xauth:/tmp/.docker.xauth:rw  -v /home/nvidia/wsp/clawbot:/home/nvidia/wsp/clawbot custom_v3
+ 
+sudo docker run --privileged --name realsense-2-container --rm -p 8084:8084 -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev:ro --gpus all -it lmwafer/realsense-ready:2.0-ubuntu18.04
+
+bash
+cd /home/nvidia/wsp/clawbot/Cortano
+. docker/bin/activate 
 ## TODO
 1. Integrate IMU + RGBD odometry
 2. Integrate april tags based pose correction
