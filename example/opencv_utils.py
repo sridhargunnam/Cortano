@@ -143,7 +143,7 @@ def getCircleColorRange(color, circle):
     
 
 if __name__ == "__main__":
-    cam = camera.RealSenseCamera() 
+    cam = camera.RealSenseCamera()#1280,720) 
     # skip first 10 frames as they are of low exposure
     max_tries = 10
     for i in range(10):

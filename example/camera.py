@@ -2,41 +2,8 @@ import numpy as np
 import pyrealsense2 as rs
 from typing import Tuple
 import cv2
+
 '''
-
-Intrinsic of "Depth" / 640x360 / {Z16}
- Width:      	640
- Height:     	360
- PPX:        	321.082885742188
- PPY:        	177.282165527344
- Fx:         	319.841674804688
- Fy:         	319.841674804688
- Distortion: 	Brown Conrady
- Coeffs:     	0  	0  	0  	0  	0  
- FOV (deg):  	90.03 x 58.74
-
-Intrinsic of "Color" / 640x360 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
- Width:      	640
- Height:     	360
- PPX:        	325.301666259766
- PPY:        	180.465133666992
- Fx:         	456.511993408203
- Fy:         	456.716552734375
- Distortion: 	Inverse Brown Conrady
- Coeffs:     	0  	0  	0  	0  	0  
- FOV (deg):  	70.05 x 43.02
-
- Intrinsic of "Color" / 640x480 / {YUYV/RGB8/BGR8/RGBA8/BGRA8/Y8/Y16}
-  Width:      	640
-  Height:     	480
-  PPX:        	327.068908691406
-  PPY:        	240.620178222656
-  Fx:         	608.682678222656
-  Fy:         	608.955383300781
-  Distortion: 	Inverse Brown Conrady
-  Coeffs:     	0  	0  	0  	0  	0  
-  FOV (deg):  	55.46 x 43.02
-
 #    Translation Vector: 0.00552000012248755  -0.00510000018402934  -0.011739999987185  
 
 # Extrinsic from "Accel"	  To	  "Color" :
@@ -74,21 +41,23 @@ class RealSenseCamera:
 
     self.align = rs.align(rs.stream.color)
 
-    # self.intrinsic_matrix = self.metadata.intrinsics.intrinsic_matrix
-    # used for USB 2.1 as found on the jetson nano
-    if height == 480:
-      self.fx = 608.6826782226562
-      self.fy = 608.9553833007812
-      self.cx = 327.06890869140625
-      self.cy = 240.62017822265625
-    elif height == 360:
-      self.fx = 456.511993408203
-      self.fy = 456.716552734375
-      self.cx = 325.301666259766
-      self.cy = 180.465133666992
+    # Get the intrinsics of the color stream
+    self.color_sensor = self.pipeline.get_active_profile().get_stream(rs.stream.color).as_video_stream_profile()
+    self.color_intrinsics = self.color_sensor.get_intrinsics()
 
+    self.fx = self.color_intrinsics.fx
+    self.fy = self.color_intrinsics.fy
+    self.cx = self.color_intrinsics.ppx
+    self.cy = self.color_intrinsics.ppy
     self.hfov = np.degrees(np.arctan2(self.width  / 2, self.fx)) * 2
     self.vfov = np.degrees(np.arctan2(self.height / 2, self.fy)) * 2
+    self.hfov_rad = np.radians(self.hfov)
+    self.vfov_rad = np.radians(self.vfov)
+    self.hfov_rad_half = self.hfov_rad / 2
+    self.vfov_rad_half = self.vfov_rad / 2
+
+    #TODO Get camera to IMU extrinsics
+    
 
   def capture(self) -> Tuple[bool, np.ndarray, np.ndarray]:
     """
