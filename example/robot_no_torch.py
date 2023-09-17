@@ -1,12 +1,7 @@
-# import cv2
 import camera
-from torchvision.models.detection import maskrcnn_resnet50_fpn
-from torchvision import transforms
 from PIL import Image
-import torch
 import numpy as np
-
-# labels are from here (COCO): https://gist.github.com/tersekmatija/9d00c4683d52d94cf348acae29e8db1a
+import cv2
 
 fx = 460.92495728
 fy = 460.85058594
@@ -29,7 +24,34 @@ def get_XYZ(depth_image):
         Z.reshape((-1, 1))
     ), axis=-1)
     return XYZ
+# getCircles takes a color image and returns a masks and boxes of the circles in the image, using opencv
+def getCircles(color):
+    # convert to grayscale
+    gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
+    # blur the image
+    gray = cv2.medianBlur(gray, 5)
+    # detect circles in the image
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=10, maxRadius=100)
+    # ensure at least some circles were found
+    if circles is not None:
+        # convert the (x, y) coordinates and radius of the circles to integers
+        # round the floating point values to integers
+        circles = np.round(circles[0, :]).astype("int")
+        # return the (x, y) coordinates and radius of the circles
+        # return circles
+        # draw the circles
+        # for (x, y, r) in circles:
+        #     cv2.circle(color, (x, y), r, (0, 255, 0), 4)
+        #     cv2.rectangle(color, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+        #     cv2.imshow("output", np.hstack([color]))
+        #     cv2.waitKey(0)
+        #     cv2.destroyAllWindows()
+        # return the circles
+        return circles
+    else:
+        return None
 
+    
 if __name__ == "__main__":
     # parse arguments
     import argparse
@@ -41,21 +63,13 @@ if __name__ == "__main__":
     # robot = RemoteInterface("...")
     cam = camera.RealSenseCamera() # because this is a locally run camera, but you don't need
 
-    # object detection model
-    model = maskrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)
-    model.eval()
-    model.to('cuda')
 
     #while robot.running():
     while True:
         # color, depth, sensors = robot.read()
         color, depth = cam.read()
 
-        preprocess = transforms.Compose([ transforms.ToTensor(), ])
-        input_tensor = preprocess(Image.fromarray(color))
-        input_batch = input_tensor.unsqueeze(0).to('cuda')
-        with torch.no_grad():
-            output = model(input_batch)[0]
+        output = getCircles(color)
         output = {l: output[l].to('cpu').numpy() for l in output}
 
         object_index = 37

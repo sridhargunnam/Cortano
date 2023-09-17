@@ -1,5 +1,5 @@
 examples/rs_extra
-docker/
+docker*/
 cmake*
 Open3D
 # Byte-compiled / optimized / DLL files
