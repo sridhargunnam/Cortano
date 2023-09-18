@@ -13,12 +13,21 @@ if __name__ == "__main__":
   prev_rgbd_image = None
   option = open3d.pipelines.odometry.OdometryOption()
   # Intel Realsense D415 Intrinsic Parameters
-  fx = 460.92495728   # FOV(x) -> depth2xyz -> focal length (x)
-  fy = 460.85058594   # FOV(y) -> depth2xyz -> focal length (y)
-  cx = 315.10949707   # 640 (width) 320
-  cy = 176.72598267   # 360 (height) 180
-  cam_intrinsic_params = open3d.camera.PinholeCameraIntrinsic(640, 360, fx, fy, cx, cy)
-  camera_params = ( fx, fy, cx, cy )
+  # fx = 460.92495728   # FOV(x) -> depth2xyz -> focal length (x)
+  # fy = 460.85058594   # FOV(y) -> depth2xyz -> focal length (y)
+  # cx = 315.10949707   # 640 (width) 320
+  # cy = 176.72598267   # height (height) 180
+  camera_params = cam.getCameraParams() #( fx, fy, cx, cy )
+  fx = camera_params[0]
+  fy = camera_params[1]
+  cx = camera_params[2]
+  cy = camera_params[3]
+  width = camera_params[4]
+  height = camera_params[5]
+  depth_scale = camera_params[6]
+
+
+  cam_intrinsic_params = open3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
   at_detector = Detector(families='tag16h5',
                         nthreads=1,
                         quad_decimate=1.0,
@@ -45,7 +54,7 @@ if __name__ == "__main__":
     o3d_rgbd  = open3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color, o3d_depth)
 
     tags = at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params, 2.5)
+      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 2.5)
     found_tag = False
     for tag in tags:
       if tag.decision_margin < 50: continue
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     prev_rgbd_image = o3d_rgbd # we forgot this last time!
 
     # dont need this, but helpful to visualize
-    filtered_color = np.where(np.tile(mask.reshape(360, 640, 1), (1, 1, 3)), color, 0)
+    filtered_color = np.where(np.tile(mask.reshape(height, width, 1), (1, 1, 3)), color, 0)
     cv2.imshow("color", filtered_color)
     if cv2.waitKey(1) == 27:
       exit(0)

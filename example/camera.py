@@ -58,7 +58,9 @@ class RealSenseCamera:
 
     #TODO Get camera to IMU extrinsics
     
-
+  def getCameraParams(self):
+    return (self.fx, self.fy, self.cx, self.cy, self.width, self.height, self.depth_scale)
+  
   def capture(self) -> Tuple[bool, np.ndarray, np.ndarray]:
     """
     Grab frames from the realsense camera

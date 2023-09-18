@@ -1,0 +1,4 @@
+# Check how the pyapriltags are working, and update the slam.py to support detection of all the tags
+# Integratre the slam with imu data to create a pose data with higher frame rate
+# Send the robot data for visualization on the host
+# Glueing all of the code together

@@ -307,6 +307,39 @@ class SimInterface:
     self.draw_robot(b)
     self.draw_goal(b)  # Add this line to draw the goal
 
+    # Annotate the goal, and robot position and angle
+    font = pygame.font.SysFont("Arial", 20)
+    #lambda function to convert the position and angle to a string with 2 decimal places
+    position_to_string = lambda x: f"{x[0]:.2f}, {x[1]:.2f}"
+    angle_to_string = lambda x: f"{x:.2f}"
+    #position and angle of the robot
+    position = position_to_string(self.position)
+    angle = angle_to_string(self.angle)
+    #position and angle of the goal
+    goal_position = position_to_string(self.goal["position"])
+    goal_angle = angle_to_string(self.goal["angle"])
+    #text to display
+    # text = f"Robot Position: {position}\nRobot Angle: {angle}\nGoal Position: {goal_position}\nGoal Angle: {goal_angle}"
+    #render the text
+    # text_surface = font.render(text, True, (0, 0, 0))
+    #blit the text to the side surface
+    # b.blit(text_surface, (0, 0))
+
+
+    
+    goal_position_text  = font.render(f"Goal Position  : {position}", True, (0, 0, 0))
+    robot_position_text = font.render(f"Robot Position : {goal_position}", True, (0, 0, 0))
+    goal_angle_text     = font.render(f"Goal Angle     : {angle}", True, (0, 0, 0))
+    robot_angle_text    = font.render(f"Robot Angle    : {goal_angle}", True, (0, 0, 0))
+
+    # Add the text to the side surface
+    b.blit(goal_position_text, (0, 0))
+    b.blit(robot_position_text, (0, 20))
+    b.blit(goal_angle_text, (0, 40))
+    b.blit(robot_angle_text, (0, 60))
+  
+
+
     self.screen.blit(a, (0, 0))
     self.screen.blit(b, (800, 0))
 
