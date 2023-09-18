@@ -63,6 +63,8 @@ class SimInterface:
     self.open_lim = 30
     self.claw_coeff = 1.5
 
+    self.goal = None
+
   @property
   def motor(self): return self.motor_vals
   @property
@@ -157,6 +159,7 @@ class SimInterface:
     robot_color = (0, 0, 255)
     wheel_color = (0, 127, 0)
     claw_color = (255, 0, 0)
+    # goal_color = (255, 255, 0)  # Yellow
     scale = 4
 
     pygame.draw.rect(surface, wall_color,
@@ -259,6 +262,23 @@ class SimInterface:
     self.sensor_vals[1] = self.has_ball + 0
     self.sensor_vals[2] = self.has_ball + 0
 
+  def set_goal(self, goal_position, goal_angle):
+      self.goal = {"position": goal_position, "angle": goal_angle}
+
+  def draw_goal(self, surface):
+      if self.goal:
+          goal_color = (255, 0, 0)  # red
+          scale = 4
+          goal_position = self.goal["position"]
+          goal_angle = self.goal["angle"]
+
+          goal_position = raster(goal_position, scale)
+          
+          pygame.draw.circle(surface, goal_color, goal_position, 10)
+          goal_direction = np.array([np.cos(np.radians(goal_angle)), np.sin(np.radians(goal_angle))])
+          goal_endpoint = goal_position + (goal_direction * 20)
+          pygame.draw.line(surface, goal_color, goal_position, goal_endpoint, 2)
+
   def update(self):
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -285,6 +305,7 @@ class SimInterface:
     self.update_sensors()
     self.draw_map(a)
     self.draw_robot(b)
+    self.draw_goal(b)  # Add this line to draw the goal
 
     self.screen.blit(a, (0, 0))
     self.screen.blit(b, (800, 0))

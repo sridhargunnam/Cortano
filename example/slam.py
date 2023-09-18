@@ -69,7 +69,8 @@ if __name__ == "__main__":
     # dont need this, but helpful to visualize
     filtered_color = np.where(np.tile(mask.reshape(360, 640, 1), (1, 1, 3)), color, 0)
     cv2.imshow("color", filtered_color)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) == 27:
+      exit(0)
 
     process_time = datetime.now() - dt
     print("FPS: " + str(1 / process_time.total_seconds()))

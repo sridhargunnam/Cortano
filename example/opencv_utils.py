@@ -1,7 +1,7 @@
 import camera
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # getCircles takes a color image and returns a masks and boxes of the circles in the image, using opencv
 def getCircles(color, minRadiusUser=50, maxRadiusUser=65):
@@ -127,23 +127,23 @@ def getCircleColorRange(color, circle):
     # print("Red channel min, max = ", np.min(red_channel_hist), np.max(red_channel_hist))
 
     # plot the histogram of each color channel
-    plt.figure()
-    plt.subplot(3,1,1)
-    plt.plot(blue_channel_hist)
-    plt.title("Blue channel histogram")
-    plt.subplot(3,1,2)
-    plt.plot(green_channel_hist)
-    plt.title("Green channel histogram")
-    plt.subplot(3,1,3)
-    plt.plot(red_channel_hist)
-    plt.title("Red channel histogram")
+    # plt.figure()
+    # plt.subplot(3,1,1)
+    # plt.plot(blue_channel_hist)
+    # plt.title("Blue channel histogram")
+    # plt.subplot(3,1,2)
+    # plt.plot(green_channel_hist)
+    # plt.title("Green channel histogram")
+    # plt.subplot(3,1,3)
+    # plt.plot(red_channel_hist)
+    # plt.title("Red channel histogram")
     #FIXME 1 plt and imshow doesn't work together
     # plt.show()
     # plt.close()
     
 
 if __name__ == "__main__":
-    cam = camera.RealSenseCamera()#1280,720) 
+    cam = camera.RealSenseCamera(1280,720) 
     # skip first 10 frames as they are of low exposure
     max_tries = 10
     for i in range(10):
@@ -151,8 +151,8 @@ if __name__ == "__main__":
     while True:
         color, depth = cam.read()
         try:
-            circles = getCircles2(color, getBallReferenceColor("pingPong"))
-            # circles = getCircles(color)
+            # circles = getCircles2(color, getBallReferenceColor("pingPong"))
+            circles = getCircles(color, 10, 100)
             # circles[0] = [circles[0][0], circles[0][1], circles[0][2] - 10]
             circles = [circles[0]]
         except:

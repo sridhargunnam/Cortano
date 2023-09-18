@@ -65,8 +65,12 @@ docker:
 sudo docker pull nvcr.io/nvidia/l4t-ml:r35.2.1-py3
 sudo docker run -it --rm --runtime nvidia --network host -v /home/nvidia/wsp/clawbot:/home/nvidia/wsp/clawbot nvcr.io/nvidia/l4t-ml:r35.2.1-py3
 xhost +local:root
-sudo docker run -it --privileged --rm --device-cgroup-rule "c 81:* rmw"  --device-cgroup-rule "c 189:* rmw" --runtime nvidia --network host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all  -v /dev:/dev  -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /tmp/.docker.xauth:/tmp/.docker.xauth:rw  -v /home/nvidia/wsp/clawbot:/home/nvidia/wsp/clawbot custom_v4
- 
+sudo docker run -it --privileged --rm --device-cgroup-rule "c 81:* rmw"  --device-cgroup-rule "c 189:* rmw" --runtime nvidia --network host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all  -v /dev:/dev  -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /tmp/.docker.xauth:/tmp/.docker.xauth:rw  -v /home/nvidia/wsp/clawbot:/home/nvidia/wsp/clawbot nvcr.io/nvidia/l4t-ml:r35.2.1-py3
+
+sudo apt update
+sudo apt install vim
+pip3 install open3d pyrealsense2 pygame pyapriltags
+
 sudo docker run --privileged --name realsense-2-container --rm -p 8084:8084 -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev:ro --gpus all -it lmwafer/realsense-ready:2.0-ubuntu18.04
 
 bash
