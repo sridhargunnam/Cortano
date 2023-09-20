@@ -144,6 +144,40 @@ def getCircleColorRange(color, circle):
 
 if __name__ == "__main__":
     cam = camera.RealSenseCamera(1280,720) 
+    for i in range(10):
+        color, depth = cam.read()
+    # Load the image
+    image, _ = cam.read()
+
+    # Convert the image to HSV color space
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Apply a blur to the image
+    blurred_image = cv2.blur(hsv_image, (5, 5))
+
+    # Find the contours in the image
+    contours, hierarchy = cv2.findContours(blurred_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Filter the contours to find only the circles
+    circles = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 1000:
+            # Check if the contour is a circle
+            perimeter = cv2.arcLength(contour, True)
+            if perimeter > 1000 / 2:
+                # The contour is a circle
+                circle = cv2.minEnclosingCircle(contour)
+                circles.append(circle)
+
+    # Draw the circles on the image
+    cv2.drawContours(image, circles, -1, (0, 255, 0), 2)
+
+    # Show the image
+    cv2.imshow('Image', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    exit(0)
     # skip first 10 frames as they are of low exposure
     max_tries = 10
     for i in range(10):

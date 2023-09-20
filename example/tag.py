@@ -6,14 +6,14 @@ from pyapriltags import Detector
 from datetime import datetime
 
 if __name__ == "__main__":
-  cam = camera.RealSenseCamera()
+  cam = camera.RealSenseCamera(1280,720) 
   camera_params = cam.getCameraParams()
   at_detector = Detector(families='tag16h5',
                         nthreads=1,
                         quad_decimate=1.0,
                         quad_sigma=0.0,
                         refine_edges=1,
-                        decode_sharpening=0.25,
+                        decode_sharpening=1,
                         debug=0)
   
   # detect the tag and get the pose
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     color, depth = cam.read()
     
     tags = at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 2.5)
+      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 1)
     found_tag = False
     for tag in tags:
         if tag.decision_margin < 50: 
@@ -42,7 +42,19 @@ if __name__ == "__main__":
 
 
     if not found_tag:
-       continue
+      cv2.imshow("color", color)
+      if cv2.waitKey(1) == 27:
+        cv2.destroyAllWindows()
+        exit(0)
+      continue
+    # #Show the depth image, mask, and filtered depth image
+    # cv2.imshow("depth", depth)
+    # cv2.imshow("mask", mask.astype(np.uint8)*255)
+    # cv2.imshow("filtered depth", filtered_depth)
+    # if cv2.waitKey(1) == 27:
+    #     cv2.destroyAllWindows()
+    #     exit(0)
+
     # print the time it took to detect the tag well formatted
     print("Time to detect tag: ", datetime.now() - dt)
 
@@ -66,16 +78,5 @@ if __name__ == "__main__":
 
     cv2.imshow("color", color)
     if cv2.waitKey(1) == 27:
-        exit(0)
-
-
-    # for tag in tags:
-    #     if tag.decision_margin < 50: 
-    #         continue
-    #     cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    #     cv2.polylines(color, [np.int32(tag.corners)], True, (0, 255, 0), 2)
-    #     cv2.putText(color, str(tag.pose_R), (int(tag.center[0]), int(tag.center[1]) + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    #     cv2.putText(color, str(tag.pose_t), (int(tag.center[0]), int(tag.center[1]) + 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    # cv2.imshow("color", color)
-    # if cv2.waitKey(1) == 27:
-    #     exit(0)
+      cv2.destroyAllWindows()
+      exit(0)

@@ -6,6 +6,89 @@ from scipy.spatial.transform import Rotation as R
 from pyapriltags import Detector
 from datetime import datetime
 
+def get_pose(R, t):
+  T = np.identity(4)
+  T[:3,:3] = R
+  T[:3,3] = t.reshape(3)
+  return T
+
+
+"""
+function to get the robot pose from the tag pose, 
+the tags are located. 
+Robots will be autonomously competing 1v1 on a 12 feet x 12 feet field. 
+The field will be separated in half with a wall, with each adversary on opposite sides of the field. 
+Robots are allowed to start in any position in their starting pose, but cannot start moving until the remote network sends a Ready signal (this will be verified before each round starts). 
+At the start of the round, 30 tennis balls are placed on each side of the field in an undisclosed symmetric formation, to prevent pre-programming.
+On the field, 4 inch x 4 inch AprilTags will be placed every 4 feet from each other (with exception of corners) on each side. These tags can be used to help with localization. 
+
+Here are the AprilTag locations (family tag16h5) in inches, where (0, 0) is the center of the field
+tag_id: 1, location: (-72, 24), orientation: (1, 0)
+tag_id: 2, location: (-24, 72), orientation: (0, -1)
+tag_id: 3, location: (24, 72), orientation: (0, -1)
+tag_id: 4, location: (72, 24), orientation: (-1, 0)
+tag_id: 5, location: (72, -24), orientation: (-1, 0)
+tag_id: 6, location: (24, -72), orientation: (0, 1)
+tag_id: 7, location: (-24, -72), orientation: (0, 1)
+tag_id: 8, location: (-72, 24), orientation: (1, 0)
+"""
+def calculateRobotPose(tag_pose, tag_id, tag_orientation):
+  if tag_id == 1:
+    robot_x = tag_pose[0] - 72
+    robot_y = tag_pose[1] + 24
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def get_robot_pose(tag_pose, tag_id, tag_orientation):
+#   if tag_id == 1:
+#     robot_pose = tag_pose + np.array([72, -24, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 2:
+#     robot_pose = tag_pose + np.array([24, -72, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 3:
+#     robot_pose = tag_pose + np.array([-24, -72, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 4:
+#     robot_pose = tag_pose + np.array([-72, -24, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 5:
+#     robot_pose = tag_pose + np.array([-72, 24, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 6:
+#     robot_pose = tag_pose + np.array([-24, 72, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 7:
+#     robot_pose = tag_pose + np.array([24, 72, 0])
+#     robot_orientation = tag_orientation
+#   elif tag_id == 8:
+#     robot_pose = tag_pose + np.array([72, 24, 0])
+#     robot_orientation = tag_orientation
+#   else:
+#     print("Invalid tag id")
+#     return None
+#   return robot_pose, robot_orientation
+
+
+
+
 if __name__ == "__main__":
   # robot = RemoteInterface("...")
   cam = camera.RealSenseCamera()
@@ -57,12 +140,22 @@ if __name__ == "__main__":
       cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 2.5)
     found_tag = False
     for tag in tags:
-      if tag.decision_margin < 50: continue
-      #found_tag!
-      if tag.tag_id == 1: # 1..8
-        print(tag.pose_R, tag.pose_t)
-        # global_T = get_pose(tag.pose_R, tag.pose_t) # use your get_pose algorithm here!
+        if tag.decision_margin < 50: 
+           continue
         found_tag = True
+        global_T = get_pose(tag.pose_R, tag.pose_t) # use your get_pose algorithm here!
+      # print the tag pose, tag id, etc well formatted
+        # print("Tag Family: ", tag.tag_family)
+        # print("Tag ID: ", tag.tag_id)
+        # print("Tag Hamming Distance: ", tag.hamming)
+        # print("Tag Decision Margin: ", tag.decision_margin)
+        # print("Tag Homography: ", tag.homography)
+        # print("Tag Center: ", tag.center)
+        # print("Tag Corners: ", tag.corners)
+        # print("Tag Pose: ", tag.pose_R, tag.pose_t)
+        # print("Tag Pose Error: ", tag.pose_err)
+        # print("Tag Size: ", tag.tag_size)
+
       
     if not found_tag and prev_rgbd_image is not None: # use RGBD odometry relative transform to estimate pose
       T = np.identity(4)

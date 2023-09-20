@@ -2,3 +2,8 @@
 # Integratre the slam with imu data to create a pose data with higher frame rate
 # Send the robot data for visualization on the host
 # Glueing all of the code together
+# Make sure the tags are working in low light
+
+
+
+# Try out NVIDIA-ISAAC-ROS isaac_ros_common
