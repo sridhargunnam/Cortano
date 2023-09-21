@@ -116,7 +116,7 @@ if __name__ == "__main__":
                         quad_decimate=1.0,
                         quad_sigma=0.0,
                         refine_edges=1,
-                        decode_sharpening=0.25,
+                        decode_sharpening=1,
                         debug=0)
 
   global_T = np.identity(4)
@@ -136,8 +136,9 @@ if __name__ == "__main__":
     o3d_depth = open3d.geometry.Image(filtered_depth)
     o3d_rgbd  = open3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color, o3d_depth)
 
+    # OPtimization note : check for tag only when you except to see a tag in fov 
     tags = at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 2.5)
+      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=7)
     found_tag = False
     for tag in tags:
         if tag.decision_margin < 50: 

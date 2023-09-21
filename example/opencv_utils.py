@@ -4,7 +4,7 @@ import numpy as np
 # import matplotlib.pyplot as plt
 
 # getCircles takes a color image and returns a masks and boxes of the circles in the image, using opencv
-def getCircles(color, minRadiusUser=50, maxRadiusUser=65):
+def getCircles(color, minRadiusUser=0, maxRadiusUser=0):
     # convert to grayscale
     gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
     # blur the image
@@ -140,83 +140,136 @@ def getCircleColorRange(color, circle):
     #FIXME 1 plt and imshow doesn't work together
     # plt.show()
     # plt.close()
-    
 
-if __name__ == "__main__":
+          
+def detectCirclesAlgo1():
     cam = camera.RealSenseCamera(1280,720) 
-    for i in range(10):
-        color, depth = cam.read()
-    # Load the image
-    image, _ = cam.read()
-
-    # Convert the image to HSV color space
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-    # Apply a blur to the image
-    blurred_image = cv2.blur(hsv_image, (5, 5))
-
-    # Find the contours in the image
-    contours, hierarchy = cv2.findContours(blurred_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Filter the contours to find only the circles
-    circles = []
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > 1000:
-            # Check if the contour is a circle
-            perimeter = cv2.arcLength(contour, True)
-            if perimeter > 1000 / 2:
-                # The contour is a circle
-                circle = cv2.minEnclosingCircle(contour)
-                circles.append(circle)
-
-    # Draw the circles on the image
-    cv2.drawContours(image, circles, -1, (0, 255, 0), 2)
-
-    # Show the image
-    cv2.imshow('Image', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    exit(0)
     # skip first 10 frames as they are of low exposure
-    max_tries = 10
-    for i in range(10):
-        color, depth = cam.read()
+    max_tries = 100
+    # for i in range(10):
+    #     color, depth = cam.read()
     while True:
-        color, depth = cam.read()
         try:
-            # circles = getCircles2(color, getBallReferenceColor("pingPong"))
-            circles = getCircles(color, 10, 100)
-            # circles[0] = [circles[0][0], circles[0][1], circles[0][2] - 10]
-            circles = [circles[0]]
+            color, depth = cam.read()
+            circles = getCircles(color) #, 5, 30)
+            if circles is not None:
+                if len(circles) > 5:
+                    numberOfCirclesToDraw = 5
+                else:
+                    numberOfCirclesToDraw = len(circles)    
+                for (x, y, r) in circles[:numberOfCirclesToDraw+1]:
+                    print("x,y,r = ", x,y,r)
+                    cv2.circle(color, (x, y), r, (0, 255, 0), 4)
+                    cv2.rectangle(color, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
         except:
             if max_tries > 0:
                 print("could not get circles")
                 max_tries -= 1
-                continue
             else:
                 exit(0)
-        if circles is not None:
-            # circles = [circles[0]]
-            getCircleColorRange(color, circles[0])
-            for (x, y, r) in circles:
-                cv2.circle(color, (x, y), r, (0, 255, 0), 4)
-                print("radius = ", r)
-                cv2.rectangle(color, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-            cv2.imshow("output", np.hstack([color]))
-            key =  cv2.waitKey(0)
-            if key in [27, ord('q'), ord('Q')]:
-                exit(0)
-            elif key == ord('d'):
-                cv2.destroyAllWindows()
-        else:
-            # print("No circles found")
-            cv2.imshow("output", np.hstack([color]))
-            key =  cv2.waitKey(1)
-            if key in [27, ord('q'), ord('Q')]:
-                exit(0)
-            elif key == ord('d'):
-                cv2.destroyAllWindows()
+      
+        cv2.imshow("output", np.hstack([color]))
+        if cv2.waitKey(1) == 27:
+            cv2.destroyAllWindows()
+            exit(0)
+            
+def blobDetector():
+        # Read the image
+        # cam = camera.RealSenseCamera(1280,720) 
+        im = cv2.imread("/home/nvidia/Downloads/photos/PXL_20230919_032555846.jpg", 0)
+        # Setup BlobDetector
+        detector = cv2.SimpleBlobDetector_create()
+        params = cv2.SimpleBlobDetector_Params()
+            
+        # Filter by Area.
+        # params.filterByArea = True
+        # params.minArea = 30
+        # params.maxArea = 40000
+            
+        # Filter by Circularity
+        params.filterByCircularity = True
+        params.minCircularity = 0.9
+        
+        # Filter by Convexity
+        params.filterByConvexity = True
+        params.minConvexity = 0.87
+            
+        # Filter by Inertia
+        params.filterByInertia = True
+        params.minInertiaRatio = 0.8
 
+        # Distance Between Blobs
+        # params.minDistBetweenBlobs = 200
+            
+        # Create a detector with the parameters
+        detector = cv2.SimpleBlobDetector_create(params)
+
+        
+        overlay = im.copy()
+
+        keypoints = detector.detect(im)
+        for k in keypoints:
+            cv2.circle(overlay, (int(k.pt[0]), int(k.pt[1])), int(k.size/2), (0, 0, 255), -1)
+            cv2.line(overlay, (int(k.pt[0])-20, int(k.pt[1])), (int(k.pt[0])+20, int(k.pt[1])), (0,0,0), 3)
+            cv2.line(overlay, (int(k.pt[0]), int(k.pt[1])-20), (int(k.pt[0]), int(k.pt[1])+20), (0,0,0), 3)
+
+        opacity = 0.5
+        cv2.addWeighted(overlay, opacity, im, 1 - opacity, 0, im)
+
+        # Uncomment to resize to fit output window if needed
+        im = cv2.resize(im, None,fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
+
+        cv2.imshow("Output", im)
+
+        if cv2.waitKey(1) == 27:
+           cv2.destroyAllWindows()
+           exit(0)
+
+        # while True:
+            # image = cam.read()[0]
+            # # Convert the image to grayscale
+            # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            # # Initialize the blob detector
+            # params = cv2.SimpleBlobDetector_Params()
+
+            # # Set blob detection parameters
+            # params.filterByColor = True
+            # params.blobColor = 255
+            # params.minThreshold = 127    # Minimum threshold value to consider a pixel as part of a blob
+            # params.maxThreshold = 200   # Maximum threshold value
+            # params.filterByArea = True  # Filter blobs by area
+            # params.minArea = 30       # Minimum blob area in pixels
+            # params.filterByCircularity = True  # Filter blobs by circularity
+            # params.minCircularity = 0.8      # Minimum circularity
+            # params.filterByConvexity = True   # Filter blobs by convexity
+            # params.minConvexity = 0.87       # Minimum convexity
+            # params.filterByInertia = True    # Filter blobs by inertia
+            # params.minInertiaRatio = 0.01   # Minimum inertia ratio
+
+            # # Create the blob detector with the specified parameters
+            # detector = cv2.SimpleBlobDetector_create(params)
+
+            # # Detect blobs in the image
+            # keypoints = detector.detect(gray)
+
+            # # Draw detected blobs on the image
+            # result_image = cv2.drawKeypoints(image, keypoints, np.array([]), (0, 0, 255),
+            #                                 cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+            # # Display the original image with detected blobs
+            # cv2.imshow('Blob Detection', result_image)
+            # if cv2.waitKey(1) == 27:
+            #     cv2.destroyAllWindows()
+            #     exit(0)
+
+            # Read image
             
 
+
+if __name__ == "__main__":
+    detectCirclesAlgo1()
+    # while True:
+    #     blobDetector()
+
+  

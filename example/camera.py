@@ -174,7 +174,7 @@ class RealSenseCamera:
                            quad_decimate=1.0,
                            quad_sigma=0.0,
                            refine_edges=1,
-                           decode_sharpening=1,
+                           decode_sharpening=1.2,
                            debug=0)
     camera_params = self.getCameraParams()
     # detect the tag and get the pose
@@ -189,7 +189,7 @@ class RealSenseCamera:
       cv2.cvtColor(self.filtered_color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size)
       found_tag = False
       for tag in tags:
-        if tag.decision_margin < 50: 
+        if tag.decision_margin < 90: 
           continue
         found_tag = True
 
