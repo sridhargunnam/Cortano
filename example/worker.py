@@ -1,15 +1,49 @@
-from cortano import VexCortex, lan
-from cortano import RealsenseCamera
+from vex_serial import VexCortex
+import camera
+import time
 
-if __name__ == "__main__":
-  cam = RealsenseCamera()
-  robot = VexCortex("/dev/ttyUSB0")
-  lan.control(robot)
-  lan.start("robot", frame_shape=(360, 640))
+from enum import Enum
+class clawAction(Enum):
+  Open = 1
+  Close = -1
 
-  while robot.running():
-    color, depth = cam.read()
-    lan.set_frame(color, depth)
-    lan.check_alive()
+robot = VexCortex("/dev/ttyUSB0")
 
-  lan.stop()
+def drive_forward(robot, value, drive_time=1, left_motor=0, right_motor=9):
+  motor_values = robot.motor
+  left_drive = 1
+  right_drive = -1
+  motor_values[left_motor] = left_drive * value
+  motor_values[right_motor] = right_drive * value
+  robot.motors(motor_values)
+  time.sleep(drive_time)
+  stop_drive(robot)
+
+def drive_backward(robot, value, drive_time=1, left_motor=0, right_motor=9):
+  motor_values = robot.motor
+  left_drive = -1
+  right_drive = 1
+  motor_values[left_motor] = left_drive * value
+  motor_values[right_motor] = right_drive * value
+  time.sleep(drive_time)
+  stop_drive(robot)
+
+def stop_drive(robot):
+  motor_values = 10*[0]
+  robot.motors(motor_values)
+
+
+
+def claw(robot, value, action = clawAction.Close, claw_motor=1):
+  motor_values = robot.motor
+  if action == clawAction.close:
+    motor_values[claw_motor] = -1 * value
+  else:
+    motor_values[claw_motor] = -1 * value
+  robot.motors(motor_values)
+  stop_drive()
+
+if robot.running():
+  drive_backward(robot,30)
+  stop_drive(robot)
+
