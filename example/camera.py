@@ -101,7 +101,13 @@ class RealSenseCamera:
     if self.pipeline:
       self.pipeline.stop()
       self.pipeline = None
-      cv2.destroyAllWindows()
+      # delete cv2 window if it exists
+      try:
+        cv2.destroyAllWindows()
+      except:
+        pass
+
+
 
   def read(self, scale=False): # will also store in buffer to be read
     ret, color, depth = self.capture()
@@ -334,7 +340,6 @@ def update_robot_goto(robot, state, goal):
     # turn in place
     robot.motor[0] = 127 if theta > 0 else -127
     robot.motor[9] = 127 if theta > 0 else -127
-
   # if the robot is close to the goal position, but if there is a large angle difference
   # then the robot should turn in place
   # TODO: tune the parameters to fix the bug. The bug is that the robot will not turn in place when the position is close to the goal. 
@@ -342,14 +347,31 @@ def update_robot_goto(robot, state, goal):
     robot.motor[0] = 127 if theta > 0 else -127
     robot.motor[9] = 127 if theta > 0 else -127
   
+def rotateRobot(robot, seconds, dir, speed):
+  robot.motor[0] = speed * dir#if theta > 0 else -127
+  robot.motor[9] = speed * dir #if theta > 0 else -127
+  time.sleep(seconds)
+  robot.motor[0] = 0 #if theta > 0 else -127
+  robot.motor[9] = 0 #if theta > 0 else -127
 
-#####################################################################################
 
-# if the file is run directly
-if __name__ == "__main__":
-  cam = RealSenseCamera(1280, 720, True)
-  # cam.resetCamera(1280, 720)
-  robot = VexCortex("/dev/ttyUSB0")
+def testRotate(robot, rot_speed=40, rot_time=5):
+  rot_dir  = 1
+  rotateRobot(robot, rot_time, rot_dir, rot_speed)
+  time.sleep(0.5)
+  rotateRobot(robot, rot_time, -rot_dir, rot_speed)
+  time.sleep(0.5)
+
+
+
+def testAngle(robot):
+    # goal_pos = np.random.rand(2) * 50
+    # goal angle between -180 and 180
+    goal_angle = np.random.rand() * 360 - 180
+    update_robot_goto(x, y, goal_angle)
+    update_robot_goto(x, y, -goal_angle)
+
+def testTransulateAlongY(robot, cam):
   set_Y = 200
   numOfIterations = 50
   # while True:
@@ -369,3 +391,15 @@ if __name__ == "__main__":
       else:
         drive_backward(robot,30)
         stop_drive(robot)
+#####################################################################################
+
+# if the file is run directly
+if __name__ == "__main__":
+  cam = RealSenseCamera(1280, 720, True)
+  # cam.resetCamera(1280, 720)
+  robot = VexCortex("/dev/ttyUSB0")
+  # testTransulateAlongY(robot, cam)
+
+testRotate(robot)
+robot.motor[0] = 0 #if theta > 0 else -127
+robot.motor[9] = 0 #if theta > 0 else -127
