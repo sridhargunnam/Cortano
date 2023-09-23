@@ -1,2 +1,28 @@
 # FIXME 1 
 # Desc: plt and imshow doesn't work together in the way I coded it up
+
+#FIXME 2
+# Running into segmentation fault during the first run
+# When I re-run It throuws following error.
+profile = self.pipeline.start(config)
+RuntimeError: xioctl(VIDIOC_S_FMT) failed, errno=16 Last Error: Device or resource busy
+Exception ignored in: <function RealSenseCamera.__del__ at 0xffff74358040>
+
+# After ressetting the camera it works but throuws the following error
+rocess Process-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/nvidia/wsp/clawbot/Cortano/example/vex_serial.py", line 125, in _serial_worker
+    rx, rxbuf = _receive_data(connection, rxbuf)
+  File "/home/nvidia/wsp/clawbot/Cortano/example/vex_serial.py", line 97, in _receive_data
+    buf = connection.read_all()
+  File "/home/nvidia/wsp/clawbot/clawbot/lib/python3.8/site-packages/serial/serialutil.py", line 652, in read_all
+    return self.read(self.in_waiting)
+  File "/home/nvidia/wsp/clawbot/clawbot/lib/python3.8/site-packages/serial/serialposix.py", line 595, in read
+    raise SerialException(
+serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)
+Tag ID:  0
+Tag y distance:  [199.98918677]

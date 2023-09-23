@@ -51,8 +51,8 @@ def find_path(objmap, state, goaltag):
 
   return None
 
-if __name__ == "__main__":
-  # robot = RemoteInterface("...")
+def simulate():
+# robot = RemoteInterface("...")
   robot = SimInterface()
 
   objective_map = np.zeros((144, 144), np.uint8)
@@ -69,3 +69,7 @@ if __name__ == "__main__":
     path = find_path(objective_map, (x, y, theta), 1)
     goal = path[min(5, len(path)-1)] # get 5 steps ahead
     update_robot_goto(robot, (x, y, theta), goal)
+
+
+if __name__ == "__main__":
+  simulate()  

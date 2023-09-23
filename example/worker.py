@@ -44,6 +44,6 @@ def claw(robot, value, action = clawAction.Close, claw_motor=1):
   stop_drive()
 
 if robot.running():
-  drive_backward(robot,30)
+  drive_backward(robot,60)
   stop_drive(robot)
 
