@@ -16,7 +16,18 @@ align = rs.align(rs.stream.color)
 pipeline.start(config)
 
 '''Use the accelerometer and gyroscope data to calculate the pose of the camera'''
+# Let's assume the camera is at rest on a flat surface. The acceleration due to gravity is 9.8 m/s^2
+# The camera is at an angle to the ground, so the acceleration due to gravity is not 9.8 m/s^2.
+# Use the acceleration data to calculate the angle of the camera.
+# https://www.nxp.com/docs/en/application-note/AN3461.pdf
+# https://www.nxp.com/docs/en/application-note/AN3463.pdf
+# Calculate the angle of the camera in degrees
+angle = math.atan2(accel_data.y, accel_data.z) * 180 / math.pi
+print(f"Angle: {angle}")
 
+
+
+    
 
 
 
