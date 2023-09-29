@@ -112,8 +112,8 @@ class RealSenseCamera:
   def read(self, scale=False): # will also store in buffer to be read
     ret, color, depth = self.capture()
     if not ret:
-      return np.zeros((self.height, self.width, 3), dtype=np.uint8), \
-             np.zeros((self.height, self.width), dtype=np.float32)
+      return None, None #np.zeros((self.height, self.width, 3), dtype=np.uint8), \
+            #  np.zeros((self.height, self.width), dtype=np.float32)
     if scale:
       depth = depth.astype(np.float32) * self.depth_scale
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
@@ -181,6 +181,9 @@ class RealSenseCamera:
         self.filtered_color = color    # TODO vairable cleanup 
       elif input_type == "filtered_color":
         self.getFilteredColorBasedOnDepth()
+      # check if the coloe image is valid
+      if self.filtered_color is None:
+        continue
       tags = at_detector.detect(
       cv2.cvtColor(self.filtered_color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size)
       if specified_tag != 255:
@@ -400,6 +403,6 @@ if __name__ == "__main__":
   robot = VexCortex("/dev/ttyUSB0")
   # testTransulateAlongY(robot, cam)
 
-testRotate(robot)
-robot.motor[0] = 0 #if theta > 0 else -127
-robot.motor[9] = 0 #if theta > 0 else -127
+# testRotate(robot)
+# robot.motor[0] = 0 #if theta > 0 else -127
+# robot.motor[9] = 0 #if theta > 0 else -127

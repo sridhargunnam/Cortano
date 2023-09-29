@@ -92,15 +92,9 @@ def calculateRobotPose(tag_pose, tag_id, tag_orientation):
 if __name__ == "__main__":
   # robot = RemoteInterface("...")
   cam = camera.RealSenseCamera()
-
   prev_rgbd_image = None
   option = open3d.pipelines.odometry.OdometryOption()
-  # Intel Realsense D415 Intrinsic Parameters
-  # fx = 460.92495728   # FOV(x) -> depth2xyz -> focal length (x)
-  # fy = 460.85058594   # FOV(y) -> depth2xyz -> focal length (y)
-  # cx = 315.10949707   # 640 (width) 320
-  # cy = 176.72598267   # height (height) 180
-  camera_params = cam.getCameraParams() #( fx, fy, cx, cy )
+  camera_params = cam.getCameraParams()
   fx = camera_params[0]
   fy = camera_params[1]
   cx = camera_params[2]
@@ -108,8 +102,6 @@ if __name__ == "__main__":
   width = camera_params[4]
   height = camera_params[5]
   depth_scale = camera_params[6]
-
-
   cam_intrinsic_params = open3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
   at_detector = Detector(families='tag16h5',
                         nthreads=1,
@@ -118,46 +110,37 @@ if __name__ == "__main__":
                         refine_edges=1,
                         decode_sharpening=1,
                         debug=0)
-
   global_T = np.identity(4)
   # while robot.running():
+  totalTagPoses = 0
+  totalSlamPoses = 0
+  st = datetime.now() 
   while True:
     dt = datetime.now()
     # color, depth, sensor = robot.read()
     color, depth = cam.read()
-
     # filter the depth image so that noise is removed
     depth = depth.astype(np.float32) / 1000.
     mask = np.bitwise_and(depth > 0.1, depth < 3.0) # -> valid depth points
     filtered_depth = np.where(mask, depth, 0)
-
     # converting to Open3D's format so we can do odometry
     o3d_color = open3d.geometry.Image(color)
     o3d_depth = open3d.geometry.Image(filtered_depth)
     o3d_rgbd  = open3d.geometry.RGBDImage.create_from_color_and_depth(o3d_color, o3d_depth)
-
     # OPtimization note : check for tag only when you except to see a tag in fov 
-    tags = at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=7)
     found_tag = False
-    for tag in tags:
-        if tag.decision_margin < 50: 
-           continue
-        found_tag = True
-        global_T = get_pose(tag.pose_R, tag.pose_t) # use your get_pose algorithm here!
-      # print the tag pose, tag id, etc well formatted
-        # print("Tag Family: ", tag.tag_family)
-        # print("Tag ID: ", tag.tag_id)
-        # print("Tag Hamming Distance: ", tag.hamming)
-        # print("Tag Decision Margin: ", tag.decision_margin)
-        # print("Tag Homography: ", tag.homography)
-        # print("Tag Center: ", tag.center)
-        # print("Tag Corners: ", tag.corners)
-        # print("Tag Pose: ", tag.pose_R, tag.pose_t)
-        # print("Tag Pose Error: ", tag.pose_err)
-        # print("Tag Size: ", tag.tag_size)
-
-      
+    # tags = at_detector.detect(
+    #   cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=7.62)
+    tags = cam.getTagPose(tag_size=7.62)
+    if tags is not None:
+      for tag in tags:
+          if tag.decision_margin < 150: 
+            continue
+          found_tag = True
+          global_T = get_pose(tag.pose_R, tag.pose_t) # use your get_pose algorithm here!
+          totalTagPoses += 1
+          break
+    
     if not found_tag and prev_rgbd_image is not None: # use RGBD odometry relative transform to estimate pose
       T = np.identity(4)
       ret, T, _ = open3d.pipelines.odometry.compute_rgbd_odometry(
@@ -165,18 +148,23 @@ if __name__ == "__main__":
         open3d.pipelines.odometry.RGBDOdometryJacobianFromHybridTerm(), option)
       global_T = global_T.dot(T)
       rotation = global_T[:3,:3]
-      print("Rotation: ", R.from_matrix(rotation).as_rotvec(degrees=True))
-
+      # print("Rotation: ", R.from_matrix(rotation).as_rotvec(degrees=True))
+      totalSlamPoses += 1
     prev_rgbd_image = o3d_rgbd # we forgot this last time!
 
     # dont need this, but helpful to visualize
     filtered_color = np.where(np.tile(mask.reshape(height, width, 1), (1, 1, 3)), color, 0)
     cv2.imshow("color", filtered_color)
     if cv2.waitKey(1) == 27:
+      et = datetime.now() 
+      tt = (et-st).total_seconds()
+      print("total time = ", tt)
+      print("totalTagPoses", totalTagPoses)
+      print("totalSlamPoses", totalSlamPoses)
+      print("fps = ", ( (totalTagPoses + totalSlamPoses) / tt ) )
       exit(0)
-
-    process_time = datetime.now() - dt
-    print("FPS: " + str(1 / process_time.total_seconds()))
+    # process_time = datetime.now() - dt
+    # print("FPS: " + str(1 / process_time.total_seconds()))
 
     # Use custom_draw_geometry_with_camera_trajectory to visualize the camera trajectory
     # and geometry. Press 'Q' to exit.

@@ -11,10 +11,8 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 align = rs.align(rs.stream.color)
 
-
 # Start the pipeline
 pipeline.start(config)
-
 '''Use the accelerometer and gyroscope data to calculate the pose of the camera'''
 # Let's assume the camera is at rest on a flat surface. The acceleration due to gravity is 9.8 m/s^2
 # The camera is at an angle to the ground, so the acceleration due to gravity is not 9.8 m/s^2.
@@ -23,17 +21,7 @@ pipeline.start(config)
 # https://www.nxp.com/docs/en/application-note/AN3463.pdf
 # Calculate the angle of the camera in degrees
 angle = math.atan2(accel_data.y, accel_data.z) * 180 / math.pi
-print(f"Angle: {angle}")
-
-
-
-    
-
-
-
-    
-
-        
+print(f"Angle: {angle}")        
 try:
     prev_time = time.time()
     while True:
