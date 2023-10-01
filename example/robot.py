@@ -5,6 +5,7 @@ from torchvision import transforms
 from PIL import Image
 import torch
 import numpy as np
+import cv2
 
 # labels are from here (COCO): https://gist.github.com/tersekmatija/9d00c4683d52d94cf348acae29e8db1a
 
