@@ -273,11 +273,80 @@ class RealSenseCamera:
     color, depth = self.read()
     return color
 
+  def calibrateCameraWrtLandMark(self,tag_size=5, viz=False):
+    # make 4 * 4 transformation matrix
+    T = np.eye(4)
+    camera_params = self.getCameraParams()
+    at_detector = Detector(families='tag16h5',
+                          nthreads=1,
+                          quad_decimate=1.0,
+                          quad_sigma=0.0,
+                          refine_edges=1,
+                          decode_sharpening=1,
+                          debug=0)
+    # detect the tag and get the pose
+    count = 0
+    while True:
+      count += 1
+      color, depth = self.read()
+      tags = at_detector.detect(
+        cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=tag_size)
+      found_tag = False
+      for tag in tags:
+          if tag.decision_margin < 50: 
+            continue
+          found_tag = True
+          if tag.tag_id != 0:
+            continue
+          # print("Tag ID: ", tag.tag_id)
+          # print("Tag Pose: ", tag.pose_R, tag.pose_t)
+          R = tag.pose_R
+          t = tag.pose_t
+          T[0:3, 0:3] = R
+          T[0:3, 3] = t.ravel()
+          # print("Tag Pose Error: ", tag.pose_err)
+          # print("Tag Size: ", tag.tag_size)
+      if not viz:
+        if count > 10:
+          return T
+        else:
+          continue
+      else:
+        print(T)
+        if not found_tag:
+          cv2.imshow("color", color)
+          if cv2.waitKey(1) == 27:
+            cv2.destroyAllWindows()
+            exit(0)
+          continue
+        for tag in tags:
+            if tag.tag_id != 0:
+                continue
+            if tag.decision_margin < 50:
+                continue
+            font_scale = 0.5  # Adjust this value for a smaller font size
+            font_color = (0, 255, 0)
+            font_thickness = 2
+            text_offset_y = 30  # Vertical offset between text lines
+            # Display tag ID
+            cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            # Display only the 1 most significant digit for pose_R and pose_t
+            pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
+            pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+            cv2.putText(color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        cv2.imshow("color", color)
+        if cv2.waitKey(1) == 27:
+          cv2.destroyAllWindows()
+          exit(0)
+
   def calibrateCameraWrtRobot(self,tag_size=5):
       #TransformationLandMarkToRobot 
+      # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
       self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
       #TransformationLmToCamera 
-      self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
+      # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
+      self.L2C= self.calibrateCameraWrtLandMark(tag_size=5, viz=False)
       return  np.linalg.inv(self.L2C) @ self.L2R
 
   def getDistance(self) :#, C2R, L2C):
@@ -399,6 +468,7 @@ def testTransulateAlongY(robot, cam):
 # if the file is run directly
 if __name__ == "__main__":
   cam = RealSenseCamera(1280, 720, True)
+  #print(cam.calibrateCameraWrtLandMark(tag_size=5, viz=True))
   # cam.resetCamera(1280, 720)
   robot = VexCortex("/dev/ttyUSB0")
   # testTransulateAlongY(robot, cam)

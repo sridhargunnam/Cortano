@@ -1,3 +1,4 @@
+# this file can be delteted. It is just for testing the apriltag detection
 import camera
 import cv2
 import numpy as np
@@ -17,28 +18,37 @@ if __name__ == "__main__":
                         debug=0)
   
   # detect the tag and get the pose
+  tag_size = 5 # centimeters
   while True:
     dt = datetime.now()
     color, depth = cam.read()
     
     tags = at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], 1)
+      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size)
     found_tag = False
     for tag in tags:
         if tag.decision_margin < 50: 
            continue
         found_tag = True
+        if tag.tag_id != 0:
+           continue
       # print the tag pose, tag id, etc well formatted
-        print("Tag Family: ", tag.tag_family)
+        # print("Tag Family: ", tag.tag_family)
         print("Tag ID: ", tag.tag_id)
-        print("Tag Hamming Distance: ", tag.hamming)
-        print("Tag Decision Margin: ", tag.decision_margin)
-        print("Tag Homography: ", tag.homography)
-        print("Tag Center: ", tag.center)
-        print("Tag Corners: ", tag.corners)
+        # print("Tag Hamming Distance: ", tag.hamming)
+        # print("Tag Decision Margin: ", tag.decision_margin)
+        # print("Tag Homography: ", tag.homography)
+        # print("Tag Center: ", tag.center)
+        # print("Tag Corners: ", tag.corners)
         print("Tag Pose: ", tag.pose_R, tag.pose_t)
-        print("Tag Pose Error: ", tag.pose_err)
-        print("Tag Size: ", tag.tag_size)
+        R = tag.pose_R
+        t = tag.pose_t
+        # make 4 * 4 transformation matrix
+        T = np.eye(4)
+        T[0:3, 0:3] = R
+        T[0:3, 3] = t.ravel()
+        # print("Tag Pose Error: ", tag.pose_err)
+        # print("Tag Size: ", tag.tag_size)
 
 
     if not found_tag:
@@ -59,6 +69,8 @@ if __name__ == "__main__":
     print("Time to detect tag: ", datetime.now() - dt)
 
     for tag in tags:
+        if tag.tag_id != 0:
+            continue
         if tag.decision_margin < 50:
             continue
         font_scale = 0.5  # Adjust this value for a smaller font size
