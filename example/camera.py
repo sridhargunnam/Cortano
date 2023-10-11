@@ -70,7 +70,7 @@ class RealSenseCamera:
     except:
       print("No realsense camera found, or failed to reset.")
 
-  def getCameraParams(self):
+  def getCameraIntrinsics(self):
     return (self.fx, self.fy, self.cx, self.cy, self.width, self.height, self.depth_scale)
   
   def capture(self) -> Tuple[bool, np.ndarray, np.ndarray]:
@@ -173,7 +173,7 @@ class RealSenseCamera:
                            refine_edges=1,
                            decode_sharpening=1.2,
                            debug=0)
-    camera_params = self.getCameraParams()
+    camera_params = self.getCameraIntrinsics()
     # detect the tag and get the pose
     while True:
       if input_type == "color":
@@ -276,7 +276,7 @@ class RealSenseCamera:
   def calibrateCameraWrtLandMark(self,tag_size=5, viz=False):
     # make 4 * 4 transformation matrix
     T = np.eye(4)
-    camera_params = self.getCameraParams()
+    camera_params = self.getCameraIntrinsics()
     at_detector = Detector(families='tag16h5',
                           nthreads=1,
                           quad_decimate=1.0,
@@ -312,6 +312,7 @@ class RealSenseCamera:
         else:
           continue
       else:
+        np.set_printoptions(precision=2, suppress=True)
         print(T)
         if not found_tag:
           cv2.imshow("color", color)
@@ -326,15 +327,21 @@ class RealSenseCamera:
                 continue
             font_scale = 0.5  # Adjust this value for a smaller font size
             font_color = (0, 255, 0)
+            font_colorR = (0, 0, 255)
             font_thickness = 2
             text_offset_y = 30  # Vertical offset between text lines
             # Display tag ID
             cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
             # Display only the 1 most significant digit for pose_R and pose_t
-            pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
-            pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+            # pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
+            pose_tx_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+            pose_ty_single_digit = np.round(tag.pose_t[1], 1)  # Round to 1 decimal place
+            pose_tz_single_digit = np.round(tag.pose_t[2], 1)  # Round to 1 decimal place
+            # create a string for the pose T  and R
+            pose_t_single_digit = np.array2string(tag.pose_t, formatter={'float_kind':lambda x: "%.1f" % x})
+            pose_R_single_digit = np.array2string(tag.pose_R, formatter={'float_kind':lambda x: "%.1f" % x})
             cv2.putText(color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_colorR, font_thickness, cv2.LINE_AA)
         cv2.imshow("color", color)
         if cv2.waitKey(1) == 27:
           cv2.destroyAllWindows()
@@ -346,7 +353,7 @@ class RealSenseCamera:
       self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
       #TransformationLmToCamera 
       # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
-      self.L2C= self.calibrateCameraWrtLandMark(tag_size=5, viz=False)
+      self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
       return  np.linalg.inv(self.L2C) @ self.L2R
 
   def getDistance(self) :#, C2R, L2C):
@@ -465,12 +472,218 @@ def testTransulateAlongY(robot, cam):
         stop_drive(robot)
 #####################################################################################
 
+    
+class CalibrateCamera:
+ def __init__(self, cam):
+    self.camera_params = [cam.fx, cam.fy, cam.cx, cam.cy, cam.width, cam.height]
+    self.cam = cam
+    return
+ def calibrateCameraWrtLandMark(self,tag_size=5, viz=False):
+    # make 4 * 4 transformation matrix
+    T = np.eye(4)
+    at_detector = Detector(families='tag16h5',
+                          nthreads=1,
+                          quad_decimate=1.0,
+                          quad_sigma=0.0,
+                          refine_edges=1,
+                          decode_sharpening=1,
+                          debug=0)
+    # detect the tag and get the pose
+    count = 0
+    while True:
+      count += 1
+      self.color, depth = self.cam.read()
+      tags = at_detector.detect(
+        cv2.cvtColor(self.color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size=tag_size)
+      found_tag = False
+      for tag in tags:
+          if tag.decision_margin < 50: 
+            continue
+          found_tag = True
+          if tag.tag_id != 0:
+            continue
+          # print("Tag ID: ", tag.tag_id)
+          # print("Tag Pose: ", tag.pose_R, tag.pose_t)
+          R = tag.pose_R
+          t = tag.pose_t
+          T[0:3, 0:3] = R
+          T[0:3, 3] = t.ravel()
+          # print("Tag Pose Error: ", tag.pose_err)
+          # print("Tag Size: ", tag.tag_size)
+      if not viz:
+        if count > 10:
+          return T
+        else:
+          continue
+      else:
+        np.set_printoptions(precision=2, suppress=True)
+        print(T)
+        if not found_tag:
+          cv2.imshow("color", self.color)
+          if cv2.waitKey(1) == 27:
+            cv2.destroyAllWindows()
+            exit(0)
+          continue
+        for tag in tags:
+            if tag.tag_id != 0:
+                continue
+            if tag.decision_margin < 50:
+                continue
+            font_scale = 0.5  # Adjust this value for a smaller font size
+            font_color = (0, 255, 0)
+            font_thickness = 2
+            text_offset_y = 30  # Vertical offset between text lines
+            # Display tag ID
+            cv2.putText(self.color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            # Display only the 1 most significant digit for pose_R and pose_t
+            pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
+            pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+            cv2.putText(self.color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(self.color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        cv2.imshow("color", self.color)
+        if cv2.waitKey(1) == 27:
+          cv2.destroyAllWindows()
+          exit(0)
+        
+import cv2
+import depthai as dai
+import sys
+from pathlib import Path
+
+class DepthAICamera:
+  def __init__(self, width=1280, height=720, debug_mode=True):
+    self.debug_mode = debug_mode
+    self.initCamera(width, height)
+
+  def initCamera(self, width, height):
+    self.camera_params = self.getCameraIntrinsics()
+    self.width = width
+    self.height = height
+    # Create pipeline
+    self.pipeline = dai.Pipeline()
+    # Define source and output
+    self.camRgb = self.pipeline.create(dai.node.ColorCamera)
+    self.camRgb.setPreviewSize(width, height)
+    self.camRgb.initialControl.setManualFocus(130)
+
+    self.xoutRgb = self.pipeline.create(dai.node.XLinkOut)
+    self.xoutRgb.setStreamName("rgb")
+    self.camRgb.preview.link(self.xoutRgb.input)
+
+    # self.camLeft = self.pipeline.create(dai.node.MonoCamera)
+    # self.camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+    # self.camLeft.setCamera("left")
+
+    # self.xoutLeft = self.pipeline.create(dai.node.XLinkOut)
+    # self.xoutLeft.setStreamName("left")
+    # self.camLeft.out.link(self.xoutLeft.input)
+
+    # Connect to device and start pipeline
+    self.device = dai.Device(self.pipeline)
+    self.qRgb = self.device.getOutputQueue(name="rgb")
+    # self.qLeft = self.device.getOutputQueue(name="left")
+
+
+  def getCameraIntrinsics(self):
+    with dai.Device() as device:
+      calibFile = str((Path(__file__).parent / Path(f"calib_{device.getMxId()}.json")).resolve().absolute())
+      if len(sys.argv) > 1:
+          calibFile = sys.argv[1]
+
+      calibData = device.readCalibration()
+      calibData.eepromToJsonFile(calibFile)
+
+      M_rgb, width, height = calibData.getDefaultIntrinsics(dai.CameraBoardSocket.CAM_A)
+      self.cx = M_rgb[0][2]
+      self.cy = M_rgb[1][2]
+      self.fx = M_rgb[0][0]
+      self.fy = M_rgb[1][1]
+      if self.debug_mode:
+        print("OAKD-1 RGB Camera Default intrinsics...")
+        print(M_rgb)
+        print(width)
+        print(height)
+      return [self.fx, self.fy, self.cx, self.cy]
+
+  def read(self, scale=False): # will also store in buffer to be read
+    imgFrame = self.qRgb.get()
+    color_image = imgFrame.getCvFrame()
+    # imgFrame = self.qLeft.get()
+    # left_image = imgFrame.getCvFrame()
+    # if scale:
+    #   depth = depth.astype(np.float32) * self.depth_scale
+    # color = np.ascontiguousarray(np.flip(color, axis=-1))
+    return color_image, None
+  
+def vizDaicam():
+  # Create pipeline
+  pipeline = dai.Pipeline()
+  # Define source and output
+  camRgb = pipeline.create(dai.node.ColorCamera)
+  #set preview size to max possible resolution for this camera
+  camRgb.setPreviewSize(1280, 720)
+  # fix the focus so that we can get a clear image
+  camRgb.initialControl.setManualFocus(130)
+
+  xoutRgb = pipeline.create(dai.node.XLinkOut)
+  xoutRgb.setStreamName("rgb")
+  camRgb.preview.link(xoutRgb.input)
+
+  camLeft = pipeline.create(dai.node.MonoCamera)
+  camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+  camLeft.setCamera("left")
+
+  xoutLeft = pipeline.create(dai.node.XLinkOut)
+  xoutLeft.setStreamName("left")
+  camLeft.out.link(xoutLeft.input)
+
+  # Connect to device and start pipeline
+  with dai.Device(pipeline) as device:
+      qRgb = device.getOutputQueue(name="rgb")
+      qLeft = device.getOutputQueue(name="left")
+    
+      while True:
+          txt = ""
+          for q in [qRgb, qLeft]:
+              imgFrame = q.get()
+              name = q.getName()
+              txt += f"[{name}] Exposure: {imgFrame.getExposureTime().total_seconds()*1000:.3f} ms, "
+              txt += f"ISO: {imgFrame.getSensitivity()},"
+              txt += f" Lens position: {imgFrame.getLensPosition()},"
+              txt += f" Color temp: {imgFrame.getColorTemperature()} K   "
+              cv2.imshow(name, imgFrame.getCvFrame())
+          print(txt)
+          if cv2.waitKey(1) == ord('q'):
+              break
+
+  # def calibrateCameraWrtRobot(self,tag_size=5):
+  #     #TransformationLandMarkToRobot 
+  #     # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
+  #     self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
+  #     #TransformationLmToCamera 
+  #     # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
+  #     self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
+  #     return  np.linalg.inv(self.L2C) @ self.L2R
+
 # if the file is run directly
 if __name__ == "__main__":
-  cam = RealSenseCamera(1280, 720, True)
-  #print(cam.calibrateCameraWrtLandMark(tag_size=5, viz=True))
+  RScam = RealSenseCamera(1280, 720, True)
+  # RSCamToRobot =   RScam.calibrateCameraWrtRobot(tag_size=5)
+  # print only 2 decimal places, and no scientific notation
+  # np.set_printoptions(precision=2, suppress=True)
+  # print(RSCamToRobot)
+  camCalib = CalibrateCamera(RScam)
+  print(camCalib.calibrateCameraWrtLandMark(tag_size=5, viz=True))
+
+  # RScam.calibrateCameraWrtLandMark(tag_size=5, viz=True)
+  # with dai.Device() as device:
+  #   print(device.getConnectedCameraFeatures())
+  # vizDaicam()
+  daiCam = DepthAICamera()
+  camCalib = CalibrateCamera(daiCam)
+  print(camCalib.calibrateCameraWrtLandMark(tag_size=5, viz=True))
   # cam.resetCamera(1280, 720)
-  robot = VexCortex("/dev/ttyUSB0")
+  # robot = VexCortex("/dev/ttyUSB0")
   # testTransulateAlongY(robot, cam)
 
 # testRotate(robot)
