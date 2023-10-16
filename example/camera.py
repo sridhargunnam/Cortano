@@ -10,6 +10,12 @@ from datetime import datetime
 from pyapriltags import Detector
 from scipy.spatial.transform import Rotation as R
 
+#!/usr/bin/env python3
+
+#For tiny yolo
+from pathlib import Path
+import sys
+import depthai as dai
 
 '''
 #    Translation Vector: 0.00552000012248755  -0.00510000018402934  -0.011739999987185  
@@ -312,7 +318,7 @@ class RealSenseCamera:
         else:
           continue
       else:
-        np.set_printoptions(precision=2, suppress=True)
+        # np.set_printoptions(precision=2, suppress=True)
         print(T)
         if not found_tag:
           cv2.imshow("color", color)
@@ -478,6 +484,16 @@ class CalibrateCamera:
     self.camera_params = [cam.fx, cam.fy, cam.cx, cam.cy, cam.width, cam.height]
     self.cam = cam
     return
+ def calibrateCameraWrtRobot(self,tag_size=5):
+      #TransformationLandMarkToRobot 
+      # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
+      # self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
+      self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
+      #TransformationLmToCamera 
+      # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
+      self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
+      return  np.linalg.inv(self.L2C) @ self.L2R
+ 
  def calibrateCameraWrtLandMark(self,tag_size=5, viz=False):
     # make 4 * 4 transformation matrix
     T = np.eye(4)
@@ -516,13 +532,14 @@ class CalibrateCamera:
         else:
           continue
       else:
-        np.set_printoptions(precision=2, suppress=True)
-        print(T)
+        # np.set_printoptions(precision=2, suppress=True)
+        # print(T)
         if not found_tag:
           cv2.imshow("color", self.color)
           if cv2.waitKey(1) == 27:
             cv2.destroyAllWindows()
-            exit(0)
+            return T
+            # exit(0)
           continue
         for tag in tags:
             if tag.tag_id != 0:
@@ -543,48 +560,137 @@ class CalibrateCamera:
         cv2.imshow("color", self.color)
         if cv2.waitKey(1) == 27:
           cv2.destroyAllWindows()
-          exit(0)
-        
-import cv2
-import depthai as dai
-import sys
-from pathlib import Path
+          return T
+          # exit(0)
+
+
+
+
 
 class DepthAICamera:
-  def __init__(self, width=1280, height=720, debug_mode=True):
+  def __init__(self, width=1920, height=1080, object_detection=False, debug_mode=True):
     self.debug_mode = debug_mode
-    self.initCamera(width, height)
+    self.initCamera(width, height, object_detection)
 
-  def initCamera(self, width, height):
-    self.camera_params = self.getCameraIntrinsics()
-    self.width = width
-    self.height = height
+   
+
+  def initCamera(self, width, height, object_detection):
+    self.camera_params = self.getCameraIntrinsics(width, height)
     # Create pipeline
     self.pipeline = dai.Pipeline()
     # Define source and output
-    self.camRgb = self.pipeline.create(dai.node.ColorCamera)
-    self.camRgb.setPreviewSize(width, height)
-    self.camRgb.initialControl.setManualFocus(130)
+    if not object_detection:
+      self.camRgb = self.pipeline.create(dai.node.ColorCamera)
+      self.camRgb.setPreviewSize(width, height)
+      # self.camRgb.initialControl.setManualFocus(130)
 
-    self.xoutRgb = self.pipeline.create(dai.node.XLinkOut)
-    self.xoutRgb.setStreamName("rgb")
-    self.camRgb.preview.link(self.xoutRgb.input)
+      self.xoutRgb = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutRgb.setStreamName("rgb_default")
+      self.camRgb.preview.link(self.xoutRgb.input)
 
-    # self.camLeft = self.pipeline.create(dai.node.MonoCamera)
-    # self.camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-    # self.camLeft.setCamera("left")
+      # self.camLeft = self.pipeline.create(dai.node.MonoCamera)
+      # self.camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+      # self.camLeft.setCamera("left")
+      # self.xoutLeft = self.pipeline.create(dai.node.XLinkOut)
+      # self.xoutLeft.setStreamName("left")
+      # self.camLeft.out.link(self.xoutLeft.input)
 
-    # self.xoutLeft = self.pipeline.create(dai.node.XLinkOut)
-    # self.xoutLeft.setStreamName("left")
-    # self.camLeft.out.link(self.xoutLeft.input)
+      # Connect to device and start pipeline
+      self.device = dai.Device(self.pipeline)
+      self.qRgb = self.device.getOutputQueue(name="rgb_default")
+      # self.qLeft = self.device.getOutputQueue(name="left")
 
-    # Connect to device and start pipeline
-    self.device = dai.Device(self.pipeline)
-    self.qRgb = self.device.getOutputQueue(name="rgb")
-    # self.qLeft = self.device.getOutputQueue(name="left")
+      #warm up the camera to get rid of the first few frames that have low exposure
+      for i in range(10):
+        self.qRgb.get()
+    else:
+      self.labelMap = [
+    "person",         "bicycle",    "car",           "motorbike",     "aeroplane",   "bus",           "train",
+    "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",   "parking meter", "bench",
+    "bird",           "cat",        "dog",           "horse",         "sheep",       "cow",           "elephant",
+    "bear",           "zebra",      "giraffe",       "backpack",      "umbrella",    "handbag",       "tie",
+    "suitcase",       "frisbee",    "skis",          "snowboard",     "sports ball", "kite",          "baseball bat",
+    "baseball glove", "skateboard", "surfboard",     "tennis racket", "bottle",      "wine glass",    "cup",
+    "fork",           "knife",      "spoon",         "bowl",          "banana",      "apple",         "sandwich",
+    "orange",         "broccoli",   "carrot",        "hot dog",       "pizza",       "donut",         "cake",
+    "chair",          "sofa",       "pottedplant",   "bed",           "diningtable", "toilet",        "tvmonitor",
+    "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",  "microwave",     "oven",
+    "toaster",        "sink",       "refrigerator",  "book",          "clock",       "vase",          "scissors",
+    "teddy bear",     "hair drier", "toothbrush"
+    ]
+      self.syncNN = True
+      # Get argument first
+      self.nnBlobPath = str((Path(__file__).parent / Path('/home/nvidia/wsp/clawbot/depthai-python/examples/models/yolo-v4-tiny-tf_openvino_2021.4_6shave.blob')).resolve().absolute())
+      if not Path(self.nnBlobPath).exists():
+          raise FileNotFoundError(f'Required file/s not found, please run "{sys.executable} install_requirements.py"')
+      # Create pipeline
+      # Define sources and outputs
+      self.camRgb = self.pipeline.create(dai.node.ColorCamera)
+      spatialDetectionNetwork = self.pipeline.create(dai.node.YoloSpatialDetectionNetwork)
+      monoLeft = self.pipeline.create(dai.node.MonoCamera)
+      monoRight = self.pipeline.create(dai.node.MonoCamera)
+      stereo = self.pipeline.create(dai.node.StereoDepth)
+      nnNetworkOut = self.pipeline.create(dai.node.XLinkOut)
+
+      xoutRgb = self.pipeline.create(dai.node.XLinkOut)
+      xoutNN = self.pipeline.create(dai.node.XLinkOut)
+      xoutDepth = self.pipeline.create(dai.node.XLinkOut)
+
+      xoutRgb.setStreamName("rgb")
+      xoutNN.setStreamName("detections")
+      xoutDepth.setStreamName("depth")
+      nnNetworkOut.setStreamName("nnNetwork")
+
+      # Properties
+      self.camRgb.setPreviewSize(416, 416)
+      self.camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
+      self.camRgb.setInterleaved(False)
+      self.camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
+
+      monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+      monoLeft.setCamera("left")
+      monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+      monoRight.setCamera("right")
+
+      # setting node configs
+      stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+      # Align depth map to the perspective of RGB camera, on which inference is done
+      stereo.setDepthAlign(dai.CameraBoardSocket.CAM_A)
+      stereo.setOutputSize(monoLeft.getResolutionWidth(), monoLeft.getResolutionHeight())
+      stereo.setSubpixel(True)
+
+      spatialDetectionNetwork.setBlobPath(self.nnBlobPath)
+      spatialDetectionNetwork.setConfidenceThreshold(0.5)
+      spatialDetectionNetwork.input.setBlocking(False)
+      spatialDetectionNetwork.setBoundingBoxScaleFactor(0.5)
+      spatialDetectionNetwork.setDepthLowerThreshold(100)
+      spatialDetectionNetwork.setDepthUpperThreshold(5000)
+
+      # Yolo specific parameters
+      spatialDetectionNetwork.setNumClasses(80)
+      spatialDetectionNetwork.setCoordinateSize(4)
+      spatialDetectionNetwork.setAnchors([10,14, 23,27, 37,58, 81,82, 135,169, 344,319])
+      spatialDetectionNetwork.setAnchorMasks({ "side26": [1,2,3], "side13": [3,4,5] })
+      spatialDetectionNetwork.setIouThreshold(0.5)
+
+      # Linking
+      monoLeft.out.link(stereo.left)
+      monoRight.out.link(stereo.right)
+
+      self.camRgb.preview.link(spatialDetectionNetwork.input)
+      spatialDetectionNetwork.passthrough.link(xoutRgb.input)
+
+      spatialDetectionNetwork.out.link(xoutNN.input)
+
+      stereo.depth.link(spatialDetectionNetwork.inputDepth)
+      spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
+      spatialDetectionNetwork.outNetwork.link(nnNetworkOut.input)
 
 
-  def getCameraIntrinsics(self):
+
+  def getCameraIntrinsics(self, width, height):
+    self.width = width
+    self.height = height
     with dai.Device() as device:
       calibFile = str((Path(__file__).parent / Path(f"calib_{device.getMxId()}.json")).resolve().absolute())
       if len(sys.argv) > 1:
@@ -593,16 +699,18 @@ class DepthAICamera:
       calibData = device.readCalibration()
       calibData.eepromToJsonFile(calibFile)
 
-      M_rgb, width, height = calibData.getDefaultIntrinsics(dai.CameraBoardSocket.CAM_A)
-      self.cx = M_rgb[0][2]
-      self.cy = M_rgb[1][2]
-      self.fx = M_rgb[0][0]
-      self.fy = M_rgb[1][1]
+      M_rgb, wid, hgt = calibData.getDefaultIntrinsics(dai.CameraBoardSocket.CAM_A)
+      self.cx = M_rgb[0][2] * (self.width / wid)
+      self.cy = M_rgb[1][2] * (self.height / hgt)
+      self.fx = M_rgb[0][0] * (self.width / wid)
+      self.fy = M_rgb[1][1] * (self.height / hgt)
       if self.debug_mode:
         print("OAKD-1 RGB Camera Default intrinsics...")
         print(M_rgb)
-        print(width)
-        print(height)
+        print(wid)
+        print(hgt)
+      # assert wid == self.width and hgt == self.height
+
       return [self.fx, self.fy, self.cx, self.cy]
 
   def read(self, scale=False): # will also store in buffer to be read
@@ -614,6 +722,99 @@ class DepthAICamera:
     #   depth = depth.astype(np.float32) * self.depth_scale
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
     return color_image, None
+  
+  def runObjectDetection(self):
+    # Connect to device and start pipeline
+    with dai.Device(self.pipeline) as device:
+
+        # Output queues will be used to get the rgb frames and nn data from the outputs defined above
+        previewQueue = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
+        detectionNNQueue = device.getOutputQueue(name="detections", maxSize=4, blocking=False)
+        depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+        networkQueue = device.getOutputQueue(name="nnNetwork", maxSize=4, blocking=False);
+
+        startTime = time.monotonic()
+        counter = 0
+        fps = 0
+        color = (255, 255, 255)
+        printOutputLayersOnce = True
+
+        while True:
+            inPreview = previewQueue.get()
+            inDet = detectionNNQueue.get()
+            depth = depthQueue.get()
+            inNN = networkQueue.get()
+
+            if printOutputLayersOnce:
+                toPrint = 'Output layer names:'
+                for ten in inNN.getAllLayerNames():
+                    toPrint = f'{toPrint} {ten},'
+                print(toPrint)
+                printOutputLayersOnce = False;
+
+            frame = inPreview.getCvFrame()
+            depthFrame = depth.getFrame() # depthFrame values are in millimeters
+
+            depth_downscaled = depthFrame[::4]
+            min_depth = np.percentile(depth_downscaled[depth_downscaled != 0], 1)
+            max_depth = np.percentile(depth_downscaled, 99)
+            depthFrameColor = np.interp(depthFrame, (min_depth, max_depth), (0, 255)).astype(np.uint8)
+            depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
+
+            counter+=1
+            current_time = time.monotonic()
+            if (current_time - startTime) > 1 :
+                fps = counter / (current_time - startTime)
+                counter = 0
+                startTime = current_time
+
+            detections = inDet.detections
+
+            # If the frame is available, draw bounding boxes on it and show the frame
+            height = frame.shape[0]
+            width  = frame.shape[1]
+            for detection in detections:
+                # if label is not a sports ball or orange, continue
+                # get sports ball and orange label from labelMap
+                orage_label = self.labelMap.index("orange")
+                sports_ball_label = self.labelMap.index("sports ball")
+                if detection.label != sports_ball_label and detection.label != orage_label:
+                    continue
+                roiData = detection.boundingBoxMapping
+                roi = roiData.roi
+                roi = roi.denormalize(depthFrameColor.shape[1], depthFrameColor.shape[0])
+                topLeft = roi.topLeft()
+                bottomRight = roi.bottomRight()
+                xmin = int(topLeft.x)
+                ymin = int(topLeft.y)
+                xmax = int(bottomRight.x)
+                ymax = int(bottomRight.y)
+                cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, 1)
+
+                # Denormalize bounding box
+                x1 = int(detection.xmin * width)
+                x2 = int(detection.xmax * width)
+                y1 = int(detection.ymin * height)
+                y2 = int(detection.ymax * height)
+                try:
+                    label = self.labelMap[detection.label]
+                except:
+                    label = detection.label
+                cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
+
+            cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
+            cv2.imshow("depth", depthFrameColor)
+            cv2.imshow("rgb", frame)
+
+            if cv2.waitKey(1) == ord('q'):
+                break
+
   
 def vizDaicam():
   # Create pipeline
@@ -665,23 +866,45 @@ def vizDaicam():
   #     self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
   #     return  np.linalg.inv(self.L2C) @ self.L2R
 
+
+rsCam2Robot = np.array([
+ [ 9.94469395e-01,  8.00882118e-02,  6.79448348e-02, -1.87907316e+01],
+ [-5.13571977e-02, -1.93490083e-01,  9.79757126e-01,  6.56196051e+01],
+ [ 9.16136479e-02, -9.77827933e-01, -1.88306860e-01,  2.59744550e+01],
+ [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]
+ ])
+
+# rsCam2LandMark =
+# [[ 9.92912028e-01  1.09941141e-01  4.51514199e-02  1.47855808e+01]
+#  [-1.06699686e-01  9.91905905e-01 -6.88320647e-02  2.12833899e+00]
+#  [-5.23534358e-02  6.35265426e-02  9.96605988e-01  6.34547258e+01]
+#  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  1.00000000e+00]]
 # if the file is run directly
 if __name__ == "__main__":
-  RScam = RealSenseCamera(1280, 720, True)
-  # RSCamToRobot =   RScam.calibrateCameraWrtRobot(tag_size=5)
-  # print only 2 decimal places, and no scientific notation
-  # np.set_printoptions(precision=2, suppress=True)
-  # print(RSCamToRobot)
-  camCalib = CalibrateCamera(RScam)
-  print(camCalib.calibrateCameraWrtLandMark(tag_size=5, viz=True))
+  np.set_printoptions(precision=2, suppress=True)
+  # rsCam = RealSenseCamera(1280, 720)
+  # rsCamCalib = CalibrateCamera(rsCam)
+  # rsCam2LM  = rsCamCalib.calibrateCameraWrtLandMark(tag_size=7.62, viz=True)
+  # print("rsCam2LM = \n", rsCam2LM)
+  # rsCamToRobot =   rsCamCalib.calibrateCameraWrtRobot(tag_size=5)
+  # print("rsCamToRobot = \n", rsCamToRobot)
 
-  # RScam.calibrateCameraWrtLandMark(tag_size=5, viz=True)
-  # with dai.Device() as device:
-  #   print(device.getConnectedCameraFeatures())
-  # vizDaicam()
-  daiCam = DepthAICamera()
-  camCalib = CalibrateCamera(daiCam)
-  print(camCalib.calibrateCameraWrtLandMark(tag_size=5, viz=True))
+  object_detection = True
+  if not object_detection:
+    daiCam = DepthAICamera(1280,720, object_detection=False)
+    daiCamCalib = CalibrateCamera(daiCam)
+    daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=7.62, viz=True)
+    print("daiCam2LM = \n", daiCam2LM)
+    daiCamToRobot =   daiCamCalib.calibrateCameraWrtRobot(tag_size=5)
+    print("daiCamToRobot = \n", daiCamToRobot)
+  else:
+    daiCam = DepthAICamera(1280,720, object_detection=True)
+    daiCam.runObjectDetection()
+
+  # daiCam2Robot = daiCam2LM @ np.linalg.inv(rsCam2LM) @ rsCam2Robot
+
+  # print("daiCam2Robot = \n", daiCam2Robot)
+
   # cam.resetCamera(1280, 720)
   # robot = VexCortex("/dev/ttyUSB0")
   # testTransulateAlongY(robot, cam)
