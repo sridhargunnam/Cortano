@@ -478,30 +478,39 @@ def testTransulateAlongY(robot, cam):
         stop_drive(robot)
 #####################################################################################
 
+
+
+ 
+def TransformationInverse(T):
+   R = T[:3,:3]
+   Ri = R.T
+   t = T[:3,3:]
+   ti = Ri @ -t
+   Ti = np.eye(4)
+   Ti[:3,:3] = Ri
+   Ti[:3,3:] = ti
+   return Ti
     
 class CalibrateCamera:
  def __init__(self, cam):
     self.camera_params = [cam.fx, cam.fy, cam.cx, cam.cy, cam.width, cam.height]
     self.cam = cam
     return
+
  def getCamera2Robot(self,tag_size=5, tag_id=0, viz = False):
-      
       #TransformationLandMarkToRobot 
       # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
       if tag_size == 5:
         self.L2R = np.array([[1, 0, 0, 5], [0, -1, 0, -47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
       elif tag_size == 12.7:
-        # tag_x, tag_y wrt paper frame of reference
-        # tag_x  = 4.6 + (17.4-4.6)/2 - 10.795 # 0.205 ignore for now, assume tag is place at the center of the paper
-        tag_y = 8.1+(21.8-8.1)/2
-        self.L2R = np.array([[1, 0, 0, 0], [0, 0, -1, 55.88], [0, 1, 0, tag_y], [0, 0, 0, 1]])
-      print("L2R = \n", self.L2R)
-      #TransformationLmToCamera 
-      # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
-      self.C2L= self.calibrateCameraWrtLandMark(tag_size=tag_size, tag_id=tag_id, viz=viz)
-      print("np.linalg.inv(self.L2R) = \n", np.linalg.inv(self.L2R))
+        tag_y = (22.94 + 16.3) # 11 inch to 22.94 cm 
+        self.L2R = np.array([[1, 0, 0, 0], [0, -1, 0, tag_y], [0, 0, -1, 0], [0, 0, 0, 1]])
       print(" L2R = \n", self.L2R)
-      return  np.linalg.inv(self.L2R) @ np.linalg.inv(self.C2L)
+      self.C2L= self.calibrateCameraWrtLandMark(tag_size=tag_size, tag_id=tag_id, viz=viz)
+      print("self.C2L = \n", self.C2L)
+      # return  TransformationInverse(self.C2L @ self.L2R) 
+      return  (self.C2L @ self.L2R) 
+      # return  TransformationInverse(self.L2R @ self.C2L) 
  
  def calibrateCameraWrtLandMark(self,tag_size=5, tag_id=0, viz=False):
     # make 4 * 4 transformation matrix
@@ -515,6 +524,7 @@ class CalibrateCamera:
                           debug=0)
     # detect the tag and get the pose
     count = 0
+    print("self.camera_params[0:4] = ", self.camera_params[0:4])
     while True:
       count += 1
       self.color, depth = self.cam.read()
@@ -893,33 +903,45 @@ def vizDaicam():
 # if the file is run directly
 
 
-# SIZE_OF_CALIBRATION_TAG = 12.7 #cm
-SIZE_OF_CALIBRATION_TAG = 5 #cm
-if __name__ == "__main__":
+SIZE_OF_CALIBRATION_TAG = 12.7 #cm
+# SIZE_OF_CALIBRATION_TAG = 5 #cm
+
+def runCameraCalib():
   np.set_printoptions(precision=2, suppress=True)
   rsCam = RealSenseCamera(1280, 720)
   rsCamCalib = CalibrateCamera(rsCam)
-  rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=8,viz = True)
+  rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz = False)
   print("rsCamToRobot = \n", rsCamToRobot)
 
+  daiCam = DepthAICamera(1280,720, object_detection=False)
+  daiCamCalib = CalibrateCamera(daiCam)
+  # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+  # print("daiCam2LM = \n", daiCam2LM)
+  daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=False)
+  print("daiCamToRobot = \n", daiCamToRobot)
+  return rsCamToRobot, daiCamToRobot
 
+if __name__ == "__main__":
+  np.set_printoptions(precision=2, suppress=True)
+  if len(sys.argv) > 1:
+    if sys.argv[1] == "calib":
+      print("Running Camera Calibration")
+      rsCamToRobot, daiCamToRobot = runCameraCalib()
+      #save both the calibration matrices to a file "calib.txt" for later loading into np array
+      np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
+    else:
+      print("incorrect argument")
+  else:
+      # load the camera calibration matrices from the file "calib.txt"
+      calib = np.loadtxt("calib.txt", delimiter=",")
+      rsCamToRobot = calib[:4,:]
+      daiCamToRobot = calib[4:,:]
+      print("rsCamToRobot = \n", rsCamToRobot)
+      print("daiCamToRobot = \n", daiCamToRobot)
 
-  # # rsCam2LM  = rsCamCalib.calibrateCameraWrtLandMark(tag_size=7.62, viz=True)
-  # # print("rsCam2LM = \n", rsCam2LM)
-  # rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=5)
-  # print("rsCamToRobot = \n", rsCamToRobot)
-
-  # object_detection = True
-  # if not object_detection:
-  #   daiCam = DepthAICamera(1280,720, object_detection=False)
-  #   daiCamCalib = CalibrateCamera(daiCam)
-  #   daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=7.62, viz=True)
-  #   print("daiCam2LM = \n", daiCam2LM)
-  #   daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=5)
-  #   print("daiCamToRobot = \n", daiCamToRobot)
-  # else:
-  #   daiCam = DepthAICamera(1280,720, object_detection=True)
-  #   daiCam.runObjectDetection()
+  object_detection = True
+  daiCam = DepthAICamera(1280,720, object_detection=True)
+  daiCam.runObjectDetection()
 
   # daiCam2Robot = daiCam2LM @ np.linalg.inv(rsCam2LM) @ rsCam2Robot
 
@@ -932,3 +954,15 @@ if __name__ == "__main__":
 # testRotate(robot)
 # robot.motor[0] = 0 #if theta > 0 else -127
 # robot.motor[9] = 0 #if theta > 0 else -127
+
+# rsCamToRobot = 
+#  [[ 1.   -0.03 -0.07 12.89]
+#  [-0.08 -0.25 -0.96 15.03]
+#  [ 0.01  0.97 -0.26 16.34]
+#  [ 0.    0.    0.    1.  ]]
+
+# daiCamToRobot = 
+#  [[  1.    -0.04   0.04 -12.07]
+#  [  0.03  -0.2   -0.98  15.03]
+#  [  0.05   0.98  -0.2   11.9 ]
+#  [  0.     0.     0.     1.  ]]
