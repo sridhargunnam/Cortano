@@ -586,12 +586,13 @@ class CalibrateCamera:
 
 
 
-
-
 class DepthAICamera:
-  def __init__(self, width=1920, height=1080, object_detection=False, debug_mode=True):
+  def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=True):
     self.debug_mode = debug_mode
     self.initCamera(width, height, object_detection)
+    self.viz = viz
+    #Create a queue to store the timestamp of the frame, x,y,z position of the detected object, and the confidence score
+    # self.q = daiQueue
 
    
 
@@ -744,7 +745,7 @@ class DepthAICamera:
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
     return color_image, None
   
-  def runObjectDetection(self):
+  def runObjectDetection(self, daiQueue):
     # Connect to device and start pipeline
     with dai.Device(self.pipeline) as device:
 
@@ -754,13 +755,15 @@ class DepthAICamera:
         depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
         networkQueue = device.getOutputQueue(name="nnNetwork", maxSize=4, blocking=False);
 
+        globalTime = time.monotonic()
         startTime = time.monotonic()
         counter = 0
         fps = 0
         color = (255, 255, 255)
         printOutputLayersOnce = True
 
-        while True:
+        # while True:
+        if True:
             inPreview = previewQueue.get()
             inDet = detectionNNQueue.get()
             depth = depthQueue.get()
@@ -774,6 +777,8 @@ class DepthAICamera:
                 printOutputLayersOnce = False;
 
             frame = inPreview.getCvFrame()
+            # print(inPreview.getTimestamp())
+            # print(inPreview.getSequenceNum())
             depthFrame = depth.getFrame() # depthFrame values are in millimeters
 
             depth_downscaled = depthFrame[::4]
@@ -790,17 +795,36 @@ class DepthAICamera:
                 startTime = current_time
 
             detections = inDet.detections
-
             # If the frame is available, draw bounding boxes on it and show the frame
             height = frame.shape[0]
             width  = frame.shape[1]
+            count = 0
             for detection in detections:
+                if detection.confidence < 1:
+                    #print detection confidence
+                    continue
+                else:
+                   print("Confidence: " + str(detection.confidence))
                 # if label is not a sports ball or orange, continue
                 # get sports ball and orange label from labelMap
                 orage_label = self.labelMap.index("orange")
                 sports_ball_label = self.labelMap.index("sports ball")
                 if detection.label != sports_ball_label and detection.label != orage_label:
                     continue
+                #Add the timestamp and the x,y,z position of the detected object to the queue
+                daiQueue.put([inPreview.getTimestamp(), int(detection.spatialCoordinates.x), int(detection.spatialCoordinates.y), int(detection.spatialCoordinates.z), detection.confidence])
+                time.sleep(1)
+                # print ([inPreview.getTimestamp(), int(detection.spatialCoordinates.x), int(detection.spatialCoordinates.y), int(detection.spatialCoordinates.z), detection.confidence])
+                # print(f"X: {int(detection.spatialCoordinates.x)} mm")
+                print(f"Y: {int(detection.spatialCoordinates.y)} mm")
+                # print(f"Z: {int(detection.spatialCoordinates.z)} mm")
+                # print(f"Confidence: {detection.confidence}")
+                print(f"time: {inPreview.getTimestamp()}")
+                if self.debug_mode:
+                  print(f"X: {int(detection.spatialCoordinates.x)} mm")
+                  print(f"Y: {int(detection.spatialCoordinates.y)} mm")
+                  print(f"Z: {int(detection.spatialCoordinates.z)} mm")
+                count += 1
                 roiData = detection.boundingBoxMapping
                 roi = roiData.roi
                 roi = roi.denormalize(depthFrameColor.shape[1], depthFrameColor.shape[0])
@@ -826,15 +850,15 @@ class DepthAICamera:
                 cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
+            # if self.viz:
+            #   cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
+            #   cv2.imshow("depth", depthFrameColor)
+            #   cv2.imshow("rgb", frame)
+            print(f"Number of sports ball and orange detected: {count}")
 
-            cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
-            cv2.imshow("depth", depthFrameColor)
-            cv2.imshow("rgb", frame)
-
-            if cv2.waitKey(1) == ord('q'):
-                break
+            # if cv2.waitKey(1) == ord('q'):
+            #   break
 
   
 def vizDaicam():
@@ -906,48 +930,96 @@ def vizDaicam():
 SIZE_OF_CALIBRATION_TAG = 12.7 #cm
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
 
-def runCameraCalib():
+def runCameraCalib(input="Load"):
   np.set_printoptions(precision=2, suppress=True)
-  rsCam = RealSenseCamera(1280, 720)
-  rsCamCalib = CalibrateCamera(rsCam)
-  rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz = False)
-  print("rsCamToRobot = \n", rsCamToRobot)
-
-  daiCam = DepthAICamera(1280,720, object_detection=False)
-  daiCamCalib = CalibrateCamera(daiCam)
-  # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
-  # print("daiCam2LM = \n", daiCam2LM)
-  daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=False)
-  print("daiCamToRobot = \n", daiCamToRobot)
-  return rsCamToRobot, daiCamToRobot
-
-if __name__ == "__main__":
-  np.set_printoptions(precision=2, suppress=True)
-  if len(sys.argv) > 1:
-    if sys.argv[1] == "calib":
+  if input == "calib":
       print("Running Camera Calibration")
-      rsCamToRobot, daiCamToRobot = runCameraCalib()
-      #save both the calibration matrices to a file "calib.txt" for later loading into np array
+      rsCam = RealSenseCamera(1280, 720)
+      rsCamCalib = CalibrateCamera(rsCam)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz = False)
+      print("rsCamToRobot = \n", rsCamToRobot)
+
+      daiCam = DepthAICamera(1280,720, object_detection=False)
+      daiCamCalib = CalibrateCamera(daiCam)
+      # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+      # print("daiCam2LM = \n", daiCam2LM)
+      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=False)
+      print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
       np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
-    else:
-      print("incorrect argument")
-  else:
+  elif input == "Load":
       # load the camera calibration matrices from the file "calib.txt"
+      print("loading th camera calibration from file")
       calib = np.loadtxt("calib.txt", delimiter=",")
       rsCamToRobot = calib[:4,:]
       daiCamToRobot = calib[4:,:]
       print("rsCamToRobot = \n", rsCamToRobot)
       print("daiCamToRobot = \n", daiCamToRobot)
+  else:
+      print("incorrect argument")
+  
+  return rsCamToRobot, daiCamToRobot
 
-  object_detection = True
-  daiCam = DepthAICamera(1280,720, object_detection=True)
-  daiCam.runObjectDetection()
+import time
+from multiprocessing import Process  
+
+import queue
+daiQueue = queue.Queue()
+
+def daiObjectDetection():
+  # daiCam = DepthAICamera(1280,720, object_detection=True, viz=True)
+  daiCam = DepthAICamera(width=1280, height=720, object_detection=True, viz=True)
+  while True:
+    daiCam.runObjectDetection(daiQueue)
+
+def goToGoalPosition():
+   robot = VexCortex("/dev/ttyUSB0")
+   while True:
+       if robot.running():
+        # get the timestamp, x,y,z position, and confidence score from the queue
+        # if the queue is empty, it will throw an exception
+        try:
+            timestamp, x, y, z, confidence = daiQueue.get()
+            #convert x,y,z to cm 
+            x = x/10
+            y = y/10
+            z = z/10
+            print("received value from queue")
+            print("timestamp = ", timestamp)
+            print("y = ", y)
+            time.sleep(1)
+            # if y > 10:
+            #   drive_forward(robot,30)
+            #   stop_drive(robot)
+            # else:
+            #   drive_backward(robot,30)
+            #   stop_drive(robot)
+        except queue.Empty:
+            print("queue is empty")
+            continue
+      
+
+if __name__ == "__main__":
+  np.set_printoptions(precision=2, suppress=True)
+  if len(sys.argv) > 1:
+    runCameraCalib("calib")
+
+  #create a queue to store the timestamp, x,y,z position, and confidence score, and pass it to the camera object 
+
+  # create multiple process, one for object detection and one for robot control
+  p1 = Process(target=daiObjectDetection, args=())
+  p1.start()
+  # time.sleep(10)
+  p2 = Process(target=goToGoalPosition, args=())
+  p2.start()
+  p1.join()
+  p2.join()
+  # daiCam.runObjectDetection()
+  # rsCamToRobot, daiCamToRobot = runCameraCalib("Load")
+  # print("rsCamToRobot = \n", rsCamToRobot)
+
 
   # daiCam2Robot = daiCam2LM @ np.linalg.inv(rsCam2LM) @ rsCam2Robot
 
-  # print("daiCam2Robot = \n", daiCam2Robot)
-
-  # cam.resetCamera(1280, 720)
   # robot = VexCortex("/dev/ttyUSB0")
   # testTransulateAlongY(robot, cam)
 
