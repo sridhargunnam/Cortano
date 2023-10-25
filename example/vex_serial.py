@@ -268,3 +268,109 @@ class VexCortex:
     sensor_values = self._sensor_values._data[:num_sensors]
     self._sensor_values._data.release()
     return sensor_values
+
+
+import time
+import numpy as np
+
+class clawAction:
+    Close = "close"
+    Open = "open"
+    Stop = "stop"
+
+
+class VexControl:
+    def __init__(self, robot):
+        self.robot = robot
+    
+    def drive_forward(self, value, drive_time=1, left_motor=0, right_motor=9):
+        motor_values = self.robot.motor
+        left_drive = 1
+        right_drive = -1
+        motor_values[left_motor] = left_drive * value
+        motor_values[right_motor] = right_drive * value
+        self.robot.motors(motor_values)
+        time.sleep(drive_time)
+        self.stop_drive()
+    
+    def drive_backward(self, value, drive_time=1, left_motor=0, right_motor=9):
+        motor_values = self.robot.motor
+        left_drive = -1
+        right_drive = 1
+        motor_values[left_motor] = left_drive * value
+        motor_values[right_motor] = right_drive * value
+        time.sleep(drive_time)
+        self.stop_drive()
+    
+    def stop_drive(self):
+        motor_values = 10 * [0]
+        self.robot.motors(motor_values)
+    
+    def claw(self, value, action=clawAction.Close, claw_motor=1):
+        motor_values = self.robot.motor
+        if action == clawAction.Close:
+            motor_values[claw_motor] = -1 * value
+        else:
+            motor_values[claw_motor] = -1 * value
+        self.robot.motors(motor_values)
+        self.stop_drive()
+    
+    def update_robot_goto(self, state, goal):
+        dpos = np.array(goal) - state[:2]
+        dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
+        theta = np.degrees(np.arctan2(dpos[1], dpos[0])) - state[2]
+        theta = (theta + 180) % 360 - 180  # [-180, 180]
+        Pforward = 30
+        Ptheta = 30
+        if np.abs(theta) < 30:
+            self.robot.motor[0] = -Pforward * dist + Ptheta * theta
+            self.robot.motor[9] = Pforward * dist + Ptheta * theta
+        else:
+            self.robot.motor[0] = 127 if theta > 0 else -127
+            self.robot.motor[9] = 127 if theta > 0 else -127
+        if dist < 1 and np.abs(theta) > 30:
+            self.robot.motor[0] = 127 if theta > 0 else -127
+            self.robot.motor[9] = 127 if theta > 0 else -127
+    
+    def rotateRobot(self, seconds, dir, speed):
+        self.robot.motor[0] = speed * dir
+        self.robot.motor[9] = speed * dir
+        time.sleep(seconds)
+        self.robot.motor[0] = 0
+        self.robot.motor[9] = 0
+    
+    def testRotate(self, rot_speed=40, rot_time=5):
+        rot_dir = 1
+        self.rotateRobot(rot_time, rot_dir, rot_speed)
+        time.sleep(0.5)
+        self.rotateRobot(rot_time, -rot_dir, rot_speed)
+        time.sleep(0.5)
+    
+    def testAngle(self):
+        goal_angle = np.random.rand() * 360 - 180
+        self.update_robot_goto(self.x, self.y, goal_angle)
+        self.update_robot_goto(self.x, self.y, -goal_angle)
+    
+    def testTransulateAlongY(self):
+            if self.robot.running():
+                if self.Y > self.set_Y:
+                    self.drive_forward(30)
+                    self.stop_drive()
+                else:
+                    self.drive_backward(30)
+                    self.stop_drive()
+
+
+if __name__ == "__main__":
+    robot = VexCortex("/dev/ttyUSB0")
+    control = VexControl(robot)
+    # control.testRotate()
+    # control.testAngle()
+    # control.testTransulateAlongY()
+    # control.claw(30, clawAction.Close)
+    # control.claw(30, clawAction.Open)
+    control.drive_backward(40, 2)
+    # control.drive_backward(40)
+    # time.sleep(4)
+    control.stop_drive()
+    robot.stop()

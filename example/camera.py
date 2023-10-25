@@ -17,15 +17,12 @@ from pathlib import Path
 import sys
 import depthai as dai
 
-'''
-#    Translation Vector: 0.00552000012248755  -0.00510000018402934  -0.011739999987185  
+import queue
+# create queue of size 10 
+daiQueue = queue.Queue(100)
 
-# Extrinsic from "Accel"	  To	  "Color" :
-#  Rotation Matrix:
-#    0.99982          0.0182547        0.00521857    
-#   -0.0182514        0.999833        -0.000682113   
-#   -0.00523015       0.000586744      0.999986   
-'''
+from vex_serial import VexCortex 
+
 class RealSenseCamera:
   def __init__(self, width=640, height=360, debug_mode=True):
     self.debug_mode = debug_mode
@@ -112,8 +109,6 @@ class RealSenseCamera:
         cv2.destroyAllWindows()
       except:
         pass
-
-
 
   def read(self, scale=False): # will also store in buffer to be read
     ret, color, depth = self.capture()
@@ -278,208 +273,6 @@ class RealSenseCamera:
   def getColor(self):
     color, depth = self.read()
     return color
-
-  def calibrateCameraWrtLandMark(self,tag_size=5, viz=False):
-    # make 4 * 4 transformation matrix
-    T = np.eye(4)
-    camera_params = self.getCameraIntrinsics()
-    at_detector = Detector(families='tag16h5',
-                          nthreads=1,
-                          quad_decimate=1.0,
-                          quad_sigma=0.0,
-                          refine_edges=1,
-                          decode_sharpening=1,
-                          debug=0)
-    # detect the tag and get the pose
-    count = 0
-    while True:
-      count += 1
-      color, depth = self.read()
-      tags = at_detector.detect(
-        cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=tag_size)
-      found_tag = False
-      for tag in tags:
-          if tag.decision_margin < 50: 
-            continue
-          found_tag = True
-          if tag.tag_id != 0:
-            continue
-          # print("Tag ID: ", tag.tag_id)
-          # print("Tag Pose: ", tag.pose_R, tag.pose_t)
-          R = tag.pose_R
-          t = tag.pose_t
-          T[0:3, 0:3] = R
-          T[0:3, 3] = t.ravel()
-          # print("Tag Pose Error: ", tag.pose_err)
-          # print("Tag Size: ", tag.tag_size)
-      if not viz:
-        if count > 10:
-          return T
-        else:
-          continue
-      else:
-        # np.set_printoptions(precision=2, suppress=True)
-        print(T)
-        if not found_tag:
-          cv2.imshow("color", color)
-          if cv2.waitKey(1) == 27:
-            cv2.destroyAllWindows()
-            exit(0)
-          continue
-        for tag in tags:
-            if tag.tag_id != 0:
-                continue
-            if tag.decision_margin < 50:
-                continue
-            font_scale = 0.5  # Adjust this value for a smaller font size
-            font_color = (0, 255, 0)
-            font_colorR = (0, 0, 255)
-            font_thickness = 2
-            text_offset_y = 30  # Vertical offset between text lines
-            # Display tag ID
-            cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-            # Display only the 1 most significant digit for pose_R and pose_t
-            # pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
-            pose_tx_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
-            pose_ty_single_digit = np.round(tag.pose_t[1], 1)  # Round to 1 decimal place
-            pose_tz_single_digit = np.round(tag.pose_t[2], 1)  # Round to 1 decimal place
-            # create a string for the pose T  and R
-            pose_t_single_digit = np.array2string(tag.pose_t, formatter={'float_kind':lambda x: "%.1f" % x})
-            pose_R_single_digit = np.array2string(tag.pose_R, formatter={'float_kind':lambda x: "%.1f" % x})
-            cv2.putText(color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_colorR, font_thickness, cv2.LINE_AA)
-        cv2.imshow("color", color)
-        if cv2.waitKey(1) == 27:
-          cv2.destroyAllWindows()
-          exit(0)
-
-  def calibrateCameraWrtRobot(self,tag_size=5):
-      #TransformationLandMarkToRobot 
-      # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
-      self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
-      #TransformationLmToCamera 
-      # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
-      self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
-      return  np.linalg.inv(self.L2C) @ self.L2R
-
-  def getDistance(self) :#, C2R, L2C):
-    return self.getTagPose(7.62, 0) @ self.calibrateCameraWrtRobot(7.62) @ np.array([0,0,0,1])
-
-#####################################################################################
-
-from vex_serial import VexCortex
-from enum import Enum
-class clawAction(Enum):
-  Open = 1
-  Close = -1
-
-
-def drive_forward(robot, value, drive_time=1, left_motor=0, right_motor=9):
-  motor_values = robot.motor
-  left_drive = 1
-  right_drive = -1
-  motor_values[left_motor] = left_drive * value
-  motor_values[right_motor] = right_drive * value
-  robot.motors(motor_values)
-  time.sleep(drive_time)
-  stop_drive(robot)
-
-def drive_backward(robot, value, drive_time=1, left_motor=0, right_motor=9):
-  motor_values = robot.motor
-  left_drive = -1
-  right_drive = 1
-  motor_values[left_motor] = left_drive * value
-  motor_values[right_motor] = right_drive * value
-  time.sleep(drive_time)
-  stop_drive(robot)
-
-def stop_drive(robot):
-  motor_values = 10*[0]
-  robot.motors(motor_values)
-
-
-
-def claw(robot, value, action = clawAction.Close, claw_motor=1):
-  motor_values = robot.motor
-  if action == clawAction.close:
-    motor_values[claw_motor] = -1 * value
-  else:
-    motor_values[claw_motor] = -1 * value
-  robot.motors(motor_values)
-  stop_drive()
-
-
-def update_robot_goto(robot, state, goal):
-  dpos = np.array(goal) - state[:2]
-  dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
-  theta = np.degrees(np.arctan2(dpos[1], dpos[0])) - state[2]
-  theta = (theta + 180) % 360 - 180 # [-180, 180]
-  Pforward = 30
-  Ptheta = 30
-  # restrict operating range
-  if np.abs(theta) < 30:
-  #   # P-controller
-    robot.motor[0] = -Pforward * dist + Ptheta * theta
-    robot.motor[9] =  Pforward * dist + Ptheta * theta
-  else:
-    # turn in place
-    robot.motor[0] = 127 if theta > 0 else -127
-    robot.motor[9] = 127 if theta > 0 else -127
-  # if the robot is close to the goal position, but if there is a large angle difference
-  # then the robot should turn in place
-  # TODO: tune the parameters to fix the bug. The bug is that the robot will not turn in place when the position is close to the goal. 
-  if dist < 1 and np.abs(theta) > 30:
-    robot.motor[0] = 127 if theta > 0 else -127
-    robot.motor[9] = 127 if theta > 0 else -127
-  
-def rotateRobot(robot, seconds, dir, speed):
-  robot.motor[0] = speed * dir#if theta > 0 else -127
-  robot.motor[9] = speed * dir #if theta > 0 else -127
-  time.sleep(seconds)
-  robot.motor[0] = 0 #if theta > 0 else -127
-  robot.motor[9] = 0 #if theta > 0 else -127
-
-
-def testRotate(robot, rot_speed=40, rot_time=5):
-  rot_dir  = 1
-  rotateRobot(robot, rot_time, rot_dir, rot_speed)
-  time.sleep(0.5)
-  rotateRobot(robot, rot_time, -rot_dir, rot_speed)
-  time.sleep(0.5)
-
-
-
-def testAngle(robot):
-    # goal_pos = np.random.rand(2) * 50
-    # goal angle between -180 and 180
-    goal_angle = np.random.rand() * 360 - 180
-    update_robot_goto(x, y, goal_angle)
-    update_robot_goto(x, y, -goal_angle)
-
-def testTransulateAlongY(robot, cam):
-  set_Y = 200
-  numOfIterations = 50
-  # while True:
-  for i in range(numOfIterations):
-    # cam.view()
-    # cam.getFilteredColorBasedOnDepth()
-    # cam.visTagPose(tag_size=7.62)
-    Y = cam.hackYdist(tag_size=7.62)
-    if Y is None:
-      continue
-    # print(cam.calibrateCameraWrtRobot(tag_size=5))
-    # print(cam.getDistance())
-    if robot.running():
-      if Y > set_Y:
-        drive_forward(robot,30)
-        stop_drive(robot)
-      else:
-        drive_backward(robot,30)
-        stop_drive(robot)
-#####################################################################################
-
-
-
  
 def TransformationInverse(T):
    R = T[:3,:3]
@@ -585,16 +378,16 @@ class CalibrateCamera:
           # exit(0)
 
 
-
+from vex_serial import VexControl
 class DepthAICamera:
   def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=True):
     self.debug_mode = debug_mode
     self.initCamera(width, height, object_detection)
     self.viz = viz
+    self.robot = VexCortex("/dev/ttyUSB0")
+    self.control = VexControl(self.robot)
     #Create a queue to store the timestamp of the frame, x,y,z position of the detected object, and the confidence score
     # self.q = daiQueue
-
-   
 
   def initCamera(self, width, height, object_detection):
     self.camera_params = self.getCameraIntrinsics(width, height)
@@ -708,8 +501,6 @@ class DepthAICamera:
       spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
       spatialDetectionNetwork.outNetwork.link(nnNetworkOut.input)
 
-
-
   def getCameraIntrinsics(self, width, height):
     self.width = width
     self.height = height
@@ -745,7 +536,7 @@ class DepthAICamera:
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
     return color_image, None
   
-  def runObjectDetection(self, daiQueue):
+  def runObjectDetection(self):
     # Connect to device and start pipeline
     with dai.Device(self.pipeline) as device:
 
@@ -762,8 +553,8 @@ class DepthAICamera:
         color = (255, 255, 255)
         printOutputLayersOnce = True
 
-        # while True:
-        if True:
+        while True:
+        # if True:
             inPreview = previewQueue.get()
             inDet = detectionNNQueue.get()
             depth = depthQueue.get()
@@ -812,11 +603,16 @@ class DepthAICamera:
                 if detection.label != sports_ball_label and detection.label != orage_label:
                     continue
                 #Add the timestamp and the x,y,z position of the detected object to the queue
-                daiQueue.put([inPreview.getTimestamp(), int(detection.spatialCoordinates.x), int(detection.spatialCoordinates.y), int(detection.spatialCoordinates.z), detection.confidence])
-                time.sleep(1)
+                # if size of queue is greater than 10, pop the oldest element
+                # if daiQueue.qsize() > 100:
+                #   print("Queue is full, exiting")
+                #   exit(0)
+                # else:
+                #   daiQueue.put([inPreview.getTimestamp(), int(detection.spatialCoordinates.x), int(detection.spatialCoordinates.y), int(detection.spatialCoordinates.z), detection.confidence])
+                #   time.sleep(1)
                 # print ([inPreview.getTimestamp(), int(detection.spatialCoordinates.x), int(detection.spatialCoordinates.y), int(detection.spatialCoordinates.z), detection.confidence])
                 # print(f"X: {int(detection.spatialCoordinates.x)} mm")
-                print(f"Y: {int(detection.spatialCoordinates.y)} mm")
+                # print(f"Y: {int(detection.spatialCoordinates.y)} mm")
                 # print(f"Z: {int(detection.spatialCoordinates.z)} mm")
                 # print(f"Confidence: {detection.confidence}")
                 print(f"time: {inPreview.getTimestamp()}")
@@ -824,6 +620,8 @@ class DepthAICamera:
                   print(f"X: {int(detection.spatialCoordinates.x)} mm")
                   print(f"Y: {int(detection.spatialCoordinates.y)} mm")
                   print(f"Z: {int(detection.spatialCoordinates.z)} mm")
+                self.ballY = int(detection.spatialCoordinates.z) / 10
+                self.goToGoalPosition()
                 count += 1
                 roiData = detection.boundingBoxMapping
                 roi = roiData.roi
@@ -851,82 +649,38 @@ class DepthAICamera:
                 cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
-            # if self.viz:
-            #   cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
-            #   cv2.imshow("depth", depthFrameColor)
-            #   cv2.imshow("rgb", frame)
+            if self.viz:
+              cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
+              cv2.imshow("depth", depthFrameColor)
+              cv2.imshow("rgb", frame)
             print(f"Number of sports ball and orange detected: {count}")
 
-            # if cv2.waitKey(1) == ord('q'):
-            #   break
+            if cv2.waitKey(1) == ord('q'):
+              self.control.drive_backward(40, 4)
+              self.robot.stop()
+              exit(0)
 
+  # TODO hack untill multiprocess is working
+  def goToGoalPosition(self):
+       print("going to self.ballY = ", self.ballY)
+  #  robot = VexCortex("/dev/ttyUSB0")
+  #  while True:
+       if abs(self.ballY) < 5:
+        self.control.stop_drive()
+        return
+       if self.robot.running():
+        # get the timestamp, x,y,z position, and confidence score from the queue
+        # if the queue is empty, it will throw an exception
+        if self.ballY > 10:
+          self.control.drive_forward(30)
+          self.control.stop_drive()
+        else:
+          self.control.drive_backward(30)
+          self.control.stop_drive()
+       else:
+        print("robot is not running")
+        # time.sleep(1)
   
-def vizDaicam():
-  # Create pipeline
-  pipeline = dai.Pipeline()
-  # Define source and output
-  camRgb = pipeline.create(dai.node.ColorCamera)
-  #set preview size to max possible resolution for this camera
-  camRgb.setPreviewSize(1280, 720)
-  # fix the focus so that we can get a clear image
-  camRgb.initialControl.setManualFocus(130)
-
-  xoutRgb = pipeline.create(dai.node.XLinkOut)
-  xoutRgb.setStreamName("rgb")
-  camRgb.preview.link(xoutRgb.input)
-
-  camLeft = pipeline.create(dai.node.MonoCamera)
-  camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-  camLeft.setCamera("left")
-
-  xoutLeft = pipeline.create(dai.node.XLinkOut)
-  xoutLeft.setStreamName("left")
-  camLeft.out.link(xoutLeft.input)
-
-  # Connect to device and start pipeline
-  with dai.Device(pipeline) as device:
-      qRgb = device.getOutputQueue(name="rgb")
-      qLeft = device.getOutputQueue(name="left")
-    
-      while True:
-          txt = ""
-          for q in [qRgb, qLeft]:
-              imgFrame = q.get()
-              name = q.getName()
-              txt += f"[{name}] Exposure: {imgFrame.getExposureTime().total_seconds()*1000:.3f} ms, "
-              txt += f"ISO: {imgFrame.getSensitivity()},"
-              txt += f" Lens position: {imgFrame.getLensPosition()},"
-              txt += f" Color temp: {imgFrame.getColorTemperature()} K   "
-              cv2.imshow(name, imgFrame.getCvFrame())
-          print(txt)
-          if cv2.waitKey(1) == ord('q'):
-              break
-
-  # def getCamera2Robot(self,tag_size=5):
-  #     #TransformationLandMarkToRobot 
-  #     # For L2R I hand measured the april tag distance from the robot base. Robot base is the center of the robot's claw
-  #     self.L2R = np.array([[1, 0, 0, -5], [0, -1, 0, 47.7], [0, 0, -1, 0], [0, 0, 0, 1]])
-  #     #TransformationLmToCamera 
-  #     # self.L2C= np.array([           [ 0.98008357,  0.19856912, 0.00255036, -2.67309145 ],           [-0.04210883,  0.19525296, 0.97984852, 8.52999655  ],           [ 0.19406969, -0.96044083, 0.19972573, 64.82263177 ],          [0,            0,          0,          1           ] ])
-  #     self.L2C= self.calibrateCameraWrtLandMark(tag_size=tag_size, viz=False)
-  #     return  np.linalg.inv(self.L2C) @ self.L2R
-
-
-# rsCam2Robot = np.array([
-#  [ 9.94469395e-01,  8.00882118e-02,  6.79448348e-02, -1.87907316e+01],
-#  [-5.13571977e-02, -1.93490083e-01,  9.79757126e-01,  6.56196051e+01],
-#  [ 9.16136479e-02, -9.77827933e-01, -1.88306860e-01,  2.59744550e+01],
-#  [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]
-#  ])
-
-# rsCam2LandMark =
-# [[ 9.92912028e-01  1.09941141e-01  4.51514199e-02  1.47855808e+01]
-#  [-1.06699686e-01  9.91905905e-01 -6.88320647e-02  2.12833899e+00]
-#  [-5.23534358e-02  6.35265426e-02  9.96605988e-01  6.34547258e+01]
-#  [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  1.00000000e+00]]
-# if the file is run directly
-
-
 SIZE_OF_CALIBRATION_TAG = 12.7 #cm
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
 
@@ -962,14 +716,11 @@ def runCameraCalib(input="Load"):
 import time
 from multiprocessing import Process  
 
-import queue
-daiQueue = queue.Queue()
-
 def daiObjectDetection():
   # daiCam = DepthAICamera(1280,720, object_detection=True, viz=True)
   daiCam = DepthAICamera(width=1280, height=720, object_detection=True, viz=True)
   while True:
-    daiCam.runObjectDetection(daiQueue)
+    daiCam.runObjectDetection()
 
 def goToGoalPosition():
    robot = VexCortex("/dev/ttyUSB0")
@@ -979,23 +730,26 @@ def goToGoalPosition():
         # if the queue is empty, it will throw an exception
         try:
             timestamp, x, y, z, confidence = daiQueue.get()
-            #convert x,y,z to cm 
-            x = x/10
-            y = y/10
-            z = z/10
-            print("received value from queue")
-            print("timestamp = ", timestamp)
-            print("y = ", y)
-            time.sleep(1)
-            # if y > 10:
-            #   drive_forward(robot,30)
-            #   stop_drive(robot)
-            # else:
-            #   drive_backward(robot,30)
-            #   stop_drive(robot)
         except queue.Empty:
             print("queue is empty")
             continue
+        #convert x,y,z to cm 
+        x = x/10
+        y = y/10
+        z = z/10
+        print("received value from queue")
+        print("timestamp = ", timestamp)
+        print("y = ", y)
+        time.sleep(1)
+        # if y > 10:
+        #   drive_forward(robot,30)
+        #   stop_drive(robot)
+        # else:
+        #   drive_backward(robot,30)
+        #   stop_drive(robot)
+       else:
+        print("robot is not running")
+        time.sleep(1)
       
 
 if __name__ == "__main__":
@@ -1005,15 +759,15 @@ if __name__ == "__main__":
     exit(0)
 
   #create a queue to store the timestamp, x,y,z position, and confidence score, and pass it to the camera object 
-
+  daiObjectDetection()
   # create multiple process, one for object detection and one for robot control
-  p1 = Process(target=daiObjectDetection, args=())
-  p1.start()
-  # time.sleep(10)
-  p2 = Process(target=goToGoalPosition, args=())
-  p2.start()
-  p1.join()
-  p2.join()
+  # p1 = Process(target=daiObjectDetection, args=())
+  # p1.start()
+  # # time.sleep(10)
+  # p2 = Process(target=goToGoalPosition, args=())
+  # p2.start()
+  # p1.join()
+  # p2.join()
   # daiCam.runObjectDetection()
   # rsCamToRobot, daiCamToRobot = runCameraCalib("Load")
   # print("rsCamToRobot = \n", rsCamToRobot)
