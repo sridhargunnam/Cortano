@@ -1002,6 +1002,7 @@ if __name__ == "__main__":
   np.set_printoptions(precision=2, suppress=True)
   if len(sys.argv) > 1:
     runCameraCalib("calib")
+    exit(0)
 
   #create a queue to store the timestamp, x,y,z position, and confidence score, and pass it to the camera object 
 
