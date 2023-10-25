@@ -388,6 +388,14 @@ class DepthAICamera:
     self.control = VexControl(self.robot)
     #Create a queue to store the timestamp of the frame, x,y,z position of the detected object, and the confidence score
     # self.q = daiQueue
+  # descructor to stop the pipeline
+  def __del__(self):
+    try:
+      cv2.destroyAllWindows()
+    except:
+      pass
+    if self.robot:
+      self.robot.stop()
 
   def initCamera(self, width, height, object_detection):
     self.camera_params = self.getCameraIntrinsics(width, height)
