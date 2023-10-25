@@ -628,7 +628,11 @@ class DepthAICamera:
                   print(f"X: {int(detection.spatialCoordinates.x)} mm")
                   print(f"Y: {int(detection.spatialCoordinates.y)} mm")
                   print(f"Z: {int(detection.spatialCoordinates.z)} mm")
+                self.ballX = int(detection.spatialCoordinates.x) / 10
                 self.ballY = int(detection.spatialCoordinates.z) / 10
+                # robot_state = [0,0, 0]
+                # goal_state = [self.ballX, self.ballY, 0]
+                # self.control.update_robot_goto(robot_state, goal_state)  
                 self.goToGoalPosition()
                 count += 1
                 roiData = detection.boundingBoxMapping
@@ -664,7 +668,7 @@ class DepthAICamera:
             print(f"Number of sports ball and orange detected: {count}")
 
             if cv2.waitKey(1) == ord('q'):
-              self.control.drive_backward(40, 4)
+              # self.control.drive_backward(40, 4)
               self.robot.stop()
               exit(0)
 
