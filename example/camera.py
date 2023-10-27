@@ -625,15 +625,15 @@ class DepthAICamera:
                 # print(f"Confidence: {detection.confidence}")
                 print(f"time: {inPreview.getTimestamp()}")
                 if self.debug_mode:
-                  print(f"X: {int(detection.spatialCoordinates.x)} mm")
-                  print(f"Y: {int(detection.spatialCoordinates.y)} mm")
-                  print(f"Z: {int(detection.spatialCoordinates.z)} mm")
+                  print(f"X: {int(detection.spatialCoordinates.x/10)} cm")
+                  print(f"Y: {int(detection.spatialCoordinates.y/10)} cm")
+                  print(f"Z: {int(detection.spatialCoordinates.z/10)} cm")
                 self.ballX = int(detection.spatialCoordinates.x) / 10
                 self.ballY = int(detection.spatialCoordinates.z) / 10
                 # robot_state = [0,0, 0]
                 # goal_state = [self.ballX, self.ballY, 0]
                 # self.control.update_robot_goto(robot_state, goal_state)  
-                self.goToGoalPosition()
+                # self.goToGoalPosition()
                 count += 1
                 roiData = detection.boundingBoxMapping
                 roi = roiData.roi
@@ -657,9 +657,9 @@ class DepthAICamera:
                     label = detection.label
                 cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x/10)} cm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y/10)} cm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z/10)} cm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
             if self.viz:
               cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
@@ -702,7 +702,7 @@ def runCameraCalib(input="Load"):
       print("Running Camera Calibration")
       rsCam = RealSenseCamera(1280, 720)
       rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz = False)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=False)
       print("rsCamToRobot = \n", rsCamToRobot)
 
       daiCam = DepthAICamera(1280,720, object_detection=False)
