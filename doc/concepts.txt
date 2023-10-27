@@ -1,0 +1,33 @@
+sensor reading: 
+    reads motor and other sensor values. Creates status like timestamp robot moving, claw moving, ball detected, along with other sensor reading and publishes. 
+daiCam:
+    daiCam will spit out two types of data. Camera data like camera images, and the second is light weight data like tag pose, object location. 
+rsCam:
+    will run april tag, and can spit put camera data, or light weight data like IMU measurements. 
+    In the interest of reducing complexity, I will inherit april tag detection into rs tag such that rsCam can spit out tag pose.  
+IMU pose:
+    Perform IMU fusion and spit out one pose. The orientation is accurate, but the robot x,y can have large error. 
+    Try this example - https://github.com/sridhargunnam/Fusion/blob/main/Python/simple_example.py
+    https://github.com/ethz-asl/kalibr - calibration
+Mapping:
+    Gets the timestamp, tag/landmark pose, and spit out the robot's current x,y, theta
+    Get the timestamp, object's x,y,z and maximum likelyhood grid based on all the previous observations.   
+    voxel grid update based on depth maps. This is done only for the frames where landmark pose was detected.   
+State Prediction and Estimation:
+    Inputs are landmark pose, IMU pose.
+    Spits out robot x,y, theta, velocity, acceletation, accuracy
+Planning:
+    Figure where the robot is, and the state of the robot. 
+    Figure out the tasks to be done. 
+    Create plan for the tasks. 
+    Check if the tasks are completed with required accuracy. 
+    Lay out the detail plan and send it to the control. eg, Proportional or PI control. 
+Control:
+    For each atomic task that planning node spits, perform the task. Send out the control commands for state prediction. 
+    Based on the
+Debug node:
+    Comsume the data to be sent out to the host for debugging. 
+ 
+
+    
+
