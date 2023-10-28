@@ -1,3 +1,6 @@
+Block diagram :
+https://docs.google.com/drawings/d/1O89PFaKcPsAajfY8YdVK3Rqaiy7yxGMP0bL2kauaXgM/edit
+
 sensor reading: 
     reads motor and other sensor values. Creates status like timestamp robot moving, claw moving, ball detected, along with other sensor reading and publishes. 
 daiCam:
