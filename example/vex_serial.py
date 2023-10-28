@@ -316,9 +316,9 @@ class VexControl:
         self.stop_drive()
     
     def update_robot_goto(self, state, goal):
-        dpos = np.array(goal) - state[:2]
+        dpos = [goal[0] - state[0] , goal[1] - state[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
-        theta = np.degrees(np.arctan2(dpos[1], dpos[0])) - state[2]
+        theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
         theta = (theta + 180) % 360 - 180  # [-180, 180]
         Pforward = 30
         Ptheta = 30

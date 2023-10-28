@@ -630,9 +630,10 @@ class DepthAICamera:
                   print(f"Z: {int(detection.spatialCoordinates.z/10)} cm")
                 self.ballX = int(detection.spatialCoordinates.x) / 10
                 self.ballY = int(detection.spatialCoordinates.z) / 10
+                self.ballTheta = abs(np.degrees(np.arctan2(self.ballY,  self.ballX)))
                 # robot_state = [0,0, 0]
                 # goal_state = [self.ballX, self.ballY, 0]
-                # self.control.update_robot_goto(robot_state, goal_state)  
+                self.control.update_robot_goto([0,0], [self.ballX, self.ballY])  
                 # self.goToGoalPosition()
                 count += 1
                 roiData = detection.boundingBoxMapping
@@ -683,7 +684,7 @@ class DepthAICamera:
        if self.robot.running():
         # get the timestamp, x,y,z position, and confidence score from the queue
         # if the queue is empty, it will throw an exception
-        if self.ballY > 10:
+        if self.ballY > 5:
           self.control.drive_forward(30)
           self.control.stop_drive()
         else:
@@ -702,14 +703,14 @@ def runCameraCalib(input="Load"):
       print("Running Camera Calibration")
       rsCam = RealSenseCamera(1280, 720)
       rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=False)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
       print("rsCamToRobot = \n", rsCamToRobot)
 
       daiCam = DepthAICamera(1280,720, object_detection=False)
       daiCamCalib = CalibrateCamera(daiCam)
       # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       # print("daiCam2LM = \n", daiCam2LM)
-      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=False)
+      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
       np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
   elif input == "Load":
