@@ -633,7 +633,7 @@ class DepthAICamera:
                 self.ballTheta = abs(np.degrees(np.arctan2(self.ballY,  self.ballX)))
                 # robot_state = [0,0, 0]
                 # goal_state = [self.ballX, self.ballY, 0]
-                self.control.update_robot_goto([0,0], [self.ballX, self.ballY])  
+                # self.control.update_robot_goto([0,0], [self.ballX, self.ballY])  
                 # self.goToGoalPosition()
                 count += 1
                 roiData = detection.boundingBoxMapping

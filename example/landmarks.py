@@ -1,5 +1,42 @@
 import numpy as np
+SIZE_OF_LANDMARK_TAG = 7.62 #cm = 3 inch
+# Map to apriltag poses home setup
+# origin is the corner of the balcony, at entrance
+map_apriltag_poses_home = {}
+for i in range(1,7):
+    T = np.identity(4)
+    T[:3,1] = np.array([0, 0                                                                                            , -1])
+    if i == 1:
+        T[:3,0] = [1, 0, 0]
+        T[:3,2] = [0, 1, 0]
+        T[:3,3] = [41, 197, 26]
+    if i == 2:
+        T[:3,0] = [1, 0, 0]
+        T[:3,2] = [0, 1, 0]
+        T[:3,3] = [41+55, 197, 26]
+    if i == 3:
+        T[:3,0] = [1, 0, 0]
+        T[:3,2] = [0, 1, 0]
+        T[:3,3] = [41+55+55, 197, 26]
+    if i == 4:
+        T[:3,0] = [-1, 0, 0]
+        T[:3,2] = [0, -1, 0]
+        T[:3,3] = [39, 0, 26]
+    if i == 5:
+        T[:3,0] = [-1, 0, 0]
+        T[:3,2] = [0, -1, 0]
+        T[:3,3] = [39+55, 0, 26]
+    if i == 6:
+        T[:3,0] = [-1, 0, 0]
+        T[:3,2] = [0, -1, 0]
+        T[:3,3] = [39+55+55, 0, 26]
+    print("i = ", i)
+    print(T)
 
+
+
+
+# Map to apriltag poses actual game setup
 map_apriltag_poses = {}
 for i in range(36):
     T = np.identity(4)
