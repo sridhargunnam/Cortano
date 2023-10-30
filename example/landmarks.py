@@ -1,5 +1,4 @@
 import numpy as np
-SIZE_OF_LANDMARK_TAG = 7.62 #cm = 3 inch
 # Map to apriltag poses home setup
 # origin is the corner of the balcony, at entrance
 map_apriltag_poses_home = {}
@@ -30,8 +29,9 @@ for i in range(1,7):
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
         T[:3,3] = [39+55+55, 0, 26]
-    print("i = ", i)
-    print(T)
+    # print("i = ", i)
+    # print(T)
+    map_apriltag_poses_home[i] = T
 
 
 
@@ -93,5 +93,8 @@ for i in range(36):
 
 if __name__ == "__main__":
     for tagid, pose in map_apriltag_poses.items():
+        print("Tag %d:" % tagid)
+        print(pose)
+    for tagid, pose in map_apriltag_poses_home.items():
         print("Tag %d:" % tagid)
         print(pose)

@@ -1,3 +1,7 @@
 class config:
   TAG_DECISION_MARGIN_THRESHOLD = 150
   TAG_SIZE = 7.62 # cm
+  GEN_DEBUG_IMAGES = False
+  SIZE_OF_CALIBRATION_TAG = 12.7 #cm
+
+
