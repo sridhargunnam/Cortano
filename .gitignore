@@ -1,3 +1,5 @@
+debug_*.ps 
+debug_*.pnm 
 example/calib
 calib
 example/rs_extra
