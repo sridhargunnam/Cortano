@@ -302,6 +302,7 @@ class CalibrateCamera:
       self.C2L= self.calibrateCameraWrtLandMark(tag_size=tag_size, tag_id=tag_id, viz=viz)
       print("self.C2L = \n", self.C2L)
       # return  TransformationInverse(self.C2L @ self.L2R) 
+      #Note L2R = R2L upon writing it down manually 
       return  (self.C2L @ self.L2R) 
       # return  TransformationInverse(self.L2R @ self.C2L) 
  
@@ -403,6 +404,7 @@ class DepthAICamera:
     self.pipeline = dai.Pipeline()
     # Define source and output
     if not object_detection:
+      print("initilying depthai color camera only")
       self.camRgb = self.pipeline.create(dai.node.ColorCamera)
       self.camRgb.setPreviewSize(width, height)
       # self.camRgb.initialControl.setManualFocus(130)
@@ -509,7 +511,7 @@ class DepthAICamera:
       spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
       spatialDetectionNetwork.outNetwork.link(nnNetworkOut.input)
 
-  def getCameraIntrinsics(self, width, height):
+  def getCameraIntrinsics(self, width=1920, height=1080):
     self.width = width
     self.height = height
     with dai.Device() as device:
@@ -535,15 +537,93 @@ class DepthAICamera:
       return [self.fx, self.fy, self.cx, self.cy]
 
   def read(self, scale=False): # will also store in buffer to be read
+    # print("read from camera")
     imgFrame = self.qRgb.get()
-    color_image = imgFrame.getCvFrame()
+    color = imgFrame.getCvFrame()
     # imgFrame = self.qLeft.get()
     # left_image = imgFrame.getCvFrame()
     # if scale:
     #   depth = depth.astype(np.float32) * self.depth_scale
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
-    return color_image, None
+    return color, None
   
+  def view(self):
+    while True:
+      color, _ = self.read()
+      # view color and depth image using opencv
+      cv2.imshow("color", self.color)
+      # cv2.imshow("depth", depth)
+      if cv2.waitKey(1) == 27:
+        cv2.destroyAllWindows()
+        exit(0)
+      continue
+  def getTagPoses(self,tag_size=5, viz=True):
+    # make 4 * 4 transformation matrix
+    T = np.eye(4)
+    at_detector = Detector(families='tag16h5',
+                          nthreads=1,
+                          quad_decimate=1.0,
+                          quad_sigma=0.0,
+                          refine_edges=1,
+                          decode_sharpening=1,
+                          debug=0)
+    # detect the tag and get the pose
+    count = 0
+    print("self.camera_params[0:4] = ", self.camera_params[0:4])
+    while True:
+      count += 1
+      color = self.read()
+      tags = at_detector.detect(
+        cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size=tag_size)
+      found_tag = False
+      for tag in tags:
+          if tag.decision_margin < 50: 
+            continue
+          found_tag = True
+          # if tag.tag_id != 0:
+          #   continue
+          # print("Tag ID: ", tag.tag_id)
+          # print("Tag Pose: ", tag.pose_R, tag.pose_t)
+          R = tag.pose_R
+          t = tag.pose_t
+          T[0:3, 0:3] = R
+          T[0:3, 3] = t.ravel()
+          # print("Tag Pose Error: ", tag.pose_err)
+          # print("Tag Size: ", tag.tag_size)
+      if not viz:
+        if count > 10:
+          return T
+        else:
+          continue
+      else:
+        # np.set_printoptions(precision=2, suppress=True)
+        # print(T)
+        if not found_tag:
+          cv2.imshow("color", color)
+          if cv2.waitKey(1) == 27:
+            cv2.destroyAllWindows()
+            return T
+            # exit(0)
+          continue
+        for tag in tags:
+            if tag.decision_margin < 50:
+                continue
+            font_scale = 0.5  # Adjust this value for a smaller font size
+            font_color = (0, 255, 0)
+            font_thickness = 2
+            text_offset_y = 30  # Vertical offset between text lines
+            # Display tag ID
+            cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            # Display only the 1 most significant digit for pose_R and pose_t
+            pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
+            pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+            cv2.putText(color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        cv2.imshow("color", color)
+        if cv2.waitKey(1) == 27:
+          cv2.destroyAllWindows()
+          return T
+          # exit(0)
   def runObjectDetection(self):
     # Connect to device and start pipeline
     with dai.Device(self.pipeline) as device:
@@ -694,7 +774,8 @@ class DepthAICamera:
         print("robot is not running")
         # time.sleep(1)
   
-SIZE_OF_CALIBRATION_TAG = 12.7 #cm
+import config
+config = config.config()
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
 
 def runCameraCalib(input="Load"):
@@ -703,14 +784,14 @@ def runCameraCalib(input="Load"):
       print("Running Camera Calibration")
       rsCam = RealSenseCamera(1280, 720)
       rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
       print("rsCamToRobot = \n", rsCamToRobot)
 
       daiCam = DepthAICamera(1280,720, object_detection=False)
       daiCamCalib = CalibrateCamera(daiCam)
       # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       # print("daiCam2LM = \n", daiCam2LM)
-      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
       np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
   elif input == "Load":
@@ -728,6 +809,11 @@ def runCameraCalib(input="Load"):
 
 import time
 from multiprocessing import Process  
+
+def daiTagPose():
+  daiCam = DepthAICamera(width=1280, height=720, object_detection=False, viz=True)
+  while True:
+    daiCam.getTagPoses()
 
 def daiObjectDetection():
   # daiCam = DepthAICamera(1280,720, object_detection=True, viz=True)
@@ -764,15 +850,20 @@ def goToGoalPosition():
         print("robot is not running")
         time.sleep(1)
       
-
+import landmarks as lm
 if __name__ == "__main__":
   np.set_printoptions(precision=2, suppress=True)
   if len(sys.argv) > 1:
     runCameraCalib("calib")
     exit(0)
 
+  # for tagid, pose in lm.map_apriltag_poses_home:
+  #   print("tagid = ", tagid)
+  #   print("pose = ", pose)
+
   #create a queue to store the timestamp, x,y,z position, and confidence score, and pass it to the camera object 
   daiObjectDetection()
+  # daiTagPose()
   # create multiple process, one for object detection and one for robot control
   # p1 = Process(target=daiObjectDetection, args=())
   # p1.start()

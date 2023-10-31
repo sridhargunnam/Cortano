@@ -1,14 +1,29 @@
 import numpy as np
 # Map to apriltag poses home setup
 # origin is the corner of the balcony, at entrance
+import config
+config = config.config()
+map_apriltag_poses = {}
 map_apriltag_poses_home = {}
+map_apriltag_poses_bedroom = {}
+T = np.identity(4)
+T[:3,0] = [1, 0, 0]
+T[:3,1] = [0, 0, -1]
+T[:3,2] = [0, 1, 0]
+T[:3,3] = [25+config.TAG_SIZE_3IN,0, 6.35+config.TAG_SIZE_3IN]
+map_apriltag_poses_bedroom[1] = T
+# print(T)
+
 for i in range(1,7):
     T = np.identity(4)
-    T[:3,1] = np.array([0, 0                                                                                            , -1])
+    T[:3,1] = np.array([0, 0, -1])
     if i == 1:
-        T[:3,0] = [1, 0, 0]
-        T[:3,2] = [0, 1, 0]
-        T[:3,3] = [41, 197, 26]
+        # T[:3,0] = [1, 0, 0]
+        # T[:3,2] = [0, 1, 0]
+         T[0,:3] = [1, 0, 0]
+         T[1,:3] = [0, 0, -1]
+         T[2,:3] = [0, 1, 0]
+         T[:3,3] = [41, 197, 26]
     if i == 2:
         T[:3,0] = [1, 0, 0]
         T[:3,2] = [0, 1, 0]
@@ -37,7 +52,7 @@ for i in range(1,7):
 
 
 # Map to apriltag poses actual game setup
-map_apriltag_poses = {}
+map_apriltag_poses_game = {}
 for i in range(36):
     T = np.identity(4)
     T[:3,1] = np.array([0, 0, -1])
@@ -89,12 +104,19 @@ for i in range(36):
         T[:3,0] = [1, 0, 0]
         T[:3,2] = [0, 1, 0]
         T[:3,3] = [-66 + 12 * (i - 30), 0, 12]
-    map_apriltag_poses[i + 1] = T
+    map_apriltag_poses_game[i + 1] = T
+
+if config.FIELD == "HOME":
+    map_apriltag_poses = map_apriltag_poses_home
+if config.FIELD == "BEDROOM":
+    map_apriltag_poses = map_apriltag_poses_bedroom
+elif config.FIELD == "GAME":
+    map_apriltag_poses = map_apriltag_poses_game
+else:
+    print("Error: invalid field type")
+    exit(1)
 
 if __name__ == "__main__":
     for tagid, pose in map_apriltag_poses.items():
-        print("Tag %d:" % tagid)
-        print(pose)
-    for tagid, pose in map_apriltag_poses_home.items():
         print("Tag %d:" % tagid)
         print(pose)

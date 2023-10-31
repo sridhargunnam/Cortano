@@ -101,7 +101,7 @@ class ATag:
 
   def getTagAndPose(self,color):
     self.tags = self.at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], config.TAG_SIZE)
+      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], config.TAG_SIZE_3IN)
     if tags is not None:
       #get the tag with highest confidence
       max_confidence = 0
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     found_tag = False
     # tags = at_detector.detect(
     #   cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, camera_params[0:4], tag_size=7.62)
-    tags = cam.getTagPose(tag_size=config.TAG_SIZE)
+    tags = cam.getTagPose(tag_size=config.TAG_SIZE_3IN)
     robot_pos , robot_orientation = getRobotPoseFromTagPose(tags)
 
     if tags is not None:
