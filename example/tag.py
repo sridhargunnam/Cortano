@@ -9,6 +9,8 @@ import sys
 import config 
 import landmarks
 config = config.config()
+config.TAG_POLICY = "FIRST"
+config.FIELD == "BEDROOM"
 
 def readCalibrationFile(path=config.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -36,8 +38,10 @@ class ATag:
       max_confidence = 0
       max_confidence_tag = None
       for tag in self.tags:
-        if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD: 
-          continue
+        if config.TAG_POLICY == "HIGHEST_CONFIDENCE":
+          if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD: 
+            print(f'tag.decision_margin = {tag.decision_margin} < {config.TAG_DECISION_MARGIN_THRESHOLD}')
+            continue
         if tag.decision_margin > max_confidence:
           max_confidence = tag.decision_margin
           max_confidence_tag = tag
@@ -56,25 +60,16 @@ class ATag:
   
   def getRobotPoseFromTagPose(self, tag_pose, tag_id, Lm2Cam, Cam2Robot):
     if tag_pose is None or tag_id is None or Lm2Cam is None:
+      print(f'getRobotPoseFromTagPose: tag_pose = \n{tag_pose}, tag_id = {tag_id}, Lm2Cam = \n{Lm2Cam}')
       return None
-    Field2Robot = landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) @ Cam2Robot
-    # print np array Lm2Cam such that it is easy to copy and paste to the code
-    # print('landmarks.map_apriltag_poses[tag_id] = \n', landmarks.map_apriltag_poses[tag_id])
-    # print("Lm2Cam = \n", Lm2Cam)
-    # print("np.linalg.inv(Lm2Cam) = \n", np.linalg.inv(Lm2Cam))
-    # print("Cam2Robot = \n", Cam2Robot)
-    # print("landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) = \n", landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam))
-    # print("LM2Field = \n", landmarks.map_apriltag_poses[tag_id])
-    print("Field2Robot = \n", Field2Robot)
-    # save all the transformation matrix to a file
-    np.savetxt("debug_transformation.txt", np.vstack((Lm2Cam, Cam2Robot)), delimiter=",")
+    if tag_id in landmarks.map_apriltag_poses:
+      Field2Robot = landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) @ Cam2Robot
+      print("Field2Robot = \n", Field2Robot)
+    # np.savetxt("debug_transformation.txt", np.vstack((Lm2Cam, Cam2Robot)), delimiter=",")
+      return Field2Robot
+    else:
+      return None
 
-
-
-
-  # def getRobotPoseFromTagPose(tag_pose, tag_id):
-  #     robot_pos, robot_orientation = get_robot_pose(tag_pose, tag_id)
-  #     return robot_pos, robot_orientation
 
 """
 function to get the robot pose from the tag pose, 
@@ -85,9 +80,8 @@ Robots are allowed to start in any position in their starting pose, but cannot s
 At the start of the round, 30 tennis balls are placed on each side of the field in an undisclosed symmetric formation, to prevent pre-programming.
 On the field, 4 inch x 4 inch AprilTags will be placed every 4 feet from each other (with exception of corners) on each side. These tags can be used to help with localization. 
 """
-    
 
-if __name__ == "__main__":
+def main():
   np.set_printoptions(precision=2, suppress=True)
   #check the input arguments and set the camera
   #rscam for realsense camera, and daicam for dai camera
@@ -105,8 +99,6 @@ if __name__ == "__main__":
     cam = camera.DepthAICamera(1280,720)
     camera_params = cam.getCameraIntrinsics(1280,720)
     cam2robot = daiCamToRobot
-  print("rsCamToRobot = \n", rsCamToRobot)
-  print("daiCamToRobot = \n", daiCamToRobot)
   atag = ATag(camera_params)
   # detect the tag and get the pose
   if config.FIELD == "HOME" or config.FIELD == "GAME":
@@ -114,14 +106,12 @@ if __name__ == "__main__":
   elif config.FIELD == "BEDROOM":
     tag_size = config.TAG_SIZE_6IN
 
-  # tag_size = config.SIZE_OF_CALIBRATION_TAG 
-  cnt = 0
   while True:
     dt = datetime.now()
     color, depth = cam.read()    
     tag, tag_id, Lm2Cam = atag.getTagAndPose(color, tag_size)
     
-    atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robot)
+    Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robot)
 
     if tag is not None:
       robot2Lm = np.linalg.inv(Lm2Cam) @ rsCamToRobot
@@ -146,3 +136,6 @@ if __name__ == "__main__":
     if cv2.waitKey(1) == 27:
       cv2.destroyAllWindows()
       exit(0)
+
+if __name__ == "__main__":
+  main()

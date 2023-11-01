@@ -5,6 +5,10 @@ import time
 from multiprocessing import Process, Array, RawValue, Value
 from ctypes import c_double, c_bool, c_int
 
+ROTATION_DIRECTION = {
+    "counter_clockwise": 1,
+    "clockwise": -1
+}
 class IndexableArray:
   def __init__(self, length):
     self._data = Array(c_int, length)
@@ -283,22 +287,20 @@ class VexControl:
     def __init__(self, robot):
         self.robot = robot
     
-    def drive_forward(self, value, drive_time=1, left_motor=0, right_motor=9):
+    def drive(self, direction, speed, drive_time=1, left_motor=0, right_motor=9):
+        if direction == "forward":
+          left_drive = 1
+          right_drive = -1
+        elif direction == "backward":
+          left_drive = -1
+          right_drive = 1
+        else:
+          left_drive = 0
+          right_drive = 0
         motor_values = self.robot.motor
-        left_drive = 1
-        right_drive = -1
-        motor_values[left_motor] = left_drive * value
-        motor_values[right_motor] = right_drive * value
+        motor_values[left_motor] = left_drive * speed
+        motor_values[right_motor] = right_drive * speed
         self.robot.motors(motor_values)
-        time.sleep(drive_time)
-        self.stop_drive()
-    
-    def drive_backward(self, value, drive_time=1, left_motor=0, right_motor=9):
-        motor_values = self.robot.motor
-        left_drive = -1
-        right_drive = 1
-        motor_values[left_motor] = left_drive * value
-        motor_values[right_motor] = right_drive * value
         time.sleep(drive_time)
         self.stop_drive()
     
@@ -306,15 +308,22 @@ class VexControl:
         motor_values = 10 * [0]
         self.robot.motors(motor_values)
     
-    def claw(self, value, action=clawAction.Close, claw_motor=1):
+    def claw(self, value, action=clawAction.Close, claw_motor=1, drive_time=0.5):
         motor_values = self.robot.motor
         if action == clawAction.Close:
             motor_values[claw_motor] = -1 * value
         else:
-            motor_values[claw_motor] = -1 * value
+            motor_values[claw_motor] = 1 * value
         self.robot.motors(motor_values)
+        time.sleep(drive_time)
         self.stop_drive()
-    
+
+    def update_robot_move_arm(self, angle, goal):
+      # P-controller with constant current
+      # +30 is to keep the arm from falling
+      self.robot.motor[1] = (goal - angle) * 127 + 30
+
+
     def update_robot_goto(self, state, goal):
         dpos = [goal[0] - state[0] , goal[1] - state[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
@@ -336,15 +345,15 @@ class VexControl:
         self.robot.motor[0] = speed * dir
         self.robot.motor[9] = speed * dir
         time.sleep(seconds)
-        self.robot.motor[0] = 0
-        self.robot.motor[9] = 0
-    
-    def testRotate(self, rot_speed=40, rot_time=5):
-        rot_dir = 1
+        self.stop_drive()
+
+    def testRotate(self, rot_speed=30, rot_time=1, rot_dir=1):
         self.rotateRobot(rot_time, rot_dir, rot_speed)
         time.sleep(0.5)
         self.rotateRobot(rot_time, -rot_dir, rot_speed)
         time.sleep(0.5)
+        self.stop_drive()
+        
     
     def testAngle(self):
         goal_angle = np.random.rand() * 360 - 180
@@ -360,17 +369,19 @@ class VexControl:
                     self.drive_backward(30)
                     self.stop_drive()
 
-
+MINIMUM_INPLACE_ROTATION_SPEED = 50
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
-    # control.testRotate()
-    # control.testAngle()
-    # control.testTransulateAlongY()
-    # control.claw(30, clawAction.Close)
-    # control.claw(30, clawAction.Open)
-    control.drive_backward(40, 2)
-    # control.drive_backward(40)
-    # time.sleep(4)
+    #tested code
+    # control.drive(direction="forward", speed=30, drive_time=7)
+    # control.drive(direction="backward", speed=30, drive_time=7)
+    # control.rotateRobot(seconds=2, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.rotateRobot(seconds=2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.claw(20, clawAction.Open, drive_time=1.5)
+    # control.claw(20, clawAction.Close, drive_time=1.5)
+    
+    #untested code
+ # robot arm  
     control.stop_drive()
     robot.stop()
