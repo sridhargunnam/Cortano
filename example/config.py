@@ -8,9 +8,9 @@ class config:
   GEN_DEBUG_IMAGES = False
   SIZE_OF_CALIBRATION_TAG = 12.7 #cm
   CALIB_PATH = "/home/nvidia/wsp/clawbot/Cortano/calib.txt"
-  FIELD = "GAME" 
+  # FIELD = "GAME" 
   FIELD = "HOME" 
-  FIELD = "BEDROOM" 
+  # FIELD = "BEDROOM" 
   ROBOT_LENGTH = 45 # cm
   ROBOT_WIDTH = 42 # cm
   ROBOT_HEIGHT = 30 # cm

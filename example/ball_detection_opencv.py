@@ -22,7 +22,8 @@ def ball_detection(cam, debug=False):
 
         # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        if not debug:
+            return contours
         # Draw circles around detected tennis balls
         for contour in contours:
             if cv2.contourArea(contour) > 100:  # this value might need adjustment

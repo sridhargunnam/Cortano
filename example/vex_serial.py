@@ -342,9 +342,17 @@ class VexControl:
             self.robot.motor[9] = 127 if theta > 0 else -127
     
     def rotateRobot(self, seconds, dir, speed):
-        self.robot.motor[0] = speed * dir
-        self.robot.motor[9] = speed * dir
-        time.sleep(seconds)
+        self.robot.motor[0] = 35 * dir
+        self.robot.motor[9] = 35 * dir
+        time.sleep(0.1)
+        for i in range(seconds*1000):
+            self.robot.motor[0] = speed * dir
+            self.robot.motor[9] = speed * dir
+            time.sleep(1/1000)
+            self.stop_drive()
+        # self.robot.motor[0] = speed * dir
+        # self.robot.motor[9] = speed * dir
+        # time.sleep(seconds)
         self.stop_drive()
 
     def testRotate(self, rot_speed=30, rot_time=1, rot_dir=1):
@@ -369,15 +377,15 @@ class VexControl:
                     self.drive_backward(30)
                     self.stop_drive()
 
-MINIMUM_INPLACE_ROTATION_SPEED = 50
+MINIMUM_INPLACE_ROTATION_SPEED = 35
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
     #tested code
     # control.drive(direction="forward", speed=30, drive_time=7)
-    # control.drive(direction="backward", speed=30, drive_time=7)
-    # control.rotateRobot(seconds=2, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.rotateRobot(seconds=2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    control.drive(direction="backward", speed=30, drive_time=2)
+    # control.rotateRobot(seconds=5, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.rotateRobot(seconds=1, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.claw(20, clawAction.Open, drive_time=1.5)
     # control.claw(20, clawAction.Close, drive_time=1.5)
     

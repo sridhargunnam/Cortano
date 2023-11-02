@@ -2,7 +2,8 @@ import numpy as np
 # Map to apriltag poses home setup
 # origin is the corner of the balcony, at entrance
 import config
-config = config.config()
+config_loc = config.config()
+config_loc.FIELD = "HOME"
 map_apriltag_poses = {}
 map_apriltag_poses_home = {}
 map_apriltag_poses_bedroom = {}
@@ -10,44 +11,44 @@ T = np.identity(4)
 T[:3,0] = [1, 0, 0]
 T[:3,1] = [0, 0, -1]
 T[:3,2] = [0, 1, 0]
-T[:3,3] = [50,0, 6.4+config.TAG_SIZE_3IN]
+T[:3,3] = [50,0, 6.4+config_loc.TAG_SIZE_3IN]
 map_apriltag_poses_bedroom[1] = T
 T = np.identity(4)
 T[:3,0] = [0, 1, 0]
 T[:3,1] = [0, 0, -1]
 T[:3,2] = [-1, 0, 0]
-T[:3,3] = [0, -50, 6.4+config.TAG_SIZE_3IN]
+T[:3,3] = [0, -50, 6.4+config_loc.TAG_SIZE_3IN]
 map_apriltag_poses_bedroom[2] = T
 
 # print(T)
-
+X_OFFSET = 0 # or 40 cm
 for i in range(1,7):
     T = np.identity(4)
     T[:3,1] = np.array([0, 0, -1])
     if i == 1:
         T[:3,0] = [1, 0, 0]
         T[:3,2] = [0, 1, 0]
-        T[:3,3] = [41, 197, 26]
+        T[:3,3] = [X_OFFSET, 197, 26]
     if i == 2:
         T[:3,0] = [1, 0, 0]
         T[:3,2] = [0, 1, 0]
-        T[:3,3] = [41+55, 197, 26]
+        T[:3,3] = [X_OFFSET+55, 197, 26]
     if i == 3:
         T[:3,0] = [1, 0, 0]
         T[:3,2] = [0, 1, 0]
-        T[:3,3] = [41+55+55, 197, 26]
+        T[:3,3] = [X_OFFSET+55+55, 197, 26]
     if i == 4:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
-        T[:3,3] = [39, 0, 26]
+        T[:3,3] = [X_OFFSET, 0, 26]
     if i == 5:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
-        T[:3,3] = [39+55, 0, 26]
+        T[:3,3] = [X_OFFSET+55, 0, 26]
     if i == 6:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
-        T[:3,3] = [39+55+55, 0, 26]
+        T[:3,3] = [X_OFFSET+55+55, 0, 26]
     # print("i = ", i)
     # print(T)
     map_apriltag_poses_home[i] = T
@@ -110,15 +111,16 @@ for i in range(36):
         T[:3,3] = [-66 + 12 * (i - 30), 0, 12]
     map_apriltag_poses_game[i + 1] = T
 
-if config.FIELD == "HOME":
-    map_apriltag_poses = map_apriltag_poses_home
-if config.FIELD == "BEDROOM":
-    map_apriltag_poses = map_apriltag_poses_bedroom
-elif config.FIELD == "GAME":
-    map_apriltag_poses = map_apriltag_poses_game
-else:
-    print("Error: invalid field type")
-    exit(1)
+map_apriltag_poses = map_apriltag_poses_home
+# if config_loc.FIELD == "HOME":
+#     map_apriltag_poses = map_apriltag_poses_home
+# if config_loc.FIELD == "BEDROOM":
+#     map_apriltag_poses = map_apriltag_poses_bedroom
+# elif config_loc.FIELD == "GAME":
+#     map_apriltag_poses = map_apriltag_poses_game
+# else:
+#     print("Error: invalid field type")
+#     exit(1)
 
 if __name__ == "__main__":
     for tagid, pose in map_apriltag_poses.items():
