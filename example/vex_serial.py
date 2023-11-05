@@ -309,11 +309,12 @@ class VexControl:
           left_drive = 0
           right_drive = 0
         motor_values = self.robot.motor
-        motor_values[left_motor] = left_drive * speed
-        motor_values[right_motor] = right_drive * speed
-        self.robot.motors(motor_values)
-        time.sleep(drive_time)
-        self.stop_drive()
+        for i in range(max(int(drive_time * 10),1)):
+          motor_values[left_motor] = left_drive * speed
+          motor_values[right_motor] = right_drive * speed
+          self.robot.motors(motor_values)
+          time.sleep(1/10)
+          self.stop_drive()
     
     def stop_drive(self):
         motor_values = 10 * [0]
@@ -379,13 +380,13 @@ class VexControl:
             self.robot.motor[9] = 127 if theta > 0 else -127
     
     def rotateRobot(self, seconds, dir, speed):
-        self.robot.motor[0] = 35 * dir
-        self.robot.motor[9] = 35 * dir
-        time.sleep(0.1)
-        for i in range(seconds*1000):
+        # self.robot.motor[0] = 35 * dir
+        # self.robot.motor[9] = 35 * dir
+        # time.sleep(0.1)
+        for i in range(int(seconds*10)):
             self.robot.motor[0] = speed * dir
             self.robot.motor[9] = speed * dir
-            time.sleep(1/1000)
+            time.sleep(1/10)
             self.stop_drive()
         # self.robot.motor[0] = speed * dir
         # self.robot.motor[9] = speed * dir
@@ -421,12 +422,12 @@ if __name__ == "__main__":
     control = VexControl(robot)
 
     #tested code
-    # control.drive(direction="forward", speed=30, drive_time=7)
+    # control.drive(direction="forward", speed=30, drive_time=1.5)
     # control.drive(direction="backward", speed=30, drive_time=2)
-    # control.rotateRobot(seconds=5, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.rotateRobot(seconds=1, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.rotateRobot(seconds=0.1, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.rotateRobot(seconds=0.2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.claw(20, clawAction.Open, drive_time=1.5)
-    # control.claw(20, clawAction.Close, drive_time=1.5)
+    control.claw(20, clawAction.Close, drive_time=1.5)
     '''    control.claw(20, clawAction.Close, drive_time=1.5)
     start_time = time.time()
     while time.time() - start_time < 5:
@@ -443,7 +444,7 @@ if __name__ == "__main__":
     # print sensor values for 3 seconds
     start_time = time.time()
     while time.time() - start_time < 3:
-      control.update_robot_move_arm(armPosition=ARM_POSITION.mid)
+      control.update_robot_move_arm(armPosition=ARM_POSITION.high)
       print(robot.sensors())
     print("done")
     time.sleep(3)

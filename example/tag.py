@@ -67,8 +67,8 @@ class ATag:
     if tag_id in landmarks.map_apriltag_poses:
       # print(f'tag_id = {tag_id} in landmarks.map_apriltag_poses')
       Field2Robot = landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) @ Cam2Robot
-      print(f'landmarks.map_apriltag_poses[{tag_id}] = \n{landmarks.map_apriltag_poses[tag_id]}')
-      print("Lm2Cam = \n", Lm2Cam)
+      # print(f'landmarks.map_apriltag_poses[{tag_id}] = \n{landmarks.map_apriltag_poses[tag_id]}')
+      # print("Lm2Cam = \n", Lm2Cam)
       # print("Cam2Robot = \n", Cam2Robot)
       # print("Field2Robot = \n", Field2Robot)
     # np.savetxt("debug_transformation.txt", np.vstack((Lm2Cam, Cam2Robot)), delimiter=",")
@@ -90,7 +90,7 @@ import vex_serial as vex
 def runRobot(robot, control):
     #tested code
     # control.drive(direction="forward", speed=30, drive_time=7)
-    control.drive(direction="backward", speed=30, drive_time=1)
+    # control.drive(direction="backward", speed=30, drive_time=1)
     # control.rotateRobot(seconds=5, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.rotateRobot(seconds=1, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.claw(20, clawAction.Open, drive_time=1.5)
@@ -167,14 +167,17 @@ def main():
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
         # find ball position in robot frame
-        robot2cam = np.linalg.inv(cam2robot)
-        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-        print("ball_pos_robot = ", ball_pos_robot)
-        ball2Field1 = Robot2Field @ ball_pos_robot
-        print("ball2Field1 = ", ball2Field1)
+        try:
+          robot2cam = np.linalg.inv(cam2robot)
+          ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+          print("ball_pos_robot = ", ball_pos_robot)
+          ball2Field1 = Robot2Field @ ball_pos_robot
+          # print("ball2Field1 = ", ball2Field1)
+        except:
+          continue
         if DETECT_ONE_BALL is True:
           break
-        # runRobot(robot, control, x, y, z, Robot2Field)
+        # runRobot(robot, control, x, y, z,)
       
     if tag is not None:
       # print the time it took to detect the tag well formatted
