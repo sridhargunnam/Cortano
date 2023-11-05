@@ -9,6 +9,14 @@ ROTATION_DIRECTION = {
     "counter_clockwise": 1,
     "clockwise": -1
 }
+
+from enum import Enum
+class ARM_POSITION(Enum):
+  low = 'low',
+  mid = 'mid'
+  high = 'high'
+
+
 class IndexableArray:
   def __init__(self, length):
     self._data = Array(c_int, length)
@@ -93,15 +101,18 @@ def _decode_message(msg):
     return sensor_values
 
   except ValueError:
-    print("Error: could not decode message, incorrect hexstring read")
+    # print("Error: could not decode message, incorrect hexstring read")
     return None
 
 def _receive_data(connection, rxbuf):
   msg = None
   buf = connection.read_all()
   if buf:
-    rxbuf += buf.decode()
-    end = rxbuf.find(']')
+    try:
+      rxbuf += buf.decode()
+      end = rxbuf.find(']')
+    except UnicodeDecodeError as e:
+        return None, rxbuf
     if end != -1:
       start = rxbuf.find('[', 0, end)
       if start != -1 and '[' not in rxbuf[start+1:end]:
@@ -318,11 +329,37 @@ class VexControl:
         time.sleep(drive_time)
         self.stop_drive()
 
-    def update_robot_move_arm(self, angle, goal):
-      # P-controller with constant current
-      # +30 is to keep the arm from falling
-      self.robot.motor[1] = (goal - angle) * 127 + 30
-
+    def update_robot_move_arm(self, armPosition=ARM_POSITION.low, motor=2, error=20):
+      POTENTIOMETRIC_SENSOR_MAX_VALUE = 2582
+      POTENTIOMETRIC_SENSOR_MIN_VALUE = 1587
+      if armPosition == ARM_POSITION.low:
+        goal = POTENTIOMETRIC_SENSOR_MIN_VALUE
+      elif armPosition == ARM_POSITION.mid:
+        goal = (POTENTIOMETRIC_SENSOR_MAX_VALUE + POTENTIOMETRIC_SENSOR_MIN_VALUE) / 2
+      elif armPosition == ARM_POSITION.high:
+        goal = POTENTIOMETRIC_SENSOR_MAX_VALUE
+      # don't take less then 5 seconds to move the arm
+      start_time = time.time()
+      while time.time() - start_time < 5:
+        try:
+          sensor_values = self.robot.sensors()
+          if len(sensor_values) == 0:
+            print("no sensor values")
+            continue
+        except:
+          print("error reading sensor values")
+          continue
+        if sensor_values[0] > goal:
+          self.robot.motor[motor] = -15
+        else:
+          self.robot.motor[motor] = 35
+        if np.abs(sensor_values[0] - goal) < error:
+          break
+        time.sleep(0.1)
+      # self.robot.motor[motor] =  30
+      if armPosition == 'high' or armPosition == 'mid':
+        self.robot.motor[motor] =  30
+      
 
     def update_robot_goto(self, state, goal):
         dpos = [goal[0] - state[0] , goal[1] - state[1]] 
@@ -378,18 +415,37 @@ class VexControl:
                     self.stop_drive()
 
 MINIMUM_INPLACE_ROTATION_SPEED = 35
+
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
+
     #tested code
     # control.drive(direction="forward", speed=30, drive_time=7)
-    control.drive(direction="backward", speed=30, drive_time=2)
+    # control.drive(direction="backward", speed=30, drive_time=2)
     # control.rotateRobot(seconds=5, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.rotateRobot(seconds=1, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
     # control.claw(20, clawAction.Open, drive_time=1.5)
     # control.claw(20, clawAction.Close, drive_time=1.5)
+    '''    control.claw(20, clawAction.Close, drive_time=1.5)
+    start_time = time.time()
+    while time.time() - start_time < 5:
+        print(robot.sensors())
+    # [1587, 0, 1] the last sensor corresponds to the bottom limit switch, and will be 1 if the claw is closed
+    
+    control.claw(30, clawAction.Open, drive_time=0.8)
+    start_time = time.time()
+    while time.time() - start_time < 5:
+        print(robot.sensors())'''
     
     #untested code
- # robot arm  
+    # move the robot arm 
+    # print sensor values for 3 seconds
+    start_time = time.time()
+    while time.time() - start_time < 3:
+      control.update_robot_move_arm(armPosition=ARM_POSITION.mid)
+      print(robot.sensors())
+    print("done")
+    time.sleep(3)
     control.stop_drive()
     robot.stop()

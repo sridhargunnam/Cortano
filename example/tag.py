@@ -62,11 +62,14 @@ class ATag:
 
   def getRobotPoseFromTagPose(self, tag_pose, tag_id, Lm2Cam, Cam2Robot):
     if tag_pose is None or tag_id is None or Lm2Cam is None:
-      print(f'getRobotPoseFromTagPose: tag_pose = \n{tag_pose}, tag_id = {tag_id}, Lm2Cam = \n{Lm2Cam}')
+      # print(f'getRobotPoseFromTagPose: tag_pose = \n{tag_pose}, tag_id = {tag_id}, Lm2Cam = \n{Lm2Cam}')
       return None
     if tag_id in landmarks.map_apriltag_poses:
-      print(f'tag_id = {tag_id} in landmarks.map_apriltag_poses')
+      # print(f'tag_id = {tag_id} in landmarks.map_apriltag_poses')
       Field2Robot = landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) @ Cam2Robot
+      print(f'landmarks.map_apriltag_poses[{tag_id}] = \n{landmarks.map_apriltag_poses[tag_id]}')
+      print("Lm2Cam = \n", Lm2Cam)
+      # print("Cam2Robot = \n", Cam2Robot)
       # print("Field2Robot = \n", Field2Robot)
     # np.savetxt("debug_transformation.txt", np.vstack((Lm2Cam, Cam2Robot)), delimiter=",")
       return Field2Robot
@@ -125,62 +128,55 @@ def main():
     tag_size = config.TAG_SIZE_3IN # centimeters
   elif config.FIELD == "BEDROOM":
     tag_size = config.TAG_SIZE_6IN
-
+  
+  DETECT_ONE_BALL = True
   while True:
     dt = datetime.now()
     color, depth = cam.read()    
     tag, tag_id, Lm2Cam = atag.getTagAndPose(color, tag_size)
     
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robot)
-    contours = ball_detection.ball_detection(cam, debug=False)
-
+    # print("Robot2Field = \n", Robot2Field)
+    # Field2Robot = np.linalg.inv(Robot2Field)
+    # print("Field2Robot = \n", Field2Robot)
+    contours = ball_detection.ball_detection(cam)
+    print(f'len contours = {len(contours)}')
     if contours is not None:
-      #get the counter with the largest area
-      max_area = 0
-      max_area_contour = None
       for contour in contours:
-        if cv2.contourArea(contour) > max_area:
-          max_area = cv2.contourArea(contour)
-          max_area_contour = contour
-    if max_area_contour is not None:
-      (x, y), radius = cv2.minEnclosingCircle(max_area_contour)
-      center = (int(x), int(y))
-      cv2.circle(color, center, int(radius), (0, 255, 0), 2)
-      # get the average depth of the ball based on the contour and depth image
-      depth_ = depth[int(y)][int(x)]
-      # convert to meters
-      # get the depth scale of the camera
-      depth_scale = cam.depth_scale
-      depth_ = depth_ * depth_scale
-      cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-      # print("depth = ", depth_)
+        temp_countour = contour
+        if DETECT_ONE_BALL is True:
+          # write a lambda function to get the contour with the largest area
+          temp_countour = max(contours, key=lambda x: cv2.contourArea(x))
 
-      # get the x, y, z from image frame to camera frame
-      x = 100 * (x - cam.cx) * depth_ / cam.fx
-      y = 100 * (y - cam.cy) * depth_ / cam.fy
-      z = 100 * depth_
+        (x, y), radius = cv2.minEnclosingCircle(temp_countour)
+        center = (int(x), int(y))
+        cv2.circle(color, center, int(radius), (0, 255, 0), 2)
+        # get the average depth of the ball based on the contour and depth image
+        depth_ = depth[int(y)][int(x)]
+        # convert to meters
+        # get the depth scale of the camera
+        depth_scale = cam.depth_scale
+        depth_ = depth_ * depth_scale
+        # cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        # print("depth = ", depth_)
 
-      print("x = ", x)
-      print("y = ", y)
-      print("z = ", z)
+        # get the x, y, z from image frame to camera frame
+        x = 100 * (x - cam.cx) * depth_ / cam.fx
+        y = 100 * (y - cam.cy) * depth_ / cam.fy
+        z = 100 * depth_
+        # camera to robot transformation
+        # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
+        # find ball position in robot frame
+        robot2cam = np.linalg.inv(cam2robot)
+        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+        print("ball_pos_robot = ", ball_pos_robot)
+        ball2Field1 = Robot2Field @ ball_pos_robot
+        print("ball2Field1 = ", ball2Field1)
+        if DETECT_ONE_BALL is True:
+          break
+        # runRobot(robot, control, x, y, z, Robot2Field)
       
-
-      # camera to robot transformation
-      cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
-      # find ball position in robot frame
-      robot2cam = np.linalg.inv(cam2robot)
-      ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-      print("ball_pos_robot = ", ball_pos_robot)
-      # run the robot
-      
-      # runRobot(robot, control, x, y, z, Robot2Field)
-
-    
-
     if tag is not None:
-      robot2Lm = np.linalg.inv(Lm2Cam) @ rsCamToRobot
-      Lm2Robot = np.linalg.inv(robot2Lm)
-      # print("Lm2Robot = \n", Lm2Robot)
       # print the time it took to detect the tag well formatted
       print("Time to detect tag: ", datetime.now() - dt)
       if tag.decision_margin < 50:

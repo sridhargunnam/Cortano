@@ -40,7 +40,7 @@ for i in range(1,7):
     if i == 4:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
-        T[:3,3] = [X_OFFSET, 0, 26]
+        T[:3,3] = [X_OFFSET+55+55, 0, 26]
     if i == 5:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
@@ -48,7 +48,7 @@ for i in range(1,7):
     if i == 6:
         T[:3,0] = [-1, 0, 0]
         T[:3,2] = [0, -1, 0]
-        T[:3,3] = [X_OFFSET+55+55, 0, 26]
+        T[:3,3] = [X_OFFSET, 0, 26]
     # print("i = ", i)
     # print(T)
     map_apriltag_poses_home[i] = T
