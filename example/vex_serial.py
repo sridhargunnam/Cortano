@@ -10,6 +10,8 @@ ROTATION_DIRECTION = {
     "clockwise": -1
 }
 
+MINIMUM_INPLACE_ROTATION_SPEED = 30
+
 from enum import Enum
 class ARM_POSITION(Enum):
   low = 'low',
@@ -297,6 +299,10 @@ class clawAction:
 class VexControl:
     def __init__(self, robot):
         self.robot = robot
+        self.prev_dist_error = 0
+        self.dist_integral = 0
+        self.prev_theta_error = 0
+        self.theta_integral = 0
     
     def drive(self, direction, speed, drive_time=1, left_motor=0, right_motor=9):
         if direction == "forward":
@@ -353,7 +359,7 @@ class VexControl:
         if sensor_values[0] > goal:
           self.robot.motor[motor] = -15
         else:
-          self.robot.motor[motor] = 35
+          self.robot.motor[motor] = 50
         if np.abs(sensor_values[0] - goal) < error:
           break
         time.sleep(0.1)
@@ -362,35 +368,76 @@ class VexControl:
         self.robot.motor[motor] =  30
       
 
-    def update_robot_goto(self, state, goal):
-        dpos = [goal[0] - state[0] , goal[1] - state[1]] 
+    def update_robot_goto(self, goal,left_motor=0, right_motor=9):
+        dpos = [goal[0], goal[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
         theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
+        # thetaWithNormal = 90 - theta
+        # theta = thetaWithNormal
         theta = (theta + 180) % 360 - 180  # [-180, 180]
-        Pforward = 30
-        Ptheta = 30
-        if np.abs(theta) < 30:
-            self.robot.motor[0] = -Pforward * dist + Ptheta * theta
-            self.robot.motor[9] = Pforward * dist + Ptheta * theta
+        print(f'dist = {dist}, theta = {theta}')
+        # exit(0)
+        # PI Control for distance
+        Kp_dist = 0.5
+        Ki_dist = 0.1
+        dist_error = dist
+        self.dist_integral += dist_error
+        P_dist = Kp_dist * dist_error
+        I_dist = Ki_dist * self.dist_integral
+
+        # PI Control for orientation
+        Kp_theta = 2
+        Ki_theta = 0.05
+        theta_error = theta
+        self.theta_integral += theta_error
+        P_theta = Kp_theta * theta_error
+        I_theta = Ki_theta * self.theta_integral
+        MAX_VALUE_FOR_ROTATION = 60
+        motor_values = self.robot.motor
+        if (np.abs(theta) < 30 and np.abs(theta) > 5) and np.abs(dist) > 10:
+            motor_values[left_motor] = int(P_dist * dist + P_theta * theta)
+            motor_values[right_motor] = int(-P_dist * dist + P_theta * theta)
         else:
-            self.robot.motor[0] = 127 if theta > 0 else -127
-            self.robot.motor[9] = 127 if theta > 0 else -127
-        if dist < 1 and np.abs(theta) > 30:
-            self.robot.motor[0] = 127 if theta > 0 else -127
-            self.robot.motor[9] = 127 if theta > 0 else -127
-    
+            motor_values[left_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
+            motor_values[right_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
+        self.robot.motors(motor_values)
+        # if dist < 1 and np.abs(theta) > 30:
+        #     motor_values[left_motor] = int(MAX_VALUE_FOR_ROTATION if theta > 0 else -MAX_VALUE_FOR_ROTATION)
+        #     motor_values[right_motor] = int(MAX_VALUE_FOR_ROTATION if theta > 0 else -MAX_VALUE_FOR_ROTATION)
+        # Update previous errors
+        self.prev_dist_error = dist_error
+        self.prev_theta_error = theta_error
+        time.sleep(0.2)
+
+#     ROTATION_DIRECTION = {
+#     "counter_clockwise": 1,
+#     "clockwise": -1
+# }
+ # revisit this code after IMU integration
+ #https://chat.openai.com/share/85c1d999-2fc5-4ad0-916e-f22d141afb2d
+    def rotateRobotPI(self, theta, speed=MINIMUM_INPLACE_ROTATION_SPEED):
+        tolerance = 1
+        current_angle = 0 # replace this with imu reading
+        error = theta - current_angle
+        if abs(error) < tolerance:
+          return 
+        Kp = 1
+        Ki = 0.1
+        self.theta_integral += error
+        pi_output = Kp * error + Ki * self.theta_integral
+        # Map the PI output to the motor speeds
+        self.robot.motor[0] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        self.robot.motor[9] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        time.sleep(0.2)
+        self.stop_drive()
+        self.stop_drive()
+
     def rotateRobot(self, seconds, dir, speed):
-        # self.robot.motor[0] = 35 * dir
-        # self.robot.motor[9] = 35 * dir
-        # time.sleep(0.1)
         for i in range(int(seconds*10)):
             self.robot.motor[0] = speed * dir
             self.robot.motor[9] = speed * dir
             time.sleep(1/10)
             self.stop_drive()
-        # self.robot.motor[0] = speed * dir
-        # self.robot.motor[9] = speed * dir
-        # time.sleep(seconds)
         self.stop_drive()
 
     def testRotate(self, rot_speed=30, rot_time=1, rot_dir=1):
@@ -415,19 +462,38 @@ class VexControl:
                     self.drive_backward(30)
                     self.stop_drive()
 
-MINIMUM_INPLACE_ROTATION_SPEED = 35
 
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
+    # input argument is stop
+    if len(sys.argv) > 1 and sys.argv[1] == "stop":
+        control.stop_drive()
+        robot.stop()
+        exit(0)
+    import signal
+    def signal_handler(sig, frame):
+        control.stop_drive()
+        robot.stop()
+        exit(0)
+    # Also stop the robot if the program is terminated or user presses Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+  
 
     #tested code
-    # control.drive(direction="forward", speed=30, drive_time=1.5)
-    # control.drive(direction="backward", speed=30, drive_time=2)
-    # control.rotateRobot(seconds=0.1, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # control.drive(direction="forward", speed=30, drive_time=1)
+    control.drive(direction="backward", speed=30, drive_time=1)
+    # start_time = time.time()
+    # while time.time() - start_time < 5:
     # control.rotateRobot(seconds=0.2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.claw(20, clawAction.Open, drive_time=1.5)
-    control.claw(20, clawAction.Close, drive_time=1.5)
+    # control.rotateRobot(seconds=0.4, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+    # # start_time = time.time()
+    # while time.time() - start_time < 30:
+    #   control.claw(20, clawAction.Open, drive_time=1.5)
+    #   time.sleep(0.5)
+    #   control.claw(20, clawAction.Close, drive_time=1.5)
+    #   time.sleep(0.5)
     '''    control.claw(20, clawAction.Close, drive_time=1.5)
     start_time = time.time()
     while time.time() - start_time < 5:
@@ -440,13 +506,21 @@ if __name__ == "__main__":
         print(robot.sensors())'''
     
     #untested code
+    # control.update_robot_goto([-15,38])
     # move the robot arm 
     # print sensor values for 3 seconds
-    start_time = time.time()
-    while time.time() - start_time < 3:
-      control.update_robot_move_arm(armPosition=ARM_POSITION.high)
-      print(robot.sensors())
-    print("done")
-    time.sleep(3)
+    # while True:
+    #   print(robot.sensors())
+    #   time.sleep(0.1)
+    # print(robot.sensors())
+    # start_time = time.time()
+    # while time.time() - start_time < 3:
+    # control.update_robot_move_arm(armPosition=ARM_POSITION.low)
+    #   print(robot.sensors())
+    # print("done")
+    # time.sleep(3)
+        # Also stop the robot if the program is terminated or user presses Ctrl+C
+    # signal.signal(signal.SIGINT, signal_handler)
+    # signal.signal(signal.SIGTERM, signal_handler)
     control.stop_drive()
     robot.stop()

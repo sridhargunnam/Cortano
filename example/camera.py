@@ -379,14 +379,14 @@ class CalibrateCamera:
           # exit(0)
 
 
-from vex_serial import VexControl
+# from vex_serial import VexControl
 class DepthAICamera:
-  def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=True):
+  def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=False):
     self.debug_mode = debug_mode
     self.initCamera(width, height, object_detection)
     self.viz = viz
-    self.robot = VexCortex("/dev/ttyUSB0")
-    self.control = VexControl(self.robot)
+    # self.robot = VexCortex("/dev/ttyUSB0")
+    # self.control = VexControl(self.robot)
     #Create a queue to store the timestamp of the frame, x,y,z position of the detected object, and the confidence score
     # self.q = daiQueue
   # descructor to stop the pipeline
@@ -395,39 +395,116 @@ class DepthAICamera:
       cv2.destroyAllWindows()
     except:
       pass
-    if self.robot:
-      self.robot.stop()
+    # if self.robot:
+    #   self.robot.stop()
 
   def initCamera(self, width, height, object_detection):
-    self.camera_params = self.getCameraIntrinsics(width, height)
+    self.width = width
+    self.height = height
     # Create pipeline
     self.pipeline = dai.Pipeline()
     # Define source and output
-    if not object_detection:
-      print("initilying depthai color camera only")
+    if not object_detection: # rgb only
+      print("initilying depthai color and depth")
+      # Closer-in minimum depth, disparity range is doubled (from 95 to 190):
+      extended_disparity = False
+      # Better accuracy for longer distance, fractional disparity 32-levels:
+      subpixel = True
+      # Better handling for occlusions:
+      lr_check = True
       self.camRgb = self.pipeline.create(dai.node.ColorCamera)
       self.camRgb.setPreviewSize(width, height)
+      self.camRgb.setInterleaved(True)
+      self.camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
+
+      self.StereoDepth = self.pipeline.create(dai.node.StereoDepth)
+      self.spatialLocationCalculator = self.pipeline.create(dai.node.SpatialLocationCalculator)
+
+
       # self.camRgb.initialControl.setManualFocus(130)
 
       self.xoutRgb = self.pipeline.create(dai.node.XLinkOut)
       self.xoutRgb.setStreamName("rgb_default")
       self.camRgb.preview.link(self.xoutRgb.input)
+      
+      self.camLeft = self.pipeline.create(dai.node.MonoCamera)
+      self.camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
+      self.camLeft.setCamera("left")
+      self.xoutLeft = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutLeft.setStreamName("left")
+      self.camLeft.out.link(self.xoutLeft.input)
 
-      # self.camLeft = self.pipeline.create(dai.node.MonoCamera)
-      # self.camLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-      # self.camLeft.setCamera("left")
-      # self.xoutLeft = self.pipeline.create(dai.node.XLinkOut)
-      # self.xoutLeft.setStreamName("left")
-      # self.camLeft.out.link(self.xoutLeft.input)
+      self.camRight = self.pipeline.create(dai.node.MonoCamera)
+      self.camRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
+      self.camRight.setCamera("right")
+      self.xoutRight = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutRight.setStreamName("right")
+      self.camRight.out.link(self.xoutRight.input)
+
+      # Link left and right cameras to StereoDepth node
+      self.camLeft.out.link(self.StereoDepth.left)
+      self.camRight.out.link(self.StereoDepth.right)
+
+      self.xoutDisparity = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutDisparity.setStreamName("disparity")
+      self.xoutSpatialData = self.pipeline.create(dai.node.XLinkOut)
+      self.xinSpatialCalcConfig = self.pipeline.create(dai.node.XLinkIn)
+
+      self.xoutSpatialData.setStreamName("spatialData")
+      self.xinSpatialCalcConfig.setStreamName("spatialCalcConfig")
+
+
+      # Create a node that will produce the depth map (using disparity output as it's easier to visualize depth this way)
+      self.StereoDepth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+      # Options: MEDIAN_OFF, KERNEL_3x3, KERNEL_5x5, KERNEL_7x7 (default)
+      self.StereoDepth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
+      self.StereoDepth.setLeftRightCheck(lr_check)
+      self.StereoDepth.setExtendedDisparity(extended_disparity)
+      self.StereoDepth.setSubpixel(subpixel)
+      # self.spatialLocationCalculator.inputConfig.setWaitForMessage(False)
+      self.StereoDepth.disparity.link(self.xoutDisparity.input)
+      # self.StereoDepth.depth.link(self.spatialLocationCalculator.inputDepth)
+
 
       # Connect to device and start pipeline
       self.device = dai.Device(self.pipeline)
-      self.qRgb = self.device.getOutputQueue(name="rgb_default")
-      # self.qLeft = self.device.getOutputQueue(name="left")
+      self.qRgb = self.device.getOutputQueue(name="rgb_default", maxSize=2, blocking=False)
+      self.qLeft = self.device.getOutputQueue(name="left")
+      self.qRight = self.device.getOutputQueue(name="right")
+      self.qDepth = self.device.getOutputQueue(name="disparity", maxSize=2, blocking=False)
 
+      self.camera_params = self.getCameraIntrinsics() #width, height)
+
+      self.depth_scale = self.fx
+
+
+      # Config
+      topLeft = dai.Point2f(0.4, 0.4)
+      bottomRight = dai.Point2f(0.6, 0.6)
+
+      config = dai.SpatialLocationCalculatorConfigData()
+      config.depthThresholds.lowerThreshold = 100
+      config.depthThresholds.upperThreshold = 10000
+      calculationAlgorithm = dai.SpatialLocationCalculatorAlgorithm.MEDIAN
+      config.roi = dai.Rect(topLeft, bottomRight)
+
+# 
+      self.spatialLocationCalculator.inputConfig.setWaitForMessage(False)
+      self.spatialLocationCalculator.initialConfig.addROI(config)
+
+      # self.spatialLocationCalculator.passthroughDepth.link(self.xoutDisparity.input)
+      # stereo.depth.link(self.spatialLocationCalculator.inputDepth)
+
+      # self.spatialLocationCalculator.out.link(self.xoutSpatialData.input)
+      # self.xinSpatialCalcConfig.out.link(self.spatialLocationCalculator.inputConfig)
       #warm up the camera to get rid of the first few frames that have low exposure
       for i in range(10):
-        self.qRgb.get()
+        if self.qRgb.has():
+          self.qRgb.get()
+        # self.qLeft.get()
+        # self.qRight.get()
+        if self.qDepth.has():
+          self.qDepth.get()
     else:
       self.labelMap = [
     "person",         "bicycle",    "car",           "motorbike",     "aeroplane",   "bus",           "train",
@@ -511,41 +588,45 @@ class DepthAICamera:
       spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
       spatialDetectionNetwork.outNetwork.link(nnNetworkOut.input)
 
-  def getCameraIntrinsics(self, width=1920, height=1080):
-    self.width = width
-    self.height = height
-    with dai.Device() as device:
-      calibFile = str((Path(__file__).parent / Path(f"calib_{device.getMxId()}.json")).resolve().absolute())
-      if len(sys.argv) > 1:
-          calibFile = sys.argv[1]
+  def getCameraIntrinsics(self):#, width=1920, height=1080):
+    calibData = self.device.readCalibration()
+    import math 
+    M_rgb, wid, hgt = calibData.getDefaultIntrinsics(dai.CameraBoardSocket.CAM_A)
+    self.cx = M_rgb[0][2] * (self.width / wid)
+    self.cy = M_rgb[1][2] * (self.height / hgt)
+    self.fx = M_rgb[0][0] * (self.width / wid)
+    self.fy = M_rgb[1][1] * (self.height / hgt)
+    self.focal_length_in_pixels = self.fx
+    self.hfov =  2 * 180 / (math.pi) * math.atan(self.width * 0.5 / self.fx)
+    self.vfov =  2 * 180 / (math.pi) * math.atan(self.height * 0.5 / self.fy)
+    self.baseline = 7.5 #cm
+    if True: #self.debug_mode:
+      print("OAKD-1 RGB Camera Default intrinsics...")
+      print(M_rgb)
+      print(wid)
+      print(hgt)
+      print("cx = ", self.cx)
+      print("cy = ", self.cy)
+      print("fx = ", self.fx)
+      print("fy = ", self.fy)
+      # exit()
+    # assert wid == self.width and hgt == self.height
 
-      calibData = device.readCalibration()
-      calibData.eepromToJsonFile(calibFile)
-
-      M_rgb, wid, hgt = calibData.getDefaultIntrinsics(dai.CameraBoardSocket.CAM_A)
-      self.cx = M_rgb[0][2] * (self.width / wid)
-      self.cy = M_rgb[1][2] * (self.height / hgt)
-      self.fx = M_rgb[0][0] * (self.width / wid)
-      self.fy = M_rgb[1][1] * (self.height / hgt)
-      if self.debug_mode:
-        print("OAKD-1 RGB Camera Default intrinsics...")
-        print(M_rgb)
-        print(wid)
-        print(hgt)
-      # assert wid == self.width and hgt == self.height
-
-      return [self.fx, self.fy, self.cx, self.cy]
+    return [self.fx, self.fy, self.cx, self.cy]
 
   def read(self, scale=False): # will also store in buffer to be read
     # print("read from camera")
-    imgFrame = self.qRgb.get()
-    color = imgFrame.getCvFrame()
+    color = self.qRgb.get().getCvFrame()
+    if self.qDepth.has():
+      depth = self.qDepth.get().getFrame()
+    else:
+      depth = np.zeros((self.height, self.width), dtype=np.float32)
     # imgFrame = self.qLeft.get()
     # left_image = imgFrame.getCvFrame()
     # if scale:
     #   depth = depth.astype(np.float32) * self.depth_scale
     # color = np.ascontiguousarray(np.flip(color, axis=-1))
-    return color, None
+    return color, depth 
   
   def view(self):
     while True:
@@ -787,7 +868,8 @@ def runCameraCalib(input="Load"):
       rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
       print("rsCamToRobot = \n", rsCamToRobot)
 
-      daiCam = DepthAICamera(1280,720, object_detection=False)
+      # daiCam = DepthAICamera(1280,720, object_detection=False)
+      daiCam = DepthAICamera(1920,1080,object_detection=False)
       daiCamCalib = CalibrateCamera(daiCam)
       # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       # print("daiCam2LM = \n", daiCam2LM)

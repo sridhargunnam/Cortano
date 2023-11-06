@@ -103,26 +103,20 @@ def runRobot(robot, control):
 
 import ball_detection_opencv as ball_detection
 def main():
-  # robot = vex.VexCortex("/dev/ttyUSB0")
-  # control = vex.VexControl(robot)
+  robot = vex.VexCortex("/dev/ttyUSB0")
+  control = vex.VexControl(robot)
   np.set_printoptions(precision=2, suppress=True)
-  #check the input arguments and set the camera
-  #rscam for realsense camera, and daicam for dai camera
   calib = np.loadtxt("calib.txt", delimiter=",")
   rsCamToRobot = calib[:4,:]
   daiCamToRobot = calib[4:,:]
-  if len(sys.argv) != 2:
-    print("Usage: python3 tag.py [rscam/daicam]")
-    # exit(0)
-  if sys.argv[1] == "rscam":
-    cam = camera.RealSenseCamera(1280,720) 
-    camera_params = cam.getCameraIntrinsics()
-    cam2robot = rsCamToRobot
-  elif sys.argv[1] == "daicam":
-    cam = camera.DepthAICamera(1280,720)
-    camera_params = cam.getCameraIntrinsics(1280,720)
-    cam2robot = daiCamToRobot
-  atag = ATag(camera_params)
+  camRS = camera.RealSenseCamera(1280,720) 
+  camera_paramsRS = camRS.getCameraIntrinsics()
+  cam2robotRS = rsCamToRobot
+  camDai = camera.DepthAICamera(1920, 1080)
+  camera_paramsDai = camDai.getCameraIntrinsics() #1280,720)
+  cam2robotDai = daiCamToRobot
+  
+  atag = ATag(camera_paramsDai)
   # detect the tag and get the pose
   if config.FIELD == "HOME" or config.FIELD == "GAME":
     tag_size = config.TAG_SIZE_3IN # centimeters
@@ -132,16 +126,19 @@ def main():
   DETECT_ONE_BALL = True
   while True:
     dt = datetime.now()
-    color, depth = cam.read()    
-    tag, tag_id, Lm2Cam = atag.getTagAndPose(color, tag_size)
+    colorRS, depthRS = camRS.read()   
+    colorDai, depthDai = camDai.read()
+    tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
     
-    Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robot)
+    Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
     # print("Robot2Field = \n", Robot2Field)
     # Field2Robot = np.linalg.inv(Robot2Field)
     # print("Field2Robot = \n", Field2Robot)
-    contours = ball_detection.ball_detection(cam)
+    contours = ball_detection.ball_detection(camRS)
+    contoursDai = ball_detection.ball_detection(camDai)
     print(f'len contours = {len(contours)}')
-    if contours is not None:
+    print(f'len contoursDai = {len(contoursDai)}')
+    if len(contours) > 0:
       for contour in contours:
         temp_countour = contour
         if DETECT_ONE_BALL is True:
@@ -150,25 +147,27 @@ def main():
 
         (x, y), radius = cv2.minEnclosingCircle(temp_countour)
         center = (int(x), int(y))
-        cv2.circle(color, center, int(radius), (0, 255, 0), 2)
+        cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
         # get the average depth of the ball based on the contour and depth image
-        depth_ = depth[int(y)][int(x)]
+        depth_ = depthRS[int(y)][int(x)]
         # convert to meters
         # get the depth scale of the camera
-        depth_scale = cam.depth_scale
+        depth_scale = camRS.depth_scale
         depth_ = depth_ * depth_scale
         # cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         # print("depth = ", depth_)
 
         # get the x, y, z from image frame to camera frame
-        x = 100 * (x - cam.cx) * depth_ / cam.fx
-        y = 100 * (y - cam.cy) * depth_ / cam.fy
+        x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
+        y = 100 * (y - camRS.cy) * depth_ / camRS.fy
         z = 100 * depth_
+        control.update_robot_goto([x, y])
+        control.stop_drive()
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
         # find ball position in robot frame
         try:
-          robot2cam = np.linalg.inv(cam2robot)
+          robot2cam = np.linalg.inv(cam2robotRS)
           ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
           print("ball_pos_robot = ", ball_pos_robot)
           ball2Field1 = Robot2Field @ ball_pos_robot
@@ -178,10 +177,41 @@ def main():
         if DETECT_ONE_BALL is True:
           break
         # runRobot(robot, control, x, y, z,)
-      
+    elif len(contoursDai) > 0:
+        # if the circle's center is not in the center of the image, rotate the robot
+        temp_countour = max(contoursDai, key=lambda x: cv2.contourArea(x))
+        (x, y), radius = cv2.minEnclosingCircle(temp_countour)
+        center = (int(x), int(y))
+        cv2.circle(colorDai, center, int(radius), (0, 255, 0), 2)
+        # calculate approx theta
+        theta = np.degrees(np.arctan2(x - colorDai.shape[1], colorDai.shape[0] / 2))
+        # print theta , x, y 
+        print(f'theta = {theta}, x = {x}, y = {y}')
+        # theta = 90 - theta
+        print(f'approx theta in dai = {theta}')
+        # if x > 0.6 * colorDai.shape[1]:
+        #   print("rotating robot counter clockwise as we detected a ball on the right")
+        #   control.rotateRobotPI(theta=theta, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+40)
+        #   # control.rotateRobot(seconds=0.1, dir=vex.ROTATION_DIRECTION["counter_clockwise"], speed=vex.MINIMUM_INPLACE_ROTATION_SPEED)    
+        # elif x < 0.4 * colorDai.shape[1]:
+        #   print("rotating robot clockwise as we detected a ball on the left")
+        #   control.rotateRobotPI(theta=theta, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+40)
+        if len(contours) == 0 and len(contoursDai) > 0:
+        # move the robot forward
+          print("moving robot forward")
+          control.drive(direction="forward", speed=30, drive_time=0.2)
+    else:
+        print("rotating robot clockwise as we didn't detect any balls")
+        control.rotateRobot(seconds=0.1, dir=vex.ROTATION_DIRECTION["clockwise"], speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+50)
+  
+    # if len(contours) == 0 and len(contoursDai) > 0:
+    #   # move the robot forward
+    #   print("moving robot forward")
+    #   control.drive(direction="forward", speed=30, drive_time=0.2)
+      # continue
     if tag is not None:
       # print the time it took to detect the tag well formatted
-      print("Time to detect tag: ", datetime.now() - dt)
+      # print("Time to detect tag: ", datetime.now() - dt)
       if tag.decision_margin < 50:
           continue
       font_scale = 0.5  # Adjust this value for a smaller font size
@@ -189,12 +219,19 @@ def main():
       font_thickness = 2
       text_offset_y = 30  # Vertical offset between text lines
       # Display tag ID
-      cv2.putText(color, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      cv2.putText(colorDai, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
       # Display only the 1 most significant digit for pose_R and pose_t
       pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
       pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
-      cv2.putText(color, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      cv2.putText(color, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      cv2.putText(colorDai, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      cv2.putText(colorDai, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+    # stack color images from RS and Dai
+    resize_scale = colorRS.shape[0] / colorDai.shape[0]
+    resized_colorDai = cv2.resize(colorDai, (int(colorDai.shape[1] * resize_scale), colorRS.shape[0]))
+
+    color = np.hstack((colorRS, resized_colorDai))
+    # downsize the image for display
+    color = cv2.resize(color, (int(color.shape[1] / 2), int(color.shape[0] / 2)))
     cv2.imshow("color", color)
     if cv2.waitKey(1) == 27:
       cv2.destroyAllWindows()

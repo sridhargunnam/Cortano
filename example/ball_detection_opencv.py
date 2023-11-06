@@ -13,7 +13,7 @@ def ball_detection(cam, debug=False, min_distance=30): # Added min_distance para
         # Read the image
         image, depth  = cam.read()
         # depth = cam.read()[1] 
-        depth_3d = cam.depth2rgb(depth)
+        # depth_3d = cam.depth2rgb(depth)
 
         # Convert to HSV
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -62,15 +62,15 @@ def ball_detection(cam, debug=False, min_distance=30): # Added min_distance para
             depth_scale = cam.depth_scale
             depth_ = depth_ * depth_scale
             cv2.putText(image, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            cv2.putText(depth_3d, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # cv2.putText(depth_3d, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
 
         fps = 1.0 / (time.time() - start_time)
         cv2.putText(image, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        cv2.putText(depth_3d, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        # cv2.putText(depth_3d, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         # Show the result
         if debug:
-            cv2.imshow('Depth', depth_3d)
+            # cv2.imshow('Depth', depth_3d)
             cv2.imshow('Color', image)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()

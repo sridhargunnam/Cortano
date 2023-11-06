@@ -1,12 +1,16 @@
-# Check how the pyapriltags are working, and update the slam.py to support detection of all the tags
-# Integratre the slam with imu data to create a pose data with higher frame rate
-# Send the robot data for visualization on the host
-# Glueing all of the code together
-# Make sure the tags are working in low light
-# For camera Calibration i.e camera to Robot transformation, just have 2 or more QR codes on the same sheet. Since the QR codes on the sheet are on same place, and relative pose came be measured. 
-# I am thinking of keeing the center of the claw as the origin of the robot. 
-Or I could calculate the distance between the center of the robot to the center of the claw and keep the camera
+# FIX vex_control update_robot_goto
 
+# Adding IMU readings for PI control
+
+# to run 
+# python3 example/tag.py |& tee log.txt
+
+# Use realsense camera for object detection and tracking and the depth ai camera for april tags
+
+# Send the robot data for visualization on the host
+
+# When you see multiple ball track the one that is the target(to be caught)
+# Hack is to use the ball that has the shortest distance
 
 
 # Try out NVIDIA-ISAAC-ROS isaac_ros_common
