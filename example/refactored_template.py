@@ -2,8 +2,9 @@ from multiprocessing import Process, Queue
 import time
 
 # Define a general Publisher class
-class Publisher:
+class Publisher(Process):
     def __init__(self):
+        super().__init__()
         self.subscribers = set()
 
     def register(self, subscriber):
@@ -14,35 +15,49 @@ class Publisher:
 
     def publish(self, message):
         for subscriber in self.subscribers:
-            subscriber.update(message)
-# Let's refine the Subscriber class to include a callback method.
-# Additionally, we'll allow the BallDetector to publish its findings after processing.
+            # check the maximum size of the queue and remove the oldest item based on the subscription policy
+            if subscriber.queue.full() and subscriber.policy == 'fifo':
+                subscriber.queue.get()
+            subscriber.queue.put(message)
 
-class Subscriber:
-    def __init__(self, name, callback=None):
+# Let's refine the Subscriber class to include a callback method.
+class Subscriber(Process):
+    def __init__(self, name, callback=None, policy='fifo'):
         self.name = name
+        self.policy = policy
+        self.queue = Queue()
         self.callback = callback
 
     def update(self, message):
         if callable(self.callback):
-            self.callback(message)
+            return self.callback(message)
+
+    def run(self):
+        while True:
+            if not self.queue.empty():
+                message = self.queue.get()
+                self.update(message)
 
 # Let's refactor the Camera class to include a method for continuously capturing images
 # and publishing them to a queue.
-class Camera(Process):
+class Camera(Publisher):
     def __init__(self, camera_type, image_queue):
         super().__init__()
+        Publisher.__init__(self)
         self.camera_type = camera_type
         self.image_queue = image_queue
         # Additional camera initialization here
+        print(f"Initializing {self.camera_type} camera")
+        # self.run()
 
     def run(self):
         while True:
             # Simulate image capture
             image = f"Image from {self.camera_type} camera"
             self.image_queue.put(image)
-            time.sleep(1)  # Simulate time delay between captures        
-    def calibrate(self):
+            time.sleep(0.33)  # Simulate time delay between captures    
+
+    def calibrate(self): #TODO port this later
         # Implement camera calibration here
         pass
     
@@ -51,26 +66,32 @@ class Camera(Process):
         pass    
 
 # Now, let's refine the BallDetector to include publishing capabilities and a callback method.
-class BallDetector(Subscriber, Process):
-    def __init__(self, name, output_queue):
+class BallDetector(Subscriber, Publisher, Process):
+    def __init__(self, name, image_queue, output_queue):
         super().__init__(name)
+        self.image_queue = image_queue
         self.output_queue = output_queue
+        print(f"Initializing {self.name}")
+        self.run()
 
     def process_image(self, image):
         # Placeholder for image processing logic
+        print(f"Processing image from {self.name}")
         # Simulate detecting ball contour details
+        self.detect()
         contours_details = f"Contours details from {self.name} for {image}"
         # Publish the ball contour details to the output queue
-        self.output_queue.put(contours_details)
+        return contours_details
 
     def run(self):
         self.callback = self.process_image
         while True:
-            if not self.output_queue.empty():
-                message = self.output_queue.get()
-                self.update(message)
-                time.sleep(2)  # Simulate processing time
-
+            if not self.image_queue.empty():
+                image = self.image_queue.get()
+                contours_details = self.update(image)
+                time.sleep(0.1)
+                self.output_queue.put(contours_details)
+    
     def detect(self, debug=False):
         # Implement ball detection here
         pass
@@ -135,3 +156,6 @@ def main():
 
     camera_publisher.join()
     ball_detector_subscriber.join()
+
+if __name__ == '__main__':
+    main()
