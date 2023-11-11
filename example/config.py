@@ -1,5 +1,5 @@
 import math
-class config:
+class Config:
   TAG_POLICY = "HIGHEST_CONFIDENCE"
   TAG_POLICY = "FIRST"
   TAG_DECISION_MARGIN_THRESHOLD = 150
@@ -16,4 +16,5 @@ class config:
   ROBOT_HEIGHT = 30 # cm
   ROBOT_RADIUS = math.sqrt(ROBOT_LENGTH**2 + ROBOT_WIDTH**2) / 2
   # FIELD = "GAME"
-
+  CREATE_MASK = False
+  MASK_PATH = "/home/nvidia/wsp/clawbot/Cortano/mask.png"

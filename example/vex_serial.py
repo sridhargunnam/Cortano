@@ -375,7 +375,7 @@ class VexControl:
         # thetaWithNormal = 90 - theta
         # theta = thetaWithNormal
         theta = (theta + 180) % 360 - 180  # [-180, 180]
-        print(f'dist = {dist}, theta = {theta}')
+        # print(f'dist = {dist}, theta = {theta}')
         # exit(0)
         # PI Control for distance
         Kp_dist = 0.5

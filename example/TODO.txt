@@ -1,9 +1,12 @@
 # FIX vex_control update_robot_goto
 
 # Adding IMU readings for PI control
+# State estimation 
 
 # to run 
 # python3 example/tag.py |& tee log.txt
+
+# Need to use filters to make sure that the object size between consecutive frames are preserved, or not change drastically. 
 
 # Use realsense camera for object detection and tracking and the depth ai camera for april tags
 
@@ -12,5 +15,7 @@
 # When you see multiple ball track the one that is the target(to be caught)
 # Hack is to use the ball that has the shortest distance
 
+# issue: when the ball is closer to the robot in the claw 
+ the x,y,z becomes noisy. i.e X is usually correct, Y and z are incorrect.  Current idea is to filter out all the ball who are not on ground. i.e if height of ball is > MAX_HEIGHT then ignore the ball.   
 
 # Try out NVIDIA-ISAAC-ROS isaac_ros_common

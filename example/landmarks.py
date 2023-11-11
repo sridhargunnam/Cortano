@@ -2,7 +2,7 @@ import numpy as np
 # Map to apriltag poses home setup
 # origin is the corner of the balcony, at entrance
 import config
-config_loc = config.config()
+config_loc = config.Config()
 config_loc.FIELD = "HOME"
 map_apriltag_poses = {}
 map_apriltag_poses_home = {}

@@ -45,6 +45,7 @@ class RealSenseCamera:
     # Get the intrinsics of the color stream
     self.color_sensor = self.pipeline.get_active_profile().get_stream(rs.stream.color).as_video_stream_profile()
     self.color_intrinsics = self.color_sensor.get_intrinsics()
+    self.colorTodepthExtrinsics = self.color_sensor.get_extrinsics_to(profile.get_stream(rs.stream.depth))  
     self.fx = self.color_intrinsics.fx
     self.fy = self.color_intrinsics.fy
     self.cx = self.color_intrinsics.ppx
@@ -59,7 +60,22 @@ class RealSenseCamera:
     #depth filtering
     self.min_depth = 0.1
     self.max_depth = 3.0 
-    
+
+  def getColorTodepthExtrinsics(self):
+    # Get the extrinsics from color to depth
+    extrinsics = self.color_sensor.get_extrinsics_to(self.pipeline.get_active_profile().get_stream(rs.stream.depth))
+    # Construct the transformation matrix (3x4)
+    R = np.array(extrinsics.rotation).reshape(3, 3)
+    T = np.array(extrinsics.translation).reshape(3, 1)
+
+    # Use only the rotation part for the homography matrix
+    # and assume the translation in z-axis does not significantly affect the transformation
+    homography_matrix = np.eye(3, dtype=np.float64)
+    homography_matrix[:2, :2] = R[:2, :2]  # Using only the top-left 2x2 part of the rotation matrix
+    homography_matrix[:2, 2] = T[:2, 0]    # Using the x and y components of the translation vector
+
+    return homography_matrix
+
   def resetCamera(self, width, height):
         # Don't do hw reset as it slows down the camera initialization
     try:
@@ -856,7 +872,7 @@ class DepthAICamera:
         # time.sleep(1)
   
 import config
-config = config.config()
+config = config.Config()
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
 
 def runCameraCalib(input="Load"):

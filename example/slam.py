@@ -158,7 +158,7 @@ class Open3DSlam:
 
 if __name__ == "__main__":
   # robot = RemoteInterface("...")
-  config = config()
+  config = config.Config()
   cam = camera.RealSenseCamera()
   o3dSlam = Open3DSlam(cam)
   atag = ATag(cam.getCameraParams())

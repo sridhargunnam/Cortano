@@ -8,10 +8,14 @@ from datetime import datetime
 import sys
 import config 
 import landmarks
-config = config.config()
+config = config.Config()
 config.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 config.FIELD == "HOME"
+
+import cv2
+import numpy as np
+
 
 def readCalibrationFile(path=config.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -101,6 +105,8 @@ def runRobot(robot, control):
     control.stop_drive()
     robot.stop()
 
+import mask_gen as msk
+
 import ball_detection_opencv as ball_detection
 def main():
   robot = vex.VexCortex("/dev/ttyUSB0")
@@ -124,20 +130,38 @@ def main():
     tag_size = config.TAG_SIZE_6IN
   
   DETECT_ONE_BALL = True
+  mask = cv2.bitwise_not(msk.load_mask())
+  # convert the mask from color camera reference to depth camera reference
+  colorTodepthExtrinsics = camRS.getColorTodepthExtrinsics()
+  #invert the extrinsics matrix
+  colorTodepthExtrinsics = np.linalg.inv(colorTodepthExtrinsics)
+  # warp the mask to the depth camera reference
+  mask = cv2.warpPerspective(mask, colorTodepthExtrinsics, (mask.shape[1], mask.shape[0]))
+  #apply the mask on the rs depth image and visualize it
   while True:
     dt = datetime.now()
-    colorRS, depthRS = camRS.read()   
     colorDai, depthDai = camDai.read()
+    colorRS, depthRS = camRS.read()   
+    depthRS = cv2.bitwise_and(depthRS, depthRS, mask=mask)
+    # # view the depth image visuallly colored based on depth
+    # depthRS = cv2.applyColorMap(cv2.convertScaleAbs(depthRS, alpha=0.1), cv2.COLORMAP_JET)
+    # cv2.imshow("depthRS", depthRS)
+    # if cv2.waitKey(1) == 27:
+    #   cv2.destroyAllWindows()
+    #   exit(0)
+    # continue
+
     tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
     
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
+
     # print("Robot2Field = \n", Robot2Field)
     # Field2Robot = np.linalg.inv(Robot2Field)
     # print("Field2Robot = \n", Field2Robot)
     contours = ball_detection.ball_detection(camRS)
     contoursDai = ball_detection.ball_detection(camDai)
-    print(f'len contours = {len(contours)}')
-    print(f'len contoursDai = {len(contoursDai)}')
+    # print(f'len contours = {len(contours)}')
+    # print(f'len contoursDai = {len(contoursDai)}')
     if len(contours) > 0:
       for contour in contours:
         temp_countour = contour
@@ -147,9 +171,11 @@ def main():
 
         (x, y), radius = cv2.minEnclosingCircle(temp_countour)
         center = (int(x), int(y))
+        depth_ = depthRS[int(y)][int(x)]
+
+        
         cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
         # get the average depth of the ball based on the contour and depth image
-        depth_ = depthRS[int(y)][int(x)]
         # convert to meters
         # get the depth scale of the camera
         depth_scale = camRS.depth_scale
@@ -161,8 +187,9 @@ def main():
         x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
         y = 100 * (y - camRS.cy) * depth_ / camRS.fy
         z = 100 * depth_
-        control.update_robot_goto([x, y])
-        control.stop_drive()
+        if z < 10:
+          control.update_robot_goto([x, y])
+          control.stop_drive()
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
         # find ball position in robot frame
