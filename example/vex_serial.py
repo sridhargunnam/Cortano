@@ -367,7 +367,24 @@ class VexControl:
       if armPosition == 'high' or armPosition == 'mid':
         self.robot.motor[motor] =  30
       
-
+    def update_robot_gotoV1(self, goal):
+      dpos = [goal[0], goal[1]] 
+      dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
+      theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
+      theta = (theta + 180) % 360 - 180  # [-180, 180]
+      Pforward = 30
+      Ptheta = 30
+      if np.abs(theta) < 30:
+          self.robot.motor[0] = int(-Pforward * dist + Ptheta * theta)
+          self.robot.motor[9] = int(Pforward * dist + Ptheta * theta)
+      else:
+          self.robot.motor[0] = int(127 if theta > 0 else -127)
+          self.robot.motor[9] = int(127 if theta > 0 else -127)
+      if dist < 1 and np.abs(theta) > 30:
+          self.robot.motor[0] = int(127 if theta > 0 else -127)
+          self.robot.motor[9] = int(127 if theta > 0 else -127)
+      time.sleep(0.2)
+    
     def update_robot_goto(self, goal,left_motor=0, right_motor=9):
         dpos = [goal[0], goal[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
@@ -375,7 +392,7 @@ class VexControl:
         # thetaWithNormal = 90 - theta
         # theta = thetaWithNormal
         theta = (theta + 180) % 360 - 180  # [-180, 180]
-        # print(f'dist = {dist}, theta = {theta}')
+        print(f'dist = {dist}, theta = {theta}')
         # exit(0)
         # PI Control for distance
         Kp_dist = 0.5
@@ -482,8 +499,8 @@ if __name__ == "__main__":
   
 
     #tested code
-    # control.drive(direction="forward", speed=30, drive_time=1)
-    control.drive(direction="backward", speed=30, drive_time=1)
+    control.drive(direction="forward", speed=30, drive_time=1)
+    # control.drive(direction="backward", speed=30, drive_time=1)
     # start_time = time.time()
     # while time.time() - start_time < 5:
     # control.rotateRobot(seconds=0.2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)

@@ -1,4 +1,8 @@
 # FIX vex_control update_robot_goto
+# get the object detection working in depth Ai, use it to calculate the x, y, z of the ball.
+# When the realsense can't detect the ball we need the x, y, z of the ball from DAI to get the ball's x, y w.r.t robot. 
+
+# maintain detected balls to robot map
 
 # Adding IMU readings for PI control
 # State estimation 
