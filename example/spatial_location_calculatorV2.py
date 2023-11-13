@@ -38,6 +38,8 @@ stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
 stereo.setLeftRightCheck(True)
 stereo.setSubpixel(True)
 
+stereo.setDepthAlign(dai.CameraBoardSocket.CAM_A)
+
 colorCam.setPreviewSize(400, 400)
 colorCam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
 colorCam.setInterleaved(False)
@@ -48,7 +50,7 @@ colorCam.preview.link(xoutColor.input)
 
 # Config
 topLeft = dai.Point2f(0.4, 0.4)
-bottomRight = dai.Point2f(0.6, 0.6)
+bottomRight = dai.Point2f(0.4, 0.4)
 
 config = dai.SpatialLocationCalculatorConfigData()
 config.depthThresholds.lowerThreshold = 100
@@ -88,9 +90,16 @@ with dai.Device(pipeline) as device:
         depthFrame = inDepth.getFrame() # depthFrame values are in millimeters
 
         colorFrame = colorQueue.get().getCvFrame()
-        contours = ball_detection.getContours(colorFrame)
+        contours = ball_detection.ball_detection(colorFrame)
 
-        # if len(contours) > 0:
+        if len(contours) > 0:
+            max_countour = max(contours, key=lambda x: cv2.contourArea(x))
+        
+            # Get the bounding rectangle of the largest contour
+            x, y, w, h = cv2.boundingRect(max_countour)
+            # Draw the bounding rectangle
+            cv2.rectangle(colorFrame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
 
         depth_downscaled = depthFrame[::4]
         if np.all(depth_downscaled == 0):
@@ -125,6 +134,14 @@ with dai.Device(pipeline) as device:
         key = cv2.waitKey(1)
         if key == ord('q'):
             break
+        #check if we detedcted a ball
+        elif len(contours) > 0:
+            #create newConfig roi from using the bounding box of the ball
+            topLeft = dai.Point2f(x/400, y/400)
+            bottomRight = dai.Point2f((x+w)/400, (y+h)/400)
+            config.roi = dai.Rect(topLeft, bottomRight)
+            newConfig = True
+
         elif key == ord('w'):
             if topLeft.y - stepSize >= 0:
                 topLeft.y -= stepSize
@@ -165,6 +182,7 @@ with dai.Device(pipeline) as device:
             calculationAlgorithm = dai.SpatialLocationCalculatorAlgorithm.MEDIAN
             print('Switching calculation algorithm to MEDIAN!')
             newConfig = True
+
 
         if newConfig:
             config.roi = dai.Rect(topLeft, bottomRight)
