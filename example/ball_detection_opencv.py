@@ -7,11 +7,11 @@ def distance(p1, p2):
     """Calculate distance between two points."""
     return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
-def ball_detection(cam, debug=False, min_distance=30): # Added min_distance parameter
+def ball_detection(image, debug=False, min_distance=30): # Added min_distance parameter
     while True:
         start_time = time.time()
         # Read the image
-        image, depth  = cam.read()
+        # image, depth  = cam.read()
         # depth = cam.read()[1] 
         # depth_3d = cam.depth2rgb(depth)
 
@@ -55,13 +55,13 @@ def ball_detection(cam, debug=False, min_distance=30): # Added min_distance para
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             cv2.circle(image, center, int(radius), (0, 255, 0), 2)
-            # get the average depth of the ball based on the contour and depth image
-            depth_ = depth[int(y)][int(x)]
-            # convert to meters
-            # get the depth scale of the camera
-            depth_scale = cam.depth_scale
-            depth_ = depth_ * depth_scale
-            cv2.putText(image, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # # get the average depth of the ball based on the contour and depth image
+            # depth_ = depth[int(y)][int(x)]
+            # # convert to meters
+            # # get the depth scale of the camera
+            # depth_scale = cam.depth_scale
+            # depth_ = depth_ * depth_scale
+            # cv2.putText(image, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
             # cv2.putText(depth_3d, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
 

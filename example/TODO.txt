@@ -4,7 +4,7 @@
 
 # maintain detected balls to robot map
 
-# Adding IMU readings for PI control
+# Adding IMU readings for PI control - use both realsense and the depth Ai camera
 # State estimation 
 
 # to run 

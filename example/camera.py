@@ -494,7 +494,7 @@ class DepthAICamera:
       self.depth_scale = self.fx
 
 
-      # Config
+      '''      # Config
       topLeft = dai.Point2f(0.4, 0.4)
       bottomRight = dai.Point2f(0.6, 0.6)
 
@@ -506,8 +506,7 @@ class DepthAICamera:
 
 # 
       self.spatialLocationCalculator.inputConfig.setWaitForMessage(False)
-      self.spatialLocationCalculator.initialConfig.addROI(config)
-
+      self.spatialLocationCalculator.initialConfig.addROI(config)'''
       # self.spatialLocationCalculator.passthroughDepth.link(self.xoutDisparity.input)
       # stereo.depth.link(self.spatialLocationCalculator.inputDepth)
 
@@ -521,7 +520,7 @@ class DepthAICamera:
         # self.qRight.get()
         if self.qDepth.has():
           self.qDepth.get()
-    else:
+    # else: #objection detection part starts from here
       self.labelMap = [
     "person",         "bicycle",    "car",           "motorbike",     "aeroplane",   "bus",           "train",
     "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",   "parking meter", "bench",
@@ -544,65 +543,71 @@ class DepthAICamera:
       # Create pipeline
       # Define sources and outputs
       self.camRgb = self.pipeline.create(dai.node.ColorCamera)
-      spatialDetectionNetwork = self.pipeline.create(dai.node.YoloSpatialDetectionNetwork)
-      monoLeft = self.pipeline.create(dai.node.MonoCamera)
-      monoRight = self.pipeline.create(dai.node.MonoCamera)
-      stereo = self.pipeline.create(dai.node.StereoDepth)
-      nnNetworkOut = self.pipeline.create(dai.node.XLinkOut)
+      self.spatialDetectionNetwork = self.pipeline.create(dai.node.YoloSpatialDetectionNetwork)
+      self.monoLeft = self.pipeline.create(dai.node.MonoCamera)
+      self.monoRight = self.pipeline.create(dai.node.MonoCamera)
+      self.stereo = self.pipeline.create(dai.node.StereoDepth)
+      self.nnNetworkOut = self.pipeline.create(dai.node.XLinkOut)
 
-      xoutRgb = self.pipeline.create(dai.node.XLinkOut)
-      xoutNN = self.pipeline.create(dai.node.XLinkOut)
-      xoutDepth = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutRgb = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutNN = self.pipeline.create(dai.node.XLinkOut)
+      self.xoutDepth = self.pipeline.create(dai.node.XLinkOut)
 
-      xoutRgb.setStreamName("rgb")
-      xoutNN.setStreamName("detections")
-      xoutDepth.setStreamName("depth")
-      nnNetworkOut.setStreamName("nnNetwork")
-
+      self.xoutRgb.setStreamName("rgb")
+      self.xoutNN.setStreamName("detections")
+      self.xoutDepth.setStreamName("depth")
+      self.nnNetworkOut.setStreamName("nnNetwork")
       # Properties
       self.camRgb.setPreviewSize(416, 416)
       self.camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
       self.camRgb.setInterleaved(False)
       self.camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
 
-      monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-      monoLeft.setCamera("left")
-      monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-      monoRight.setCamera("right")
+      self.monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+      self.monoLeft.setCamera("left")
+      self.monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+      self.monoRight.setCamera("right")
 
       # setting node configs
-      stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+      self.stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
       # Align depth map to the perspective of RGB camera, on which inference is done
-      stereo.setDepthAlign(dai.CameraBoardSocket.CAM_A)
-      stereo.setOutputSize(monoLeft.getResolutionWidth(), monoLeft.getResolutionHeight())
-      stereo.setSubpixel(True)
+      self.stereo.setDepthAlign(dai.CameraBoardSocket.CAM_A)
+      self.stereo.setOutputSize(self.monoLeft.getResolutionWidth(), self.monoLeft.getResolutionHeight())
+      self.stereo.setSubpixel(True)
 
-      spatialDetectionNetwork.setBlobPath(self.nnBlobPath)
-      spatialDetectionNetwork.setConfidenceThreshold(0.5)
-      spatialDetectionNetwork.input.setBlocking(False)
-      spatialDetectionNetwork.setBoundingBoxScaleFactor(0.5)
-      spatialDetectionNetwork.setDepthLowerThreshold(100)
-      spatialDetectionNetwork.setDepthUpperThreshold(5000)
+      self.spatialDetectionNetwork.setBlobPath(self.nnBlobPath)
+      self.spatialDetectionNetwork.setConfidenceThreshold(0.5)
+      self.spatialDetectionNetwork.input.setBlocking(False)
+      self.spatialDetectionNetwork.setBoundingBoxScaleFactor(0.5)
+      self.spatialDetectionNetwork.setDepthLowerThreshold(100)
+      self.spatialDetectionNetwork.setDepthUpperThreshold(5000)
 
       # Yolo specific parameters
-      spatialDetectionNetwork.setNumClasses(80)
-      spatialDetectionNetwork.setCoordinateSize(4)
-      spatialDetectionNetwork.setAnchors([10,14, 23,27, 37,58, 81,82, 135,169, 344,319])
-      spatialDetectionNetwork.setAnchorMasks({ "side26": [1,2,3], "side13": [3,4,5] })
-      spatialDetectionNetwork.setIouThreshold(0.5)
+      self.spatialDetectionNetwork.setNumClasses(80)
+      self.spatialDetectionNetwork.setCoordinateSize(4)
+      self.spatialDetectionNetwork.setAnchors([10,14, 23,27, 37,58, 81,82, 135,169, 344,319])
+      self.spatialDetectionNetwork.setAnchorMasks({ "side26": [1,2,3], "side13": [3,4,5] })
+      self.spatialDetectionNetwork.setIouThreshold(0.5)
 
       # Linking
-      monoLeft.out.link(stereo.left)
-      monoRight.out.link(stereo.right)
+      self.monoLeft.out.link(self.stereo.left)
+      self.monoRight.out.link(self.stereo.right)
 
-      self.camRgb.preview.link(spatialDetectionNetwork.input)
-      spatialDetectionNetwork.passthrough.link(xoutRgb.input)
+      self.camRgb.preview.link(self.spatialDetectionNetwork.input)
+      self.spatialDetectionNetwork.passthrough.link(self.xoutRgb.input)
 
-      spatialDetectionNetwork.out.link(xoutNN.input)
+      self.spatialDetectionNetwork.out.link(self.xoutNN.input)
 
-      stereo.depth.link(spatialDetectionNetwork.inputDepth)
-      spatialDetectionNetwork.passthroughDepth.link(xoutDepth.input)
-      spatialDetectionNetwork.outNetwork.link(nnNetworkOut.input)
+      self.stereo.depth.link(self.spatialDetectionNetwork.inputDepth)
+      self.spatialDetectionNetwork.passthroughDepth.link(self.xoutDepth.input)
+      self.spatialDetectionNetwork.outNetwork.link(self.nnNetworkOut.input)
+    
+      # Output queues will be used to get the rgb frames and nn data from the outputs defined above
+      # self.previewQueue      = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
+      # self.detectionNNQueue  = self.device.getOutputQueue(name="detections", maxSize=4, blocking=False)
+      # self.depthQueue        = self.device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+      # self.networkQueue      = self.device.getOutputQueue(name="nnNetwork", maxSize=4, blocking=False);
+      # self.runObjectDetection()
 
   def getCameraIntrinsics(self):#, width=1920, height=1080):
     calibData = self.device.readCalibration()
@@ -723,13 +728,8 @@ class DepthAICamera:
           # exit(0)
   def runObjectDetection(self):
     # Connect to device and start pipeline
-    with dai.Device(self.pipeline) as device:
+    # with dai.Device(self.pipeline) as device:
 
-        # Output queues will be used to get the rgb frames and nn data from the outputs defined above
-        previewQueue = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
-        detectionNNQueue = device.getOutputQueue(name="detections", maxSize=4, blocking=False)
-        depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
-        networkQueue = device.getOutputQueue(name="nnNetwork", maxSize=4, blocking=False);
 
         globalTime = time.monotonic()
         startTime = time.monotonic()
@@ -740,10 +740,10 @@ class DepthAICamera:
 
         while True:
         # if True:
-            inPreview = previewQueue.get()
-            inDet = detectionNNQueue.get()
-            depth = depthQueue.get()
-            inNN = networkQueue.get()
+            inPreview = self.previewQueue.get()
+            inDet = self.detectionNNQueue.get()
+            depth = self.depthQueue.get()
+            inNN = self.networkQueue.get()
 
             if printOutputLayersOnce:
                 toPrint = 'Output layer names:'

@@ -1,0 +1,3236 @@
+initilying depthai color and depth
+OAKD-1 RGB Camera Default intrinsics...
+[[1485.187255859375, 0.0, 957.6279907226562], [0.0, 1483.3082275390625, 534.66552734375], [0.0, 0.0, 1.0]]
+1920
+1080
+cx =  957.6279907226562
+cy =  534.66552734375
+fx =  1485.187255859375
+fy =  1483.3082275390625
+OAKD-1 RGB Camera Default intrinsics...
+[[1485.187255859375, 0.0, 957.6279907226562], [0.0, 1483.3082275390625, 534.66552734375], [0.0, 0.0, 1.0]]
+1920
+1080
+cx =  957.6279907226562
+cy =  534.66552734375
+fx =  1485.187255859375
+fy =  1483.3082275390625
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 48.15868948111434, y = -5.3478679034641345, z = 95.38250660291843
+[34.35 87.77  1.18  1.  ]
+moving robot closer to ball
+theta = 68.62868565431974
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 33.830607144777495, y = -5.876079665975338, z = 146.27233053867778
+[ 17.9  137.31  -7.26   1.  ]
+moving robot closer to ball
+theta = 82.57071059115344
+moving robot forward
+error = -7.429289408846557, pi_output = -81.72218349731213
+motor[0] = -50, motor[9] = -50
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -49.504666185799614, y = 3.059472499729612, z = 83.573099989405
+[-63.07  71.9    3.76   1.  ]
+moving robot closer to ball
+theta = 131.25421101711586
+moving robot forward
+error = 41.254211017115864, pi_output = 446.367031779428
+motor[0] = 50, motor[9] = 50
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 60.93140986090396, y = -4.3082412084094885, z = 120.19912055678822
+[ 45.91 112.19  -5.91   1.  ]
+moving robot closer to ball
+theta = 67.74710773181498
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 40.620614307620954, y = -4.715008944665428, z = 97.05136752373916
+[26.72 89.08  0.88  1.  ]
+moving robot closer to ball
+theta = 73.304223297955
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 23.312115374051025, y = -4.0172480829630155, z = 102.09980183898845
+[ 9.2  93.42  0.68  1.  ]
+moving robot closer to ball
+theta = 84.3725949034125
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.42842697031406, y = -3.0701866842727448, z = 104.04443194829024
+[-8.77 94.65  0.91  1.  ]
+moving robot closer to ball
+theta = 95.2910784279239
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.256831400285064, y = -2.944090402143116, z = 103.19018208654117
+[-8.91 93.78  0.97  1.  ]
+moving robot closer to ball
+theta = 95.42668322751784
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.061938016978632, y = -2.833365976426228, z = 103.70679133564502
+[-9.13 94.26  0.77  1.  ]
+moving robot closer to ball
+theta = 95.53505630506928
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.283449808159497, y = -2.978052247779012, z = 104.85820296547266
+[-8.95 95.42  0.67  1.  ]
+moving robot closer to ball
+theta = 95.35978218213903
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.304482448887152, y = -2.979299000741911, z = 105.154013519745
+[-8.94 95.71  0.61  1.  ]
+moving robot closer to ball
+theta = 95.33876923567293
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.44116916147323, y = -3.123577257629479, z = 105.4201067136246
+[-8.81 96.01  0.68  1.  ]
+moving robot closer to ball
+theta = 95.24209817997614
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.194558818981484, y = -2.8983594702303255, z = 104.43593768782668
+[-9.03 94.99  0.68  1.  ]
+moving robot closer to ball
+theta = 95.42971008231322
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375113293535746, y = -3.0619133503634366, z = 105.21732373236927
+[-8.87 95.8   0.67  1.  ]
+moving robot closer to ball
+theta = 95.29034915540389
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.4297940117226515, y = -3.112878925952391, z = 105.38885645786387
+[-8.82 95.98  0.68  1.  ]
+moving robot closer to ball
+theta = 95.25029627251055
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.283449808159497, y = -2.978052247779012, z = 104.85820296547266
+[-8.95 95.42  0.67  1.  ]
+moving robot closer to ball
+theta = 95.35978218213903
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.394475898257717, y = -3.068177044894997, z = 105.42757076942365
+[-8.86 96.    0.63  1.  ]
+moving robot closer to ball
+theta = 95.27268590088615
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375113293535746, y = -3.0619133503634366, z = 105.21732373236927
+[-8.87 95.8   0.67  1.  ]
+moving robot closer to ball
+theta = 95.29034915540389
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372186506844449, y = -3.043864411873059, z = 104.30500911170483
+[-8.84 94.9   0.83  1.  ]
+moving robot closer to ball
+theta = 95.31888215827497
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.28692666784518, y = -2.9812002090520466, z = 104.87331895502861
+[-8.95 95.44  0.67  1.  ]
+moving robot closer to ball
+theta = 95.35709798805318
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.384158765767523, y = -3.049379478040427, z = 105.04067158378399
+[-8.85 95.62  0.69  1.  ]
+moving robot closer to ball
+theta = 95.2906569051068
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.423097208750428, y = -3.119696782988867, z = 104.77565159853975
+[-8.8  95.38  0.81  1.  ]
+moving robot closer to ball
+theta = 95.27083732439814
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.39422610100654, y = -3.065575190204009, z = 104.69483146525714
+[-8.83 95.29  0.77  1.  ]
+moving robot closer to ball
+theta = 95.29343334194724
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.429292595244525, y = -3.1312804346282186, z = 105.14195107762518
+[-8.81 95.74  0.75  1.  ]
+moving robot closer to ball
+theta = 95.25632722441414
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372578864396179, y = -3.0794109188492245, z = 104.84989534600452
+[-8.86 95.44  0.76  1.  ]
+moving robot closer to ball
+theta = 95.30113821325457
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.247209092190233, y = -2.9101543524592715, z = 103.46888969619066
+[-8.93 94.05  0.88  1.  ]
+moving robot closer to ball
+theta = 95.42617744114919
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.403684646418883, y = -3.096936900493198, z = 104.64387039375634
+[-8.81 95.24  0.81  1.  ]
+moving robot closer to ball
+theta = 95.28740263958927
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3780750255169325, y = -3.097569700024421, z = 104.28919364525974
+[-8.82 94.89  0.89  1.  ]
+moving robot closer to ball
+theta = 95.31266280770664
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.365639285738931, y = -3.066318539249413, z = 104.58713329812917
+[-8.85 95.18  0.8   1.  ]
+moving robot closer to ball
+theta = 95.31345539608832
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.334916587971412, y = -3.018926561126993, z = 104.8544203309994
+[-8.9  95.43  0.7   1.  ]
+moving robot closer to ball
+theta = 95.326919212794
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.276952412726807, y = -3.0059963687076667, z = 103.29583396835822
+[-8.89 93.9   1.01  1.  ]
+moving robot closer to ball
+theta = 95.40769079081053
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361491432913661, y = -3.0811473254190087, z = 104.91607328079557
+[-8.87 95.5   0.75  1.  ]
+moving robot closer to ball
+theta = 95.30575966278967
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3199675960670945, y = -3.0457580998850315, z = 104.52531699376428
+[-8.9  95.11  0.8   1.  ]
+moving robot closer to ball
+theta = 95.34364367545031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.382979768963779, y = -3.1111735912627494, z = 104.3407333133905
+[-8.82 94.95  0.89  1.  ]
+moving robot closer to ball
+theta = 95.30747119627819
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.348896011333602, y = -3.033423312104671, z = 104.25592932549098
+[-8.86 94.85  0.84  1.  ]
+moving robot closer to ball
+theta = 95.33481979276098
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.351364188763878, y = -3.039481902143835, z = 104.04817337370211
+[-8.84 94.65  0.88  1.  ]
+moving robot closer to ball
+theta = 95.33895338394709
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.2903396136717085, y = -3.043121814513716, z = 104.13625105997632
+[-8.91 94.73  0.87  1.  ]
+moving robot closer to ball
+theta = 95.37273679494697
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.276053847355744, y = -3.0116211802683077, z = 104.09250422810828
+[-8.92 94.68  0.85  1.  ]
+moving robot closer to ball
+theta = 95.38442109622082
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3978088362751935, y = -3.1236797387262554, z = 104.41225517977573
+[-8.81 95.02  0.89  1.  ]
+moving robot closer to ball
+theta = 95.29586078749128
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.360676750173621, y = -3.0569977808957365, z = 104.39991712419717
+[-8.85 94.99  0.83  1.  ]
+moving robot closer to ball
+theta = 95.32228252855924
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.384207519419196, y = -3.1173712030586698, z = 104.2700096266728
+[-8.82 94.88  0.91  1.  ]
+moving robot closer to ball
+theta = 95.30838098622127
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375113293535746, y = -3.0619133503634366, z = 105.21732373236927
+[-8.87 95.8   0.67  1.  ]
+moving robot closer to ball
+theta = 95.29034915540389
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.284145548230441, y = -2.9780055318205965, z = 103.65260145080575
+[-8.9  94.24  0.91  1.  ]
+moving robot closer to ball
+theta = 95.394459881066
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.405431071296486, y = -3.1029187910527445, z = 104.63272443476474
+[-8.81 95.23  0.82  1.  ]
+moving robot closer to ball
+theta = 95.28632607650657
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346196812071287, y = -3.0896685200036016, z = 104.43973302672094
+[-8.86 95.04  0.85  1.  ]
+moving robot closer to ball
+theta = 95.32787485516457
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.351955576491822, y = -3.0197769966170003, z = 104.37224630603419
+[-8.86 94.96  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33046214682666
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.404873222016079, y = -3.137359659180897, z = 104.6847161947783
+[-8.81 95.29  0.85  1.  ]
+moving robot closer to ball
+theta = 95.2831901222395
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.345223509457721, y = -3.0242166681370315, z = 104.74042177742818
+[-8.88 95.32  0.73  1.  ]
+moving robot closer to ball
+theta = 95.32372096952301
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3749979854517305, y = -3.0839467649699093, z = 104.9410402190879
+[-8.86 95.53  0.75  1.  ]
+moving robot closer to ball
+theta = 95.2968744869347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.334318071827765, y = -3.0470286629483736, z = 104.71375872711522
+[-8.89 95.3   0.76  1.  ]
+moving robot closer to ball
+theta = 95.32963564723921
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.304789180280697, y = -3.016906523103, z = 104.42912733112398
+[-8.91 95.01  0.79  1.  ]
+moving robot closer to ball
+theta = 95.35715615598282
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346700555309377, y = -3.0596296735364037, z = 104.82085493240302
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.31849273611037
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.396649708412754, y = -3.125445364226741, z = 104.37788540934002
+[-8.81 94.99  0.9   1.  ]
+moving robot closer to ball
+theta = 95.29741974465986
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.365410712968563, y = -3.0587578057272986, z = 104.33979266427683
+[-8.84 94.94  0.84  1.  ]
+moving robot closer to ball
+theta = 95.32106583628381
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.378219558438991, y = -3.086740832234378, z = 104.95374877568808
+[-8.85 95.54  0.75  1.  ]
+moving robot closer to ball
+theta = 95.29444259374439
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.421432857146738, y = -3.1155092674450504, z = 104.80940375923613
+[-8.8  95.41  0.8   1.  ]
+moving robot closer to ball
+theta = 95.27113069963403
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.318534635918522, y = -3.079430762202879, z = 104.34045966826268
+[-8.89 94.94  0.87  1.  ]
+moving robot closer to ball
+theta = 95.34783482866743
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.386346006237274, y = -3.1147344885762203, z = 104.3797081936746
+[-8.82 94.99  0.89  1.  ]
+moving robot closer to ball
+theta = 95.30414776394421
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.400563852662672, y = -3.134082755183555, z = 104.67540326571614
+[-8.82 95.28  0.85  1.  ]
+moving robot closer to ball
+theta = 95.28620750230091
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.332669101396333, y = -2.9870185652875483, z = 103.754484400912
+[-8.85 94.35  0.89  1.  ]
+moving robot closer to ball
+theta = 95.36176454588455
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.303815168443085, y = -3.015068459395288, z = 104.45186625368952
+[-8.91 95.03  0.78  1.  ]
+moving robot closer to ball
+theta = 95.35718932615798
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372592149698973, y = -3.060477190128212, z = 105.16797258519091
+[-8.87 95.75  0.68  1.  ]
+moving robot closer to ball
+theta = 95.29330537831271
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3351955464726535, y = -3.0391743538113265, z = 104.43593768782668
+[-8.88 95.02  0.81  1.  ]
+moving robot closer to ball
+theta = 95.33750775834031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.406615569479155, y = -3.1405393068886696, z = 104.42306300643129
+[-8.8  95.03  0.9   1.  ]
+moving robot closer to ball
+theta = 95.28931309725107
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.414749227843162, y = -3.1185473835016624, z = 105.09097897113388
+[-8.82 95.68  0.75  1.  ]
+moving robot closer to ball
+theta = 95.26709575933836
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346322916321883, y = -3.059157904042787, z = 104.82375479752457
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3186625692854
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346700555309377, y = -3.0596296735364037, z = 104.82085493240302
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.31849273611037
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346700555309377, y = -3.0596296735364037, z = 104.82085493240302
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.31849273611037
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.389273731206531, y = -3.118514702085446, z = 104.31830772638179
+[-8.81 94.93  0.9   1.  ]
+moving robot closer to ball
+theta = 95.3039166248799
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3351955464726535, y = -3.0391743538113265, z = 104.43593768782668
+[-8.88 95.02  0.81  1.  ]
+moving robot closer to ball
+theta = 95.33750775834031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.345223509457721, y = -3.0242166681370315, z = 104.74042177742818
+[-8.88 95.32  0.73  1.  ]
+moving robot closer to ball
+theta = 95.32372096952301
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3749979854517305, y = -3.0839467649699093, z = 104.9410402190879
+[-8.86 95.53  0.75  1.  ]
+moving robot closer to ball
+theta = 95.2968744869347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.364609946213135, y = -3.0620804991516573, z = 105.05194797170446
+[-8.87 95.63  0.7   1.  ]
+moving robot closer to ball
+theta = 95.30119620610347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3749979854517305, y = -3.0839467649699093, z = 104.9410402190879
+[-8.86 95.53  0.75  1.  ]
+moving robot closer to ball
+theta = 95.2968744869347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.370672888693227, y = -3.162369737515547, z = 103.79164319221267
+[-8.8  94.42  1.05  1.  ]
+moving robot closer to ball
+theta = 95.32750471646492
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361491432913661, y = -3.0811473254190087, z = 104.91607328079557
+[-8.87 95.5   0.75  1.  ]
+moving robot closer to ball
+theta = 95.30575966278967
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.276952412726807, y = -3.0059963687076667, z = 103.29583396835822
+[-8.89 93.9   1.01  1.  ]
+moving robot closer to ball
+theta = 95.40769079081053
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.336836762895074, y = -3.078521439947839, z = 104.59393850088219
+[-8.88 95.19  0.81  1.  ]
+moving robot closer to ball
+theta = 95.32970916775717
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.377966247318779, y = -3.065348287401573, z = 105.21730634092948
+[-8.87 95.8   0.67  1.  ]
+moving robot closer to ball
+theta = 95.28846109028561
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.364116457977584, y = -3.086237505830563, z = 104.92643220995593
+[-8.87 95.52  0.75  1.  ]
+moving robot closer to ball
+theta = 95.30361257364592
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.303520384911967, y = -3.0550563440738334, z = 104.23869488616442
+[-8.9  94.83  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36117638561235
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325485713259856, y = -3.057651144812402, z = 103.88950993774147
+[-8.86 94.49  0.93  1.  ]
+moving robot closer to ball
+theta = 95.35798495875044
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.358165268941799, y = -3.049144118816812, z = 105.02683293182669
+[-8.88 95.61  0.7   1.  ]
+moving robot closer to ball
+theta = 95.30647787769941
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.330233747983248, y = -3.066664326278678, z = 104.06589778101181
+[-8.86 94.67  0.91  1.  ]
+moving robot closer to ball
+theta = 95.34950155582486
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.380967119595867, y = -3.089130445296007, z = 104.9644353423286
+[-8.85 95.55  0.75  1.  ]
+moving robot closer to ball
+theta = 95.29237290823143
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.397757709795706, y = -3.1347693002300594, z = 105.13671532812356
+[-8.84 95.73  0.75  1.  ]
+moving robot closer to ball
+theta = 95.27495352904872
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.392150098047029, y = -3.118939253282441, z = 104.38660625434767
+[-8.81 94.99  0.89  1.  ]
+moving robot closer to ball
+theta = 95.30024090506421
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.339459145249125, y = -3.0841927410430245, z = 104.4088642785044
+[-8.87 95.01  0.86  1.  ]
+moving robot closer to ball
+theta = 95.33309887628758
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.268089492612776, y = -3.051664177331454, z = 103.75434065576736
+[-8.91 94.36  0.96  1.  ]
+moving robot closer to ball
+theta = 95.39675691109578
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.37822577497623, y = -3.0938839933218127, z = 103.90872380232281
+[-8.81 94.52  0.96  1.  ]
+moving robot closer to ball
+theta = 95.32364843849572
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.314768072705719, y = -3.035692439091028, z = 104.8041320557147
+[-8.91 95.38  0.73  1.  ]
+moving robot closer to ball
+theta = 95.33934918913472
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.354117532188338, y = -3.1162498625640174, z = 103.84895183595255
+[-8.83 94.47  1.    1.  ]
+moving robot closer to ball
+theta = 95.33851656085268
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.366473059324997, y = -3.1550755212818964, z = 103.77971361425423
+[-8.81 94.41  1.05  1.  ]
+moving robot closer to ball
+theta = 95.3308005518592
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.377444058002934, y = -3.0882275958117904, z = 105.09774579002239
+[-8.86 95.68  0.72  1.  ]
+moving robot closer to ball
+theta = 95.29078243704586
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361052809572074, y = -3.081098211203784, z = 104.91035858693233
+[-8.87 95.5   0.75  1.  ]
+moving robot closer to ball
+theta = 95.30618405031814
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.336836762895074, y = -3.078521439947839, z = 104.59393850088219
+[-8.88 95.19  0.81  1.  ]
+moving robot closer to ball
+theta = 95.32970916775717
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346196812071287, y = -3.0896685200036016, z = 104.43973302672094
+[-8.86 95.04  0.85  1.  ]
+moving robot closer to ball
+theta = 95.32787485516457
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.300099139834924, y = -3.0080738462784837, z = 104.25279614328453
+[-8.91 94.84  0.82  1.  ]
+moving robot closer to ball
+theta = 95.36557567295598
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.390311014511359, y = -3.1256851161991626, z = 104.63269863668823
+[-8.82 95.24  0.85  1.  ]
+moving robot closer to ball
+theta = 95.29400197698496
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.314768072705719, y = -3.035692439091028, z = 104.8041320557147
+[-8.91 95.38  0.73  1.  ]
+moving robot closer to ball
+theta = 95.33934918913472
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372581996566702, y = -3.0595719108230157, z = 105.20856786968707
+[-8.87 95.79  0.67  1.  ]
+moving robot closer to ball
+theta = 95.2922285635143
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.32747716479151, y = -3.0253090612739544, z = 104.16686504472784
+[-8.88 94.76  0.85  1.  ]
+moving robot closer to ball
+theta = 95.35067071468593
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3920255168039954, y = -3.1336254584286154, z = 105.06442329175849
+[-8.84 95.66  0.77  1.  ]
+moving robot closer to ball
+theta = 95.28042980026139
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.247199700630447, y = -2.9667770397371904, z = 103.90757043080895
+[-8.95 94.49  0.85  1.  ]
+moving robot closer to ball
+theta = 95.40979892051175
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.318534635918522, y = -3.079430762202879, z = 104.34045966826268
+[-8.89 94.94  0.87  1.  ]
+moving robot closer to ball
+theta = 95.34783482866743
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3749979854517305, y = -3.0839467649699093, z = 104.9410402190879
+[-8.86 95.53  0.75  1.  ]
+moving robot closer to ball
+theta = 95.2968744869347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.281094299922972, y = -2.972918690997844, z = 104.33694516625276
+[-8.93 94.91  0.77  1.  ]
+moving robot closer to ball
+theta = 95.37655765132243
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.423097208750428, y = -3.119696782988867, z = 104.77565159853975
+[-8.8  95.38  0.81  1.  ]
+moving robot closer to ball
+theta = 95.27083732439814
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.294157824932049, y = -2.997361592373834, z = 104.79277079265583
+[-8.94 95.36  0.7   1.  ]
+moving robot closer to ball
+theta = 95.35416851944727
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.330233747983248, y = -3.066664326278678, z = 104.06589778101181
+[-8.86 94.67  0.91  1.  ]
+moving robot closer to ball
+theta = 95.34950155582486
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.326556790000382, y = -3.0774259699621562, z = 104.4596052287292
+[-8.88 95.06  0.84  1.  ]
+moving robot closer to ball
+theta = 95.33974217841121
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.308262392653644, y = -3.0238319826384252, z = 103.90872380232281
+[-8.88 94.5   0.9   1.  ]
+moving robot closer to ball
+theta = 95.36975670399974
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3466662823886555, y = -3.1283902265592456, z = 103.94437221124589
+[-8.84 94.56  0.99  1.  ]
+moving robot closer to ball
+theta = 95.3395223209747
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.336836762895074, y = -3.078521439947839, z = 104.59393850088219
+[-8.88 95.19  0.81  1.  ]
+moving robot closer to ball
+theta = 95.32970916775717
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3351955464726535, y = -3.0391743538113265, z = 104.43593768782668
+[-8.88 95.02  0.81  1.  ]
+moving robot closer to ball
+theta = 95.33750775834031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.281094299922972, y = -2.972918690997844, z = 104.33694516625276
+[-8.93 94.91  0.77  1.  ]
+moving robot closer to ball
+theta = 95.37655765132243
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.380967119595867, y = -3.089130445296007, z = 104.9644353423286
+[-8.85 95.55  0.75  1.  ]
+moving robot closer to ball
+theta = 95.29237290823143
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361491432913661, y = -3.0811473254190087, z = 104.91607328079557
+[-8.87 95.5   0.75  1.  ]
+moving robot closer to ball
+theta = 95.30575966278967
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.342874563293433, y = -3.1147849843174087, z = 103.70329404922393
+[-8.83 94.32  1.03  1.  ]
+moving robot closer to ball
+theta = 95.3495671569783
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.316661984123277, y = -3.0763705766445937, z = 104.3303016085692
+[-8.89 94.93  0.87  1.  ]
+moving robot closer to ball
+theta = 95.34942547073028
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346322916321883, y = -3.059157904042787, z = 104.82375479752457
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3186625692854
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3749979854517305, y = -3.0839467649699093, z = 104.9410402190879
+[-8.86 95.53  0.75  1.  ]
+moving robot closer to ball
+theta = 95.2968744869347
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3421102359844355, y = -3.113529736422343, z = 103.7063267067122
+[-8.83 94.33  1.02  1.  ]
+moving robot closer to ball
+theta = 95.35001293356547
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.409901085513619, y = -3.094253833298996, z = 105.33041126409117
+[-8.84 95.91  0.67  1.  ]
+moving robot closer to ball
+theta = 95.26474621794587
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.392260740651363, y = -3.118815549384394, z = 104.35753103097105
+[-8.81 94.97  0.89  1.  ]
+moving robot closer to ball
+theta = 95.30100435339554
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372152675651693, y = -3.0962538249295637, z = 104.9360060941283
+[-8.86 95.53  0.76  1.  ]
+moving robot closer to ball
+theta = 95.29798844492294
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.372386159354716, y = -3.0723605331199377, z = 104.61958626112126
+[-8.85 95.21  0.8   1.  ]
+moving robot closer to ball
+theta = 95.30816355901426
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.247199700630447, y = -2.9667770397371904, z = 103.90757043080895
+[-8.95 94.49  0.85  1.  ]
+moving robot closer to ball
+theta = 95.40979892051175
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361292931791112, y = -3.1274921220944343, z = 104.67682333728595
+[-8.86 95.28  0.84  1.  ]
+moving robot closer to ball
+theta = 95.30992849917521
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.339459145249125, y = -3.0841927410430245, z = 104.4088642785044
+[-8.87 95.01  0.86  1.  ]
+moving robot closer to ball
+theta = 95.33309887628758
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.353475939178911, y = -3.1149315641026236, z = 103.84809627069181
+[-8.83 94.47  1.    1.  ]
+moving robot closer to ball
+theta = 95.33900412338589
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.308262392653644, y = -3.0238319826384252, z = 103.90872380232281
+[-8.88 94.5   0.9   1.  ]
+moving robot closer to ball
+theta = 95.36975670399974
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.286505736835056, y = -2.999531817782248, z = 104.2897489423523
+[-8.92 94.87  0.8   1.  ]
+moving robot closer to ball
+theta = 95.37313156952771
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.321582233135536, y = -3.015373061366441, z = 103.98275423904623
+[-8.87 94.58  0.87  1.  ]
+moving robot closer to ball
+theta = 95.36011416944724
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.244367399187157, y = -2.9579630934420105, z = 103.90847786066102
+[-8.95 94.49  0.84  1.  ]
+moving robot closer to ball
+theta = 95.41199247222487
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.32566058535624, y = -3.0567431093788464, z = 104.54937707847452
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33891710997572
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3351955464726535, y = -3.0391743538113265, z = 104.43593768782668
+[-8.88 95.02  0.81  1.  ]
+moving robot closer to ball
+theta = 95.33750775834031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346963803391798, y = -3.0600326234981985, z = 104.82246882563258
+[-8.88 95.41  0.75  1.  ]
+moving robot closer to ball
+theta = 95.3182670125603
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3140938068392245, y = -3.0344419033933843, z = 104.77911810707378
+[-8.91 95.36  0.73  1.  ]
+moving robot closer to ball
+theta = 95.34053767717383
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.311206522924108, y = -3.028987913934768, z = 104.670282721542
+[-8.91 95.25  0.75  1.  ]
+moving robot closer to ball
+theta = 95.34568902033872
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.303815168443085, y = -3.015068459395288, z = 104.45186625368952
+[-8.91 95.03  0.78  1.  ]
+moving robot closer to ball
+theta = 95.35718932615798
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.403682420744807, y = -3.1537986245097556, z = 105.11698393073792
+[-8.83 95.72  0.78  1.  ]
+moving robot closer to ball
+theta = 95.27088607579016
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.380967119595867, y = -3.089130445296007, z = 104.9644353423286
+[-8.85 95.55  0.75  1.  ]
+moving robot closer to ball
+theta = 95.29237290823143
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.294395204616664, y = -2.990807687161592, z = 104.87254145497788
+[-8.94 95.44  0.68  1.  ]
+moving robot closer to ball
+theta = 95.35212173062172
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.334318071827765, y = -3.0470286629483736, z = 104.71375872711522
+[-8.89 95.3   0.76  1.  ]
+moving robot closer to ball
+theta = 95.32963564723921
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.333736037078078, y = -3.045364970408563, z = 105.07887894836493
+[-8.91 95.66  0.68  1.  ]
+moving robot closer to ball
+theta = 95.31971701139203
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.37822577497623, y = -3.0938839933218127, z = 103.90872380232281
+[-8.81 94.52  0.96  1.  ]
+moving robot closer to ball
+theta = 95.32364843849572
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.393114568482427, y = -3.126933767032856, z = 104.32029084375284
+[-8.81 94.93  0.91  1.  ]
+moving robot closer to ball
+theta = 95.30107231453546
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.398460287284779, y = -3.142355676035182, z = 104.29965985423166
+[-8.8  94.91  0.93  1.  ]
+moving robot closer to ball
+theta = 95.29755793422301
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.312362677662878, y = -3.031166801999772, z = 104.66119606484278
+[-8.91 95.24  0.76  1.  ]
+moving robot closer to ball
+theta = 95.3451336050098
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3351955464726535, y = -3.0391743538113265, z = 104.43593768782668
+[-8.88 95.02  0.81  1.  ]
+moving robot closer to ball
+theta = 95.33750775834031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.361052809572074, y = -3.081098211203784, z = 104.91035858693233
+[-8.87 95.5   0.75  1.  ]
+moving robot closer to ball
+theta = 95.30618405031814
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.38806143147294, y = -3.115474916294749, z = 104.36623991930855
+[-8.82 94.97  0.89  1.  ]
+moving robot closer to ball
+theta = 95.30346139759594
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.251105245566814, y = -2.9773276385868512, z = 104.36967083333094
+[-8.96 94.95  0.77  1.  ]
+moving robot closer to ball
+theta = 95.39325703302325
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375765667913701, y = -3.1624887569697444, z = 103.86119389265001
+[-8.8  94.49  1.04  1.  ]
+moving robot closer to ball
+theta = 95.32244464988588
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.342714800854782, y = -3.0903742167050385, z = 104.5298140060014
+[-8.87 95.13  0.84  1.  ]
+moving robot closer to ball
+theta = 95.32734072560925
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.289865900479389, y = -3.019713992312632, z = 104.85674342348827
+[-8.94 95.43  0.71  1.  ]
+moving robot closer to ball
+theta = 95.35357790158005
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.317684714912224, y = -3.025574391176041, z = 105.18949609013296
+[-8.93 95.76  0.64  1.  ]
+moving robot closer to ball
+theta = 95.32724944084916
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.2817598943410395, y = -2.9741178821106686, z = 104.33450824182172
+[-8.93 94.91  0.77  1.  ]
+moving robot closer to ball
+theta = 95.37616038492355
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.318700128839024, y = -3.043121781716462, z = 104.88353983304063
+[-8.91 95.46  0.72  1.  ]
+moving robot closer to ball
+theta = 95.33431420050412
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.371112689877579, y = -3.087662419338021, z = 103.86778631305198
+[-8.81 94.48  0.96  1.  ]
+moving robot closer to ball
+theta = 95.32945824783675
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.355639110378778, y = -3.1194516593898576, z = 103.85048511193679
+[-8.83 94.47  1.    1.  ]
+moving robot closer to ball
+theta = 95.33737015765419
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.390311014511359, y = -3.1256851161991626, z = 104.63269863668823
+[-8.82 95.24  0.85  1.  ]
+moving robot closer to ball
+theta = 95.29400197698496
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3426447307777085, y = -3.1144286485858657, z = 103.70677443997452
+[-8.83 94.33  1.03  1.  ]
+moving robot closer to ball
+theta = 95.34962551896693
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3376511608517685, y = -3.1127525870426207, z = 103.65714183730097
+[-8.84 94.28  1.03  1.  ]
+moving robot closer to ball
+theta = 95.3541672960866
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.336836762895074, y = -3.078521439947839, z = 104.59393850088219
+[-8.88 95.19  0.81  1.  ]
+moving robot closer to ball
+theta = 95.32970916775717
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.342304374036749, y = -3.1138148429324186, z = 103.70132587339859
+[-8.83 94.32  1.03  1.  ]
+moving robot closer to ball
+theta = 95.35002432452544
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.353475939178911, y = -3.1149315641026236, z = 103.84809627069181
+[-8.83 94.47  1.    1.  ]
+moving robot closer to ball
+theta = 95.33900412338589
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.247199700630447, y = -2.9667770397371904, z = 103.90757043080895
+[-8.95 94.49  0.85  1.  ]
+moving robot closer to ball
+theta = 95.40979892051175
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375458114056258, y = -3.1706943187698826, z = 103.8048112151581
+[-8.8  94.43  1.06  1.  ]
+moving robot closer to ball
+theta = 95.32376194111637
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.381275152712826, y = -3.107785243895165, z = 104.27263996498469
+[-8.82 94.88  0.9   1.  ]
+moving robot closer to ball
+theta = 95.31062137116793
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.247199700630447, y = -2.9667770397371904, z = 103.90757043080895
+[-8.95 94.49  0.85  1.  ]
+moving robot closer to ball
+theta = 95.40979892051175
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.352154892054455, y = -3.080261388209297, z = 104.0352835959741
+[-8.84 94.64  0.93  1.  ]
+moving robot closer to ball
+theta = 95.33645009454045
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.375765667913701, y = -3.1624887569697444, z = 103.86119389265001
+[-8.8  94.49  1.04  1.  ]
+moving robot closer to ball
+theta = 95.32244464988588
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.342304374036749, y = -3.1138148429324186, z = 103.70132587339859
+[-8.83 94.32  1.03  1.  ]
+moving robot closer to ball
+theta = 95.35002432452544
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.3845496931647086, y = -3.117965743604445, z = 104.2701633440919
+[-8.82 94.88  0.91  1.  ]
+moving robot closer to ball
+theta = 95.308137216439
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.325450522024286, y = -3.056346281786003, z = 104.5484584202402
+[-8.89 95.14  0.8   1.  ]
+moving robot closer to ball
+theta = 95.33909185500278
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.2851237722833755, y = -2.981046819556696, z = 104.84849647929661
+[-8.95 95.42  0.67  1.  ]
+moving robot closer to ball
+theta = 95.3588914673159
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.384225954686063, y = -3.1173577854575973, z = 104.25592932549098
+[-8.82 94.87  0.91  1.  ]
+moving robot closer to ball
+theta = 95.30877055004581
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.390828552996471, y = -3.1267063987313404, z = 104.65326373978307
+[-8.83 95.26  0.84  1.  ]
+moving robot closer to ball
+theta = 95.29305567261783
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.301710704410106, y = -3.052280540643166, z = 104.24606940192243
+[-8.9  94.84  0.86  1.  ]
+moving robot closer to ball
+theta = 95.36220813736298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.390311014511359, y = -3.1256851161991626, z = 104.63269863668823
+[-8.82 95.24  0.85  1.  ]
+moving robot closer to ball
+theta = 95.29400197698496
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.404700734010708, y = -3.085378020271906, z = 105.36506249394807
+[-8.85 95.95  0.66  1.  ]
+moving robot closer to ball
+theta = 95.26737709050292
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.346196812071287, y = -3.0896685200036016, z = 104.43973302672094
+[-8.86 95.04  0.85  1.  ]
+moving robot closer to ball
+theta = 95.32787485516457
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 5.2336168494102875, y = -2.6766789973729046, z = 100.80270225507009
+[-8.85 91.39  1.19  1.  ]
+moving robot closer to ball
+theta = 95.53077776174746
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -8.97878972388768, y = -2.546715796531159, z = 111.08280320684395
+[-23.46 101.05   0.23   1.  ]
+moving robot closer to ball
+theta = 103.07139500397084
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -15.70976051024161, y = -1.887280999528712, z = 103.56584514745694
+[-29.89  93.38   1.67   1.  ]
+moving robot closer to ball
+theta = 107.74971099790473
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.275405926927434, y = -1.680787406611933, z = 105.30455320415689
+[-31.54  95.     1.26   1.  ]
+moving robot closer to ball
+theta = 108.3675529457316
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.178620117629443, y = -1.7719487230933115, z = 105.04049825313226
+[-31.43  94.76   1.39   1.  ]
+moving robot closer to ball
+theta = 108.34778784667077
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.14571730219419, y = -1.7471849827023553, z = 104.82903710700803
+[-31.39  94.55   1.41   1.  ]
+moving robot closer to ball
+theta = 108.36416787896604
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.05659447912004, y = -1.7210064511781904, z = 104.16058400414377
+[-31.27  93.89   1.51   1.  ]
+moving robot closer to ball
+theta = 108.42042721470708
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.14898086509011, y = -1.7419816190126562, z = 104.757365682596
+[-31.39  94.48   1.42   1.  ]
+moving robot closer to ball
+theta = 108.37739132548005
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.150677534655664, y = -1.7783109415041534, z = 104.91643641399875
+[-31.39  94.64   1.42   1.  ]
+moving robot closer to ball
+theta = 108.35098606687716
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.088725284495062, y = -1.7459304765277017, z = 104.3965441454127
+[-31.31  94.13   1.49   1.  ]
+moving robot closer to ball
+theta = 108.39959106835212
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.150160674423685, y = -1.7799097244066204, z = 104.91156026360095
+[-31.39  94.64   1.42   1.  ]
+moving robot closer to ball
+theta = 108.35132277997721
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.14359786773598, y = -1.7933978239705566, z = 104.85388491163938
+[-31.38  94.58   1.45   1.  ]
+moving robot closer to ball
+theta = 108.35549489720586
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.088263557168613, y = -1.8174176347048085, z = 104.39988287966258
+[-31.3   94.14   1.56   1.  ]
+moving robot closer to ball
+theta = 108.39307435515116
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.05508469280067, y = -1.8229166471648282, z = 104.25028631846222
+[-31.26  94.     1.59   1.  ]
+moving robot closer to ball
+theta = 108.39748323748208
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.05663346214461, y = -1.7345006717650808, z = 104.06246979751886
+[-31.27  93.8    1.54   1.  ]
+moving robot closer to ball
+theta = 108.43459665088214
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.005630029583987, y = -1.786154789207085, z = 103.90048963009814
+[-31.2   93.65   1.62   1.  ]
+moving robot closer to ball
+theta = 108.42741826338506
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.1369312300964, y = -1.7716910352625008, z = 104.75526247880508
+[-31.37  94.48   1.44   1.  ]
+moving robot closer to ball
+theta = 108.36872341139014
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.295384505391247, y = -1.7633957846173012, z = 105.59454384713658
+[-31.57  95.3    1.28   1.  ]
+moving robot closer to ball
+theta = 108.32765812921744
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.177780301186903, y = -1.747481377886178, z = 105.26209965663611
+[-31.44  94.97   1.32   1.  ]
+moving robot closer to ball
+theta = 108.31541693687936
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.024349173736116, y = -1.7628409756949894, z = 104.06513220679909
+[-31.23  93.81   1.56   1.  ]
+moving robot closer to ball
+theta = 108.41406095785696
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.05663346214461, y = -1.7345006717650808, z = 104.06246979751886
+[-31.27  93.8    1.54   1.  ]
+moving robot closer to ball
+theta = 108.43459665088214
+moving robot forward
+error = 18.434596650882156, pi_output = 236.60548476797302
+motor[0] = 50, motor[9] = 50
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -17.279870626755507, y = -1.6913371028117503, z = 105.35480858575718
+[-31.55  95.05   1.26   1.  ]
+moving robot closer to ball
+theta = 108.36146902751892
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -21.541321902237144, y = -2.28240301950591, z = 106.9538717733374
+[-35.81  96.62   1.88   1.  ]
+moving robot closer to ball
+theta = 110.33831375988258
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -16.148844359471646, y = -3.8261431038369818, z = 114.58175434143817
+[-30.65 104.54   1.4    1.  ]
+moving robot closer to ball
+theta = 106.34194992208319
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -16.273827707663582, y = -3.5340214937201986, z = 112.66637644814347
+[-30.72 102.61   1.5    1.  ]
+moving robot closer to ball
+theta = 106.66652996320303
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -16.631955997226648, y = -3.6218856076064765, z = 115.49146604518153
+[-31.19 105.38   1.06   1.  ]
+moving robot closer to ball
+theta = 106.48791183617944
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -16.37240456159816, y = -3.494396710875519, z = 113.76817570388502
+[-30.87 103.67   1.25   1.  ]
+moving robot closer to ball
+theta = 106.5800685282031
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -16.55987904819062, y = -3.646321317965044, z = 115.0867019777248
+[-31.1  104.99   1.15   1.  ]
+moving robot closer to ball
+theta = 106.49989840117497
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -15.95768495531195, y = -3.56864336886272, z = 109.95977510528552
+[-30.28  99.97   2.05   1.  ]
+moving robot closer to ball
+theta = 106.85205844750189
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -18.790978883696468, y = -3.434165140233477, z = 109.94197060686541
+[-33.11  99.85   2.17   1.  ]
+moving robot closer to ball
+theta = 108.3471797272521
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -24.484951872028894, y = -3.026994773186148, z = 111.00313191121901
+[-38.86 100.66   2.05   1.  ]
+moving robot closer to ball
+theta = 111.11152417275545
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -23.149986401334203, y = -3.1847955114407194, z = 109.55334665118548
+[-37.46  99.3    2.38   1.  ]
+moving robot closer to ball
+theta = 110.66666729559537
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -23.102164329227403, y = -3.101533834685035, z = 107.78895877951939
+[-37.34  97.56   2.65   1.  ]
+moving robot closer to ball
+theta = 110.94351562499843
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -24.815836449234702, y = -2.8164529742563036, z = 106.07426210564861
+[-38.99  95.78   2.86   1.  ]
+moving robot closer to ball
+theta = 112.15264274786324
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -26.563439981623997, y = -3.184735454797719, z = 112.95301978853581
+[-41.01 102.54   1.99   1.  ]
+moving robot closer to ball
+theta = 111.7961589362719
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -28.737666551292843, y = -2.930346653380927, z = 104.32142775107573
+[-42.82  93.98   3.66   1.  ]
+moving robot closer to ball
+theta = 114.49229784337767
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -32.9345646929019, y = -2.0031549466836363, z = 101.8769926026433
+[-46.96  91.29   3.61   1.  ]
+moving robot closer to ball
+theta = 117.22241038817148
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -32.87188129439285, y = -2.255241520388279, z = 102.66901446530437
+[-46.91  92.12   3.69   1.  ]
+moving robot closer to ball
+theta = 116.98885065668577
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -33.93473885901168, y = -2.141156185619766, z = 106.31856507868427
+[-48.14  95.64   2.94   1.  ]
+moving robot closer to ball
+theta = 116.71868400776633
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.941048417898514, y = -2.244942889129596, z = 110.03777449164564
+[-49.3   99.27   2.38   1.  ]
+moving robot closer to ball
+theta = 116.4076602102426
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.21861904103405, y = -2.317812864045936, z = 110.7251319628353
+[-49.6   99.95   2.34   1.  ]
+moving robot closer to ball
+theta = 116.39056686091588
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.67491089730711, y = -2.245643001670179, z = 109.07791271581684
+[-48.99  98.34   2.55   1.  ]
+moving robot closer to ball
+theta = 116.48054626161684
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.651776927291095, y = -2.2443510683128265, z = 108.99642439097182
+[-48.96  98.26   2.57   1.  ]
+moving robot closer to ball
+theta = 116.48665267807746
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.10223069210619, y = -2.2905338643208655, z = 110.55375360221413
+[-49.48  99.78   2.34   1.  ]
+moving robot closer to ball
+theta = 116.37362248317449
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.651776927291095, y = -2.2443510683128265, z = 108.99642439097182
+[-48.96  98.26   2.57   1.  ]
+moving robot closer to ball
+theta = 116.48665267807746
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.86927934998288, y = -2.3086044158643313, z = 109.70095829546288
+[-49.21  98.96   2.51   1.  ]
+moving robot closer to ball
+theta = 116.4379155088325
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.91279739834589, y = -2.249364447673538, z = 109.96727846077435
+[-49.26  99.21   2.4    1.  ]
+moving robot closer to ball
+theta = 116.4085356485554
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.21861904103405, y = -2.1685180244338915, z = 110.7251319628353
+[-49.61  99.92   2.19   1.  ]
+moving robot closer to ball
+theta = 116.4029253070521
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.9443344860059, y = -2.2994797735531836, z = 110.13325959735296
+[-49.3   99.38   2.42   1.  ]
+moving robot closer to ball
+theta = 116.38510737788918
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.812245938781565, y = -2.228828921324371, z = 109.59663456579459
+[-49.15  98.84   2.44   1.  ]
+moving robot closer to ball
+theta = 116.43933104293012
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.651776927291095, y = -2.2443510683128265, z = 108.99642439097182
+[-48.96  98.26   2.57   1.  ]
+moving robot closer to ball
+theta = 116.48665267807746
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.08254909177802, y = -2.269046326887941, z = 110.46538769216191
+[-49.45  99.69   2.33   1.  ]
+moving robot closer to ball
+theta = 116.38425087589489
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.569215682037175, y = -2.2115181477451338, z = 108.74542409025592
+[-48.87  98.01   2.58   1.  ]
+moving robot closer to ball
+theta = 116.50261631946404
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.91279739834589, y = -2.249364447673538, z = 109.96727846077435
+[-49.26  99.21   2.4    1.  ]
+moving robot closer to ball
+theta = 116.4085356485554
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.11324413108758, y = -2.2445899477575093, z = 110.45679078579514
+[-49.49  99.68   2.31   1.  ]
+moving robot closer to ball
+theta = 116.40231903988618
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.812245938781565, y = -2.228828921324371, z = 109.59663456579459
+[-49.15  98.84   2.44   1.  ]
+moving robot closer to ball
+theta = 116.43933104293012
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.860295535340825, y = -2.3068605313863864, z = 109.66108276133426
+[-49.19  98.92   2.51   1.  ]
+moving robot closer to ball
+theta = 116.44205725711024
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.090161108594295, y = -2.2068776085389867, z = 110.38417782594652
+[-49.46  99.6    2.29   1.  ]
+moving robot closer to ball
+theta = 116.40952586791049
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.199322343277224, y = -2.243711992201202, z = 110.74479979067443
+[-49.58  99.96   2.26   1.  ]
+moving robot closer to ball
+theta = 116.38374265887037
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.67135329303577, y = -2.227738698367007, z = 109.02045853172979
+[-48.98  98.28   2.55   1.  ]
+moving robot closer to ball
+theta = 116.49229244367767
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.860295535340825, y = -2.3068605313863864, z = 109.66108276133426
+[-49.19  98.92   2.51   1.  ]
+moving robot closer to ball
+theta = 116.44205725711024
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.14415222870472, y = -2.2104224930671097, z = 110.5754830156517
+[-49.52  99.79   2.26   1.  ]
+moving robot closer to ball
+theta = 116.39533144922376
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.757691990042666, y = -2.2048951741830707, z = 108.41975727649749
+[-49.05  97.69   2.65   1.  ]
+moving robot closer to ball
+theta = 116.66031045849469
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.381515942711324, y = -2.299889683613486, z = 108.35275710018878
+[-48.66  97.65   2.73   1.  ]
+moving robot closer to ball
+theta = 116.48813237964464
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.16248614300492, y = -2.138272757363388, z = 110.46366245312673
+[-49.54  99.66   2.21   1.  ]
+moving robot closer to ball
+theta = 116.43265349804209
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.61366865944779, y = -2.3076501762090516, z = 108.83008177651581
+[-48.91  98.11   2.66   1.  ]
+moving robot closer to ball
+theta = 116.49788518937329
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.46568906085307, y = -2.2048951741830707, z = 108.41975727649749
+[-48.76  97.69   2.63   1.  ]
+moving robot closer to ball
+theta = 116.52209790732807
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.08319827483975, y = -2.3205195596117822, z = 110.44400811744178
+[-49.45  99.68   2.39   1.  ]
+moving robot closer to ball
+theta = 116.38464060173722
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.97001911804151, y = -2.290406009212419, z = 109.94460056177921
+[-49.32  99.19   2.45   1.  ]
+moving robot closer to ball
+theta = 116.4365126939995
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.626308229321936, y = -2.3752769191871907, z = 108.96279439122435
+[-48.93  98.26   2.7    1.  ]
+moving robot closer to ball
+theta = 116.47059124981692
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.905274201424305, y = -2.3773628762174908, z = 109.91390343949237
+[-49.24  99.18   2.53   1.  ]
+moving robot closer to ball
+theta = 116.40528554828147
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.30252676519066, y = -2.258430718260272, z = 111.05222287507902
+[-49.7  100.26   2.22   1.  ]
+moving robot closer to ball
+theta = 116.36797266953295
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.876217010718754, y = -2.319788513190292, z = 109.73889530040657
+[-49.21  99.     2.51   1.  ]
+moving robot closer to ball
+theta = 116.43242797193923
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.7573487585403, y = -2.176902403668356, z = 109.16211563040346
+[-49.08  98.41   2.48   1.  ]
+moving robot closer to ball
+theta = 116.50768839371779
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.50995328819313, y = -2.168779942342586, z = 108.32955104947764
+[-48.8   97.6    2.61   1.  ]
+moving robot closer to ball
+theta = 116.56500602996296
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.06152145121929, y = -2.3130230499061963, z = 110.37622512778346
+[-49.43  99.62   2.39   1.  ]
+moving robot closer to ball
+theta = 116.38899544490887
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.876217010718754, y = -2.319788513190292, z = 109.73889530040657
+[-49.21  99.     2.51   1.  ]
+moving robot closer to ball
+theta = 116.43242797193923
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.532170098336884, y = -2.228082440845831, z = 108.64185208813556
+[-48.83  97.91   2.61   1.  ]
+moving robot closer to ball
+theta = 116.50527143093046
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.30252676519066, y = -2.258430718260272, z = 111.05222287507902
+[-49.7  100.26   2.22   1.  ]
+moving robot closer to ball
+theta = 116.36797266953295
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.57544138639596, y = -2.355395906895971, z = 108.97448091168471
+[-48.88  98.27   2.67   1.  ]
+moving robot closer to ball
+theta = 116.44585251377751
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.04593406707579, y = -2.203971749062038, z = 110.22748855057004
+[-49.41  99.45   2.31   1.  ]
+moving robot closer to ball
+theta = 116.42118659704188
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.93765695869116, y = -2.3092345810631962, z = 109.93597060311572
+[-49.28  99.19   2.47   1.  ]
+moving robot closer to ball
+theta = 116.42158496350302
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.86927934998288, y = -2.3086044158643313, z = 109.70095829546288
+[-49.21  98.96   2.51   1.  ]
+moving robot closer to ball
+theta = 116.4379155088325
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.98611151308811, y = -2.349483830173876, z = 110.0568658760946
+[-49.33  99.31   2.49   1.  ]
+moving robot closer to ball
+theta = 116.416086912361
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.50030283477347, y = -2.3087268551972873, z = 111.67437302044266
+[-49.92 100.87   2.17   1.  ]
+moving robot closer to ball
+theta = 116.32954854432352
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.900711629067956, y = -2.3666352218332793, z = 109.883887341624
+[-49.24  99.15   2.53   1.  ]
+moving robot closer to ball
+theta = 116.41020279363312
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.900711629067956, y = -2.3666352218332793, z = 109.883887341624
+[-49.24  99.15   2.53   1.  ]
+moving robot closer to ball
+theta = 116.41020279363312
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.09870226017307, y = -2.296716422186397, z = 110.53242618025125
+[-49.47  99.76   2.35   1.  ]
+moving robot closer to ball
+theta = 116.37581184725943
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.58114701012176, y = -2.2323919610863565, z = 108.62608444758546
+[-48.88  97.9    2.62   1.  ]
+moving robot closer to ball
+theta = 116.53135288414653
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.87636351508398, y = -2.307352717501898, z = 109.71817420811847
+[-49.21  98.98   2.5    1.  ]
+moving robot closer to ball
+theta = 116.43779730526725
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.97059441238713, y = -2.364530385782368, z = 110.07173834452838
+[-49.32  99.33   2.5    1.  ]
+moving robot closer to ball
+theta = 116.40454167027193
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.114474114907246, y = -2.2911672061271013, z = 110.59695195761812
+[-49.49  99.83   2.33   1.  ]
+moving robot closer to ball
+theta = 116.37046986964826
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.717176061325965, y = -2.182384615796644, z = 109.06312072033545
+[-49.04  98.31   2.5    1.  ]
+moving robot closer to ball
+theta = 116.50884820216517
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.906351527020405, y = -2.2278138691771234, z = 109.66021375977331
+[-49.25  98.9    2.44   1.  ]
+moving robot closer to ball
+theta = 116.47043008325491
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.752504202806335, y = -2.2724476015676665, z = 109.3200782909532
+[-49.08  98.58   2.54   1.  ]
+moving robot closer to ball
+theta = 116.46468276214108
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.876217010718754, y = -2.319788513190292, z = 109.73889530040657
+[-49.21  99.     2.51   1.  ]
+moving robot closer to ball
+theta = 116.43242797193923
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.86927934998288, y = -2.3086044158643313, z = 109.70095829546288
+[-49.21  98.96   2.51   1.  ]
+moving robot closer to ball
+theta = 116.4379155088325
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.91972634375174, y = -2.1622848518900994, z = 109.57530698538145
+[-49.26  98.8    2.39   1.  ]
+moving robot closer to ball
+theta = 116.49969566392153
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.752504202806335, y = -2.2724476015676665, z = 109.3200782909532
+[-49.08  98.58   2.54   1.  ]
+moving robot closer to ball
+theta = 116.46468276214108
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.873916202341746, y = -2.315998290042478, z = 109.72619312750572
+[-49.21  98.98   2.51   1.  ]
+moving robot closer to ball
+theta = 116.43427904557288
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.88548251154148, y = -2.305734370752099, z = 109.74031419179784
+[-49.22  99.     2.5    1.  ]
+moving robot closer to ball
+theta = 116.43765011334584
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.97059441238713, y = -2.364530385782368, z = 110.07173834452838
+[-49.32  99.33   2.5    1.  ]
+moving robot closer to ball
+theta = 116.40454167027193
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.46568906085307, y = -2.2048951741830707, z = 108.41975727649749
+[-48.76  97.69   2.63   1.  ]
+moving robot closer to ball
+theta = 116.52209790732807
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.14415222870472, y = -2.2104224930671097, z = 110.5754830156517
+[-49.52  99.79   2.26   1.  ]
+moving robot closer to ball
+theta = 116.39533144922376
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.752504202806335, y = -2.2724476015676665, z = 109.3200782909532
+[-49.08  98.58   2.54   1.  ]
+moving robot closer to ball
+theta = 116.46468276214108
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.565537277530694, y = -2.306077439231484, z = 108.86650640867225
+[-48.87  98.15   2.64   1.  ]
+moving robot closer to ball
+theta = 116.4677301083435
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.905274201424305, y = -2.3773628762174908, z = 109.91390343949237
+[-49.24  99.18   2.53   1.  ]
+moving robot closer to ball
+theta = 116.40528554828147
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.53007655286421, y = -2.137584595594873, z = 108.71385181334965
+[-48.84  97.97   2.51   1.  ]
+moving robot closer to ball
+theta = 116.49693688117524
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.547070642998854, y = -2.507974714925535, z = 109.12886974373392
+[-48.84  98.45   2.79   1.  ]
+moving robot closer to ball
+theta = 116.3877062135268
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.66642282762026, y = -2.2320572031285058, z = 109.01468937134786
+[-48.98  98.28   2.55   1.  ]
+moving robot closer to ball
+theta = 116.4908020230511
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.11084890795526, y = -2.290050962746392, z = 110.58546239524024
+[-49.49  99.81   2.33   1.  ]
+moving robot closer to ball
+theta = 116.3712151948612
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.74712227551283, y = -2.1446668654395373, z = 109.07404379638588
+[-49.07  98.32   2.46   1.  ]
+moving robot closer to ball
+theta = 116.52385976016257
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.07712149600827, y = -2.2892369006735165, z = 110.46515765717692
+[-49.45  99.7    2.35   1.  ]
+moving robot closer to ball
+theta = 116.38009628342064
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.05192895689963, y = -2.2558761143656616, z = 110.37843569061371
+[-49.42  99.61   2.33   1.  ]
+moving robot closer to ball
+theta = 116.38882217403551
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.651776927291095, y = -2.2443510683128265, z = 108.99642439097182
+[-48.96  98.26   2.57   1.  ]
+moving robot closer to ball
+theta = 116.48665267807746
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.00356014860448, y = -2.263970425298367, z = 110.2358302633828
+[-49.37  99.47   2.37   1.  ]
+moving robot closer to ball
+theta = 116.39472885956536
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.56610424402965, y = -2.3080387237746014, z = 108.87132886919828
+[-48.87  98.15   2.65   1.  ]
+moving robot closer to ball
+theta = 116.46683125829146
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -35.06152145121929, y = -2.3130230499061963, z = 110.37622512778346
+[-49.43  99.62   2.39   1.  ]
+moving robot closer to ball
+theta = 116.38899544490887
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -34.68929060135359, y = -2.1711826851488167, z = 108.94172208741976
+[-49.    98.19   2.51   1.  ]
+moving robot closer to ball
+theta = 116.52186492311549
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -31.991862551636213, y = -1.8314575516674525, z = 100.00233091009348
+[-45.96  89.45   3.74   1.  ]
+moving robot closer to ball
+theta = 117.19305728122613
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 3.2819596269110254, y = -3.2800742663100695, z = 121.92397389518733
+[-11.66 112.14  -2.28   1.  ]
+moving robot closer to ball
+theta = 95.93880338481942
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.564261735496572, y = -3.5939088100906016, z = 94.07614747311598
+[12.76 85.56  1.59  1.  ]
+moving robot closer to ball
+theta = 81.51852174676408
+moving robot forward
+error = -8.481478253235935, pi_output = -41.03674252644382
+motor[0] = -50, motor[9] = -50
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 38.95390945878223, y = -3.1121875867679734, z = 72.88300194561728
+[25.98 65.05  4.3   1.  ]
+moving robot closer to ball
+theta = 68.2276369175501
+moving robot forward
+error = -21.772363082449885, pi_output = -195.7179539010332
+motor[0] = -50, motor[9] = -50
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 103.87508347122123, y = -7.678359129040155, z = 161.05904408792244
+[ 87.16 154.01 -14.51   1.  ]
+moving robot closer to ball
+theta = 60.49277504317763
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 228.3755179809956, y = -35.57190962958904, z = 353.7285535233032
+[204.97 351.58 -36.61   1.  ]
+moving robot closer to ball
+theta = 59.75717638939382
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 127.62175501302157, y = -18.669328303461015, z = 197.56903712306703
+[110.09 192.61 -13.14   1.  ]
+moving robot closer to ball
+theta = 60.24911941794526
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 62.91056073349593, y = -8.948373304999176, z = 100.05007338495687
+[49.12 93.47  2.49  1.  ]
+moving robot closer to ball
+theta = 62.27619075839739
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 51.8820348452787, y = -9.63298017109733, z = 111.65857469407042
+[ 37.69 104.67   1.78   1.  ]
+moving robot closer to ball
+theta = 70.19949287717785
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 50.738520345039376, y = -9.424563339658906, z = 109.07404379638588
+[ 36.64 102.07   2.19   1.  ]
+moving robot closer to ball
+theta = 70.25211784607366
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 50.54449329424872, y = -9.45593837291751, z = 108.46488902724754
+[ 36.48 101.48   2.36   1.  ]
+moving robot closer to ball
+theta = 70.22743090041998
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 50.92258760608231, y = -9.546372341867533, z = 109.62841966462686
+[ 36.81 102.64   2.18   1.  ]
+moving robot closer to ball
+theta = 70.27022698138549
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 51.319107867015006, y = -9.537105965679023, z = 110.47563480558838
+[ 37.17 103.48   1.97   1.  ]
+moving robot closer to ball
+theta = 70.24237176310298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 51.51614475912321, y = -9.574465865941798, z = 110.87500305335054
+[ 37.35 103.89   1.91   1.  ]
+moving robot closer to ball
+theta = 70.22440135587235
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 50.447503088646286, y = -9.127457677810254, z = 109.07665108149742
+[ 36.33 102.01   1.93   1.  ]
+moving robot closer to ball
+theta = 70.39649057543843
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 40.6359023698067, y = -5.782032454842305, z = 98.3936720573335
+[26.76 90.61  1.65  1.  ]
+moving robot closer to ball
+theta = 73.54705026891442
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 28.813592945035513, y = -5.330565026108367, z = 98.63180874185278
+[14.94 90.43  2.18  1.  ]
+moving robot closer to ball
+theta = 80.62033219447373
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 28.557921291151466, y = -4.972236463631315, z = 99.49333265812338
+[14.62 91.2   1.68  1.  ]
+moving robot closer to ball
+theta = 80.89366930129098
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 28.196747018546994, y = -4.866894351669287, z = 99.41446004004943
+[14.25 91.09  1.62  1.  ]
+moving robot closer to ball
+theta = 81.10674462921429
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.960258543778345, y = -4.856830475973105, z = 98.59720596763401
+[14.05 90.28  1.8   1.  ]
+moving robot closer to ball
+theta = 81.15276331235796
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 33.25585698973281, y = -3.9905017703831107, z = 99.97201943972202
+[19.2  91.59  0.22  1.  ]
+moving robot closer to ball
+theta = 78.16191616055465
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 41.9539844786499, y = -3.7011922516635605, z = 96.01901214621554
+[28.01 87.9  -0.02  1.  ]
+moving robot closer to ball
+theta = 72.3244422600782
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.15948714123292, y = -3.680512668661042, z = 82.51025786621142
+[25.81 74.6   2.91  1.  ]
+moving robot closer to ball
+theta = 70.91227085866794
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.330143176354, y = -3.5289474968278065, z = 82.8698354422272
+[25.96 74.92  2.67  1.  ]
+moving robot closer to ball
+theta = 70.89204274187836
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.46746515353922, y = -3.487792558757954, z = 83.21869819522463
+[26.07 75.26  2.55  1.  ]
+moving robot closer to ball
+theta = 70.89091402213717
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.517101628315466, y = -3.5169048817341175, z = 83.3040852598361
+[26.12 75.35  2.56  1.  ]
+moving robot closer to ball
+theta = 70.87967404799811
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.645182464858706, y = -3.5594980825956775, z = 83.58725105057016
+[26.24 75.64  2.53  1.  ]
+moving robot closer to ball
+theta = 70.8672762198005
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.330143176354, y = -3.5289474968278065, z = 82.8698354422272
+[25.96 74.92  2.67  1.  ]
+moving robot closer to ball
+theta = 70.89204274187836
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.491617671781476, y = -3.6377251317686485, z = 83.27981427650586
+[26.11 75.35  2.68  1.  ]
+moving robot closer to ball
+theta = 70.8897279205368
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.58323285979444, y = -3.4686612681186344, z = 83.45585656108048
+[26.18 75.49  2.47  1.  ]
+moving robot closer to ball
+theta = 70.87511427511923
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.22748392155671, y = -3.631181110585481, z = 82.65352919809463
+[25.87 74.73  2.82  1.  ]
+moving robot closer to ball
+theta = 70.90412329226382
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.724308139185986, y = -3.5956114758497986, z = 83.77218107949048
+[26.31 75.83  2.52  1.  ]
+moving robot closer to ball
+theta = 70.86219212514453
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.34801726268589, y = -3.5839026760631563, z = 82.84872806584278
+[25.98 74.91  2.73  1.  ]
+moving robot closer to ball
+theta = 70.87416084473121
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.43764626228922, y = -3.6334708243699914, z = 83.04145479763321
+[26.06 75.11  2.73  1.  ]
+moving robot closer to ball
+theta = 70.86390858150638
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 39.55435797739544, y = -3.4671594993923316, z = 83.39937130465663
+[26.15 75.43  2.49  1.  ]
+moving robot closer to ball
+theta = 70.87977475366431
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 43.20804923191225, y = -4.177289009905187, z = 89.98126080337082
+[29.56 82.12  1.55  1.  ]
+moving robot closer to ball
+theta = 70.20281227455476
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 47.115214373303, y = -5.824945129322316, z = 89.38231935116029
+[33.61 81.97  2.94  1.  ]
+moving robot closer to ball
+theta = 67.70673410440239
+len contours = 0
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 50.70435768959925, y = -6.922387923361758, z = 93.62218597501248
+[37.08 86.44  2.85  1.  ]
+moving robot closer to ball
+theta = 66.77969464619258
+moving robot forward
+error = -23.22030535380742, pi_output = -233.41768196841596
+motor[0] = -50, motor[9] = -50
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 80.91405807670806, y = -9.419729256727448, z = 125.58733978231123
+[ 65.98 119.04  -3.72   1.  ]
+moving robot closer to ball
+theta = 61.002524814399365
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 41.82705954000325, y = -6.4530786736179335, z = 96.65080930561082
+[28.07 89.07  2.55  1.  ]
+moving robot closer to ball
+theta = 72.50592922012994
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 42.341101655036226, y = -6.316279626023996, z = 95.39722267547705
+[28.63 87.83  2.62  1.  ]
+moving robot closer to ball
+theta = 71.94581318707716
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 33.24261374704775, y = -6.240729674490614, z = 101.08773721226326
+[19.31 93.14  2.19  1.  ]
+moving robot closer to ball
+theta = 78.28480975918356
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 33.8857546407043, y = -6.399920343982741, z = 102.44429372973835
+[19.91 94.52  2.02  1.  ]
+moving robot closer to ball
+theta = 78.10564645019991
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 33.61946126480987, y = -5.848742294429603, z = 101.50116632226191
+[19.64 93.48  1.7   1.  ]
+moving robot closer to ball
+theta = 78.13395417660007
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -0.9583414852504074, y = -3.0987405779257924, z = 117.35798560567484
+[-15.7  107.52  -1.18   1.  ]
+moving robot closer to ball
+theta = 98.30962212788336
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -26.259843118999328, y = 0.18957464028338347, z = 99.20632786668847
+[-40.37  88.41   1.43   1.  ]
+moving robot closer to ball
+theta = 114.54378941977824
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -37.53259744007513, y = 1.2822558494943268, z = 94.32469955493708
+[-51.47  83.11   2.31   1.  ]
+moving robot closer to ball
+theta = 121.77166459702497
+len contours = 1
+len contoursDai = 2
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -38.75648074170042, y = 1.2038828776298853, z = 92.49740003801267
+[-52.61  81.3    2.86   1.  ]
+moving robot closer to ball
+theta = 122.9041004409054
+len contours = 1
+len contoursDai = 2
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -38.78834902739464, y = 1.2757014006991856, z = 92.54113641116476
+[-52.64  81.33   2.78   1.  ]
+moving robot closer to ball
+theta = 122.91483373840248
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -38.93289579910713, y = 1.6172479552561367, z = 91.12328465026414
+[-52.75  79.87   2.75   1.  ]
+moving robot closer to ball
+theta = 123.44495993258565
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = -82.0931177466862, y = 5.333400336096815, z = 130.0426592664684
+[-97.73 116.06  -4.95   1.  ]
+moving robot closer to ball
+theta = 130.0989426250591
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 0
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 0
+rotating robot clockwise as we didn't detect any balls
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 57.8562939011757, y = -8.820278600668303, z = 95.38250660291843
+[44.28 88.74  3.73  1.  ]
+moving robot closer to ball
+theta = 63.48080307226298
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 56.53202242264126, y = -11.755915794561368, z = 125.64782535139373
+[ 41.88 118.92   0.65   1.  ]
+moving robot closer to ball
+theta = 70.60121737207818
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 48.447844310317365, y = -11.622605631705122, z = 134.1325618806561
+[ 33.45 126.98  -0.48   1.  ]
+moving robot closer to ball
+theta = 75.24450615739049
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.8397305867657, y = -10.804824549330846, z = 142.886014363588
+[ 12.48 134.84  -1.26   1.  ]
+moving robot closer to ball
+theta = 84.7138914204014
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.139160793385567, y = -10.150842955864078, z = 133.7237051605186
+[ 12.12 125.72  -0.     1.  ]
+moving robot closer to ball
+theta = 84.49115296494949
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.281085046598264, y = -10.200263493076408, z = 134.89113028442105
+[ 12.22 126.87  -0.2    1.  ]
+moving robot closer to ball
+theta = 84.49880059337785
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.041496750498553, y = -10.212109264769484, z = 133.7169213608782
+[ 12.03 125.72   0.07   1.  ]
+moving robot closer to ball
+theta = 84.5328937752173
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 27.03895956861211, y = -10.170337974018766, z = 134.20717722835622
+[ 12.01 126.19  -0.07   1.  ]
+moving robot closer to ball
+theta = 84.56541330448329
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.914837702364498, y = -10.113831942829872, z = 133.74813534974083
+[ 11.9  125.73  -0.02   1.  ]
+moving robot closer to ball
+theta = 84.59429771874203
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.215892994493124, y = -9.849466232908318, z = 129.35718566136612
+[ 11.37 121.36   0.66   1.  ]
+moving robot closer to ball
+theta = 84.64687862205203
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.1768802548491, y = -9.797429667577791, z = 129.00516343015147
+[ 11.34 121.     0.68   1.  ]
+moving robot closer to ball
+theta = 84.64419104820227
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.212010482643553, y = -9.777541491131037, z = 129.58450759169233
+[ 11.35 121.56   0.54   1.  ]
+moving robot closer to ball
+theta = 84.66506214415296
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.094374810080282, y = -9.73394556436705, z = 128.69744994156082
+[ 11.27 120.68   0.69   1.  ]
+moving robot closer to ball
+theta = 84.66496746793715
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.892290470950755, y = -10.133110776411021, z = 133.098664648244
+[ 11.9  125.09   0.13   1.  ]
+moving robot closer to ball
+theta = 84.56380440738914
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.7453942927176, y = -10.049089971130046, z = 132.67927484039328
+[ 11.77 124.66   0.14   1.  ]
+moving robot closer to ball
+theta = 84.60645243161684
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.349386646110375, y = -9.857887047032875, z = 130.15883157913032
+[ 11.47 122.15   0.5    1.  ]
+moving robot closer to ball
+theta = 84.63538920569327
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.511585027261592, y = -9.990219322731585, z = 130.94601213066227
+[ 11.61 122.95   0.45   1.  ]
+moving robot closer to ball
+theta = 84.60653806023782
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 26.116622584866636, y = -9.77383704159055, z = 128.97311860753624
+[ 11.28 120.96   0.67   1.  ]
+moving robot closer to ball
+theta = 84.67092872962792
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.904217836243358, y = -9.669363968934546, z = 127.87036685732272
+[ 11.11 119.86   0.81   1.  ]
+moving robot closer to ball
+theta = 84.70344863048533
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.35035636158158, y = -9.641484432169303, z = 124.7218193228501
+[ 10.69 116.75   1.46   1.  ]
+moving robot closer to ball
+theta = 84.76630967204038
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.708912869360805, y = -9.853130501977313, z = 126.90628765129522
+[ 10.97 118.95   1.2    1.  ]
+moving robot closer to ball
+theta = 84.72900830325534
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.500810458870856, y = -9.68851000977098, z = 125.87903673248877
+[ 10.8  117.9    1.26   1.  ]
+moving robot closer to ball
+theta = 84.7671772039342
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.618016014206614, y = -9.727723586375573, z = 126.38852345901779
+[ 10.9  118.41   1.19   1.  ]
+moving robot closer to ball
+theta = 84.74272156848706
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.996746645410504, y = -9.747159605399784, z = 128.32711459037026
+[ 11.19 120.32   0.79   1.  ]
+moving robot closer to ball
+theta = 84.6867896946188
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.708912869360805, y = -9.853130501977313, z = 126.90628765129522
+[ 10.97 118.95   1.2    1.  ]
+moving robot closer to ball
+theta = 84.72900830325534
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.726179364837055, y = -9.763909852252015, z = 126.85867751644027
+[ 10.99 118.88   1.12   1.  ]
+moving robot closer to ball
+theta = 84.72033876293534
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.280974183605142, y = -9.68911984392182, z = 124.79386421948419
+[ 10.63 116.83   1.5    1.  ]
+moving robot closer to ball
+theta = 84.80309943508941
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.708912869360805, y = -9.853130501977313, z = 126.90628765129522
+[ 10.97 118.95   1.2    1.  ]
+moving robot closer to ball
+theta = 84.72900830325534
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.71026298934177, y = -9.965801749752883, z = 127.25251688212617
+[ 10.97 119.31   1.24   1.  ]
+moving robot closer to ball
+theta = 84.74719585544103
+len contours = 1
+len contoursDai = 1
+fx = 1485.187255859375, fy = 1483.3082275390625
+x = 25.516837026507876, y = -9.794717162508343, z = 125.85418651156706
+[ 10.82 117.9    1.37   1.  ]
+moving robot closer to ball
+theta = 84.75481402209344

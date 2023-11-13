@@ -29,9 +29,9 @@ xoutSpatialData.setStreamName("spatialData")
 xinSpatialCalcConfig.setStreamName("spatialCalcConfig")
 
 # Properties
-monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
 monoLeft.setCamera("left")
-monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
 monoRight.setCamera("right")
 
 stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
@@ -71,8 +71,19 @@ stereo.depth.link(spatialLocationCalculator.inputDepth)
 spatialLocationCalculator.out.link(xoutSpatialData.input)
 xinSpatialCalcConfig.out.link(spatialLocationCalculator.inputConfig)
 
+RUN_ONCE = True
 # Connect to device and start pipeline
 with dai.Device(pipeline) as device:
+    if RUN_ONCE:
+        try:
+            print("Setting fixed focus")
+            calibData = device.readCalibration2()
+            lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
+            if lensPosition:
+                colorCam.initialControl.setManualFocus(lensPosition)
+        except:
+            raise
+        RUN_ONCE = False
 
     # Output queue will be used to get the depth frames from the outputs defined above
     depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)

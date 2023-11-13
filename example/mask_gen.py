@@ -104,10 +104,6 @@ def apply_mask_to_feed(width, height):
         pipeline.stop()
         cv2.destroyAllWindows()
 
-if config.CREATE_MASK is True:
-    create_mask(1280, 720)
-    apply_mask_to_feed(1280, 720)
-
 
 def load_mask(mask_path = config.MASK_PATH):
     return cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
@@ -116,3 +112,11 @@ def load_mask(mask_path = config.MASK_PATH):
 def is_point_in_mask(point, mask):
     x, y = point
     return mask[y, x] > 0
+
+if config.CREATE_MASK is True:
+    create_mask(1280, 720)
+    apply_mask_to_feed(1280, 720)
+
+if __name__ == "__main__":
+    create_mask(1280, 720)
+    apply_mask_to_feed(1280, 720)

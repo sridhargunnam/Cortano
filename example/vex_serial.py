@@ -10,7 +10,7 @@ ROTATION_DIRECTION = {
     "clockwise": -1
 }
 
-MINIMUM_INPLACE_ROTATION_SPEED = 30
+MINIMUM_INPLACE_ROTATION_SPEED = 50
 
 from enum import Enum
 class ARM_POSITION(Enum):
@@ -385,6 +385,24 @@ class VexControl:
           self.robot.motor[9] = int(127 if theta > 0 else -127)
       time.sleep(0.2)
     
+    def update_robot_gotoV2(self, goal, offset=90):
+      dpos = [goal[0], goal[1]] 
+      dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
+      theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
+      theta = (theta + 180) % 360 - 180  - offset# [-180, 180]
+      Pforward = 30
+      Ptheta = 30
+      if np.abs(theta) < 30:
+          self.robot.motor[0] = int(-Pforward * dist + Ptheta * theta)
+          self.robot.motor[9] = int(Pforward * dist + Ptheta * theta)
+      else:
+          self.robot.motor[0] = int(127 if theta > 0 else -127)
+          self.robot.motor[9] = int(127 if theta > 0 else -127)
+      if dist < 1 and np.abs(theta) > 30:
+          self.robot.motor[0] = int(127 if theta > 0 else -127)
+          self.robot.motor[9] = int(127 if theta > 0 else -127)
+      time.sleep(0.2)
+
     def update_robot_goto(self, goal,left_motor=0, right_motor=9):
         dpos = [goal[0], goal[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
@@ -434,19 +452,21 @@ class VexControl:
  #https://chat.openai.com/share/85c1d999-2fc5-4ad0-916e-f22d141afb2d
     def rotateRobotPI(self, theta, speed=MINIMUM_INPLACE_ROTATION_SPEED):
         tolerance = 1
-        current_angle = 0 # replace this with imu reading
+        current_angle = 90 # replace this with imu reading
         error = theta - current_angle
+        error = (error + 180) % 360 - 180  # [-180, 180]
         if abs(error) < tolerance:
           return 
-        Kp = 1
-        Ki = 0.1
+        Kp = 10
+        Ki = 1
         self.theta_integral += error
         pi_output = Kp * error + Ki * self.theta_integral
         # Map the PI output to the motor speeds
         self.robot.motor[0] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
         self.robot.motor[9] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        print(f'error = {error}, pi_output = {pi_output}')
+        print(f'motor[0] = {self.robot.motor[0]}, motor[9] = {self.robot.motor[9]}')
         time.sleep(0.2)
-        self.stop_drive()
         self.stop_drive()
 
     def rotateRobot(self, seconds, dir, speed):

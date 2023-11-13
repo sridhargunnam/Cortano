@@ -91,20 +91,6 @@ At the start of the round, 30 tennis balls are placed on each side of the field 
 On the field, 4 inch x 4 inch AprilTags will be placed every 4 feet from each other (with exception of corners) on each side. These tags can be used to help with localization. 
 """
 import vex_serial as vex
-def runRobot(robot, control):
-    #tested code
-    # control.drive(direction="forward", speed=30, drive_time=7)
-    # control.drive(direction="backward", speed=30, drive_time=1)
-    # control.rotateRobot(seconds=5, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.rotateRobot(seconds=1, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.claw(20, clawAction.Open, drive_time=1.5)
-    # control.claw(20, clawAction.Close, drive_time=1.5)
-    
-    #untested code
- # robot arm  
-    control.stop_drive()
-    robot.stop()
-
 import mask_gen as msk
 
 import ball_detection_opencv as ball_detection
@@ -143,26 +129,15 @@ def main():
     colorDai, depthDai = camDai.read()
     colorRS, depthRS = camRS.read()   
     depthRS = cv2.bitwise_and(depthRS, depthRS, mask=mask)
-    # # view the depth image visuallly colored based on depth
-    # depthRS = cv2.applyColorMap(cv2.convertScaleAbs(depthRS, alpha=0.1), cv2.COLORMAP_JET)
-    # cv2.imshow("depthRS", depthRS)
-    # if cv2.waitKey(1) == 27:
-    #   cv2.destroyAllWindows()
-    #   exit(0)
-    # continue
-
     tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
-    
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
-
-    # print("Robot2Field = \n", Robot2Field)
-    # Field2Robot = np.linalg.inv(Robot2Field)
-    # print("Field2Robot = \n", Field2Robot)
-    contours = ball_detection.ball_detection(camRS)
-    contoursDai = ball_detection.ball_detection(camDai)
-    # print(f'len contours = {len(contours)}')
-    # print(f'len contoursDai = {len(contoursDai)}')
-    if len(contours) > 0:
+    contours = ball_detection.ball_detection(colorRS)
+    contoursDai = ball_detection.ball_detection(colorDai)
+    print(f'len contours = {len(contours)}')
+    print(f'len contoursDai = {len(contoursDai)}')
+    SIZE_OF_TENNIS_BALL = 6.54 # centimeters
+    ENABLE_RS_BALL_DETECTION = False
+    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION is True:
       for contour in contours:
         temp_countour = contour
         if DETECT_ONE_BALL is True:
@@ -187,46 +162,57 @@ def main():
         x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
         y = 100 * (y - camRS.cy) * depth_ / camRS.fy
         z = 100 * depth_
-        if z < 10:
-          control.update_robot_goto([x, y])
+        robot2cam = np.linalg.inv(cam2robotRS)
+        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+        if ball_pos_robot[2] < 10:
+          print("moving robot closer to ball")
+          control.update_robot_gotoV2([x, y])
           control.stop_drive()
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
         # find ball position in robot frame
-        try:
-          robot2cam = np.linalg.inv(cam2robotRS)
-          ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-          print("ball_pos_robot = ", ball_pos_robot)
-          ball2Field1 = Robot2Field @ ball_pos_robot
-          # print("ball2Field1 = ", ball2Field1)
-        except:
-          continue
-        if DETECT_ONE_BALL is True:
-          break
-        # runRobot(robot, control, x, y, z,)
+        # try:
+        #   robot2cam = np.linalg.inv(cam2robotRS)
+        #   ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+        #   print("ball_pos_robot = ", ball_pos_robot)
+        #   ball2Field1 = Robot2Field @ ball_pos_robot
+        #   # print("ball2Field1 = ", ball2Field1)
+        # except:
+        #   continue
+        # if DETECT_ONE_BALL is True:
+        #   break
     elif len(contoursDai) > 0:
+        #get focal length of dai camera
+        fx = camera_paramsDai[0]
+        fy = camera_paramsDai[1]
+        cx = camera_paramsDai[2]
+        cy = camera_paramsDai[3]
         # if the circle's center is not in the center of the image, rotate the robot
         temp_countour = max(contoursDai, key=lambda x: cv2.contourArea(x))
         (x, y), radius = cv2.minEnclosingCircle(temp_countour)
         center = (int(x), int(y))
         cv2.circle(colorDai, center, int(radius), (0, 255, 0), 2)
         # calculate approx theta
-        theta = np.degrees(np.arctan2(x - colorDai.shape[1], colorDai.shape[0] / 2))
-        # print theta , x, y 
-        print(f'theta = {theta}, x = {x}, y = {y}')
-        # theta = 90 - theta
-        print(f'approx theta in dai = {theta}')
-        # if x > 0.6 * colorDai.shape[1]:
-        #   print("rotating robot counter clockwise as we detected a ball on the right")
-        #   control.rotateRobotPI(theta=theta, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+40)
-        #   # control.rotateRobot(seconds=0.1, dir=vex.ROTATION_DIRECTION["counter_clockwise"], speed=vex.MINIMUM_INPLACE_ROTATION_SPEED)    
-        # elif x < 0.4 * colorDai.shape[1]:
-        #   print("rotating robot clockwise as we detected a ball on the left")
-        #   control.rotateRobotPI(theta=theta, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+40)
-        if len(contours) == 0 and len(contoursDai) > 0:
-        # move the robot forward
-          print("moving robot forward")
-          control.drive(direction="forward", speed=30, drive_time=0.2)
+        print(f'fx = {fx}, fy = {fy}')
+        z = 0.5 * SIZE_OF_TENNIS_BALL * fx / radius
+        x = (x - cx) * z / fx
+        y = (y - cy) * z / fy
+        robot2cam = np.linalg.inv(cam2robotDai)
+        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+        if ball_pos_robot[2] < 10:
+          print(f'x = {x}, y = {y}, z = {z}')
+          print(ball_pos_robot)
+          print("moving robot closer to ball")
+          theta = np.degrees(np.arctan2(ball_pos_robot[1], ball_pos_robot[0]))
+          print(f'theta = {theta}')
+          # control.update_robot_gotoV1([x, y])
+          # control.stop_drive()
+
+          if len(contours) == 0 and len(contoursDai) > 0:
+          # move the robot forward
+            print("moving robot forward")
+            control.rotateRobotPI(theta)
+          # control.drive(direction="forward", speed=30, drive_time=0.1)
     else:
         print("rotating robot clockwise as we didn't detect any balls")
         control.rotateRobot(seconds=0.1, dir=vex.ROTATION_DIRECTION["clockwise"], speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+50)
