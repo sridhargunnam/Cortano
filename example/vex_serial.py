@@ -10,7 +10,7 @@ ROTATION_DIRECTION = {
     "clockwise": -1
 }
 
-MINIMUM_INPLACE_ROTATION_SPEED = 50
+MINIMUM_INPLACE_ROTATION_SPEED = 127
 
 from enum import Enum
 class ARM_POSITION(Enum):
@@ -303,7 +303,13 @@ class VexControl:
         self.dist_integral = 0
         self.prev_theta_error = 0
         self.theta_integral = 0
+        self.search_direction = "clockwise"
     
+    def setSearchDirection(self, direction):
+        # assert if direction is not clockwise or counter_clockwise
+        assert  direction == "clockwise" or direction == "counter_clockwise"
+        self.search_direction = direction
+
     def drive(self, direction, speed, drive_time=1, left_motor=0, right_motor=9):
         if direction == "forward":
           left_drive = 1
@@ -373,35 +379,50 @@ class VexControl:
       theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
       theta = (theta + 180) % 360 - 180  # [-180, 180]
       Pforward = 30
-      Ptheta = 30
+      Ptheta = 1
       if np.abs(theta) < 30:
           self.robot.motor[0] = int(-Pforward * dist + Ptheta * theta)
           self.robot.motor[9] = int(Pforward * dist + Ptheta * theta)
       else:
           self.robot.motor[0] = int(127 if theta > 0 else -127)
           self.robot.motor[9] = int(127 if theta > 0 else -127)
-      if dist < 1 and np.abs(theta) > 30:
-          self.robot.motor[0] = int(127 if theta > 0 else -127)
-          self.robot.motor[9] = int(127 if theta > 0 else -127)
+      # if dist < 1 and np.abs(theta) > 30:
+      #     self.robot.motor[0] = int(127 if theta > 0 else -127)
+      #     self.robot.motor[9] = int(127 if theta > 0 else -127)
       time.sleep(0.2)
     
     def update_robot_gotoV2(self, goal, offset=90):
       dpos = [goal[0], goal[1]] 
       dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
-      theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
-      theta = (theta + 180) % 360 - 180  - offset# [-180, 180]
-      Pforward = 30
-      Ptheta = 30
-      if np.abs(theta) < 30:
-          self.robot.motor[0] = int(-Pforward * dist + Ptheta * theta)
-          self.robot.motor[9] = int(Pforward * dist + Ptheta * theta)
+      theta = np.degrees(np.arctan2(dpos[0], dpos[1])) #+ offset
+      theta = (theta + 180) % 360 - 180  # [-180, 180]
+      if dist < 10:
+        Pforward = 5
       else:
-          self.robot.motor[0] = int(127 if theta > 0 else -127)
-          self.robot.motor[9] = int(127 if theta > 0 else -127)
-      if dist < 1 and np.abs(theta) > 30:
-          self.robot.motor[0] = int(127 if theta > 0 else -127)
-          self.robot.motor[9] = int(127 if theta > 0 else -127)
-      time.sleep(0.2)
+        Pforward = 3
+      if np.abs(theta) < 30:
+        Ptheta = -1
+      else:
+        Ptheta = -0.5
+      motor_values = [0]*10 #self.robot.motor
+      # if np.abs(theta) < 30:
+      motor_values[0] = int(Pforward * dist + Ptheta * theta)
+      motor_values[9] = int(-Pforward * dist + Ptheta * theta)
+      # else:
+      #     motor_values[0] = int(127 if theta > 0 else -127)
+      #     motor_values[9] = int(127 if theta > 0 else -127)
+      # if dist < 1 and np.abs(theta) > 30:
+      #     motor_values[0] = int(127 if theta > 0 else -127)
+      #     motor_values[9] = int(127 if theta > 0 else -127)
+      self.robot.motors(motor_values)
+      print(f'x = {goal[0]}, y = {goal[1]}')
+      print(f'dist = {dist}, theta = {theta}, Pf = {Pforward * dist}, Pt = {Ptheta * theta}')
+      print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
+      sleep_time = 0.2
+      multiplication_factor = (np.abs(theta))/90
+      effective_sleep_time = sleep_time * multiplication_factor
+      print(f'effective_sleep_time = {effective_sleep_time}')
+      time.sleep(effective_sleep_time)
 
     def update_robot_goto(self, goal,left_motor=0, right_motor=9):
         dpos = [goal[0], goal[1]] 
@@ -454,6 +475,10 @@ class VexControl:
         tolerance = 1
         current_angle = 90 # replace this with imu reading
         error = theta - current_angle
+        if error > 0:
+           self.setSearchDirection("clockwise")
+        else:
+            self.setSearchDirection("counter_clockwise")
         error = (error + 180) % 360 - 180  # [-180, 180]
         if abs(error) < tolerance:
           return 
@@ -470,10 +495,10 @@ class VexControl:
         self.stop_drive()
 
     def rotateRobot(self, seconds, dir, speed):
-        for i in range(int(seconds*10)):
+        for i in range(int(seconds*100)):
             self.robot.motor[0] = speed * dir
             self.robot.motor[9] = speed * dir
-            time.sleep(1/10)
+            time.sleep(1/100)
             self.stop_drive()
         self.stop_drive()
 
@@ -498,7 +523,58 @@ class VexControl:
                 else:
                     self.drive_backward(30)
                     self.stop_drive()
-
+    def calibrateMotors(self):
+        motor_values = self.robot.motor
+        motor_values[0] = -127
+        motor_values[9] = -127
+        self.robot.motors(motor_values)
+        time.sleep(0.2)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[0] = -30
+        # motor_values[9] = -30
+        # self.robot.motors(motor_values)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[0] = 0
+        # motor_values[9] = 0
+        # self.robot.motors(motor_values)
+        # time.sleep(0.5)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[1] = 30
+        # self.robot.motors(motor_values)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[1] = -30
+        # self.robot.motors(motor_values)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[1] = 0
+        # self.robot.motors(motor_values)
+        # time.sleep(0.5)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[2] = 30
+        # self.robot.motors(motor_values)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[2] = -30
+        # self.robot.motors(motor_values)
+        # time.sleep(1)
+        # self.stop_drive()
+        # time.sleep(0.5)
+        # motor_values[2] = 0
+        # self.robot.motors(motor_values)
+        # time.sleep(0.5)
+        # self.stop
+       
+       
 
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
@@ -519,7 +595,8 @@ if __name__ == "__main__":
   
 
     #tested code
-    control.drive(direction="forward", speed=30, drive_time=1)
+    # control.drive(direction="forward", speed=30, drive_time=1)
+    control.calibrateMotors()
     # control.drive(direction="backward", speed=30, drive_time=1)
     # start_time = time.time()
     # while time.time() - start_time < 5:

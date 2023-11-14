@@ -17,7 +17,9 @@ class Config:
   ROBOT_RADIUS = math.sqrt(ROBOT_LENGTH**2 + ROBOT_WIDTH**2) / 2
   WHEEL_RADIUS = 5.08 # in cm , 2 inch
   WHEEL_CIRCUMFERENCE = 2 * math.pi * WHEEL_RADIUS
-  WHEEL_DISTANCE = 20 # cm
+  WHEEL_DISTANCE = 29 # cm
+  WHEEL_DISTANCE_SIDE = 21 # cm
+  
   
   # FIELD = "GAME"
   CREATE_MASK = False

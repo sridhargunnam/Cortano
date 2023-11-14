@@ -124,6 +124,7 @@ def main():
   # warp the mask to the depth camera reference
   mask = cv2.warpPerspective(mask, colorTodepthExtrinsics, (mask.shape[1], mask.shape[0]))
   #apply the mask on the rs depth image and visualize it
+  
   while True:
     dt = datetime.now()
     colorDai, depthDai = camDai.read()
@@ -136,8 +137,9 @@ def main():
     print(f'len contours = {len(contours)}')
     print(f'len contoursDai = {len(contoursDai)}')
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
-    ENABLE_RS_BALL_DETECTION = False
-    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION is True:
+    ENABLE_RS_BALL_DETECTION = True
+    ENABLE_DAI_BALL_DETECTION = False
+    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION:
       for contour in contours:
         temp_countour = contour
         if DETECT_ONE_BALL is True:
@@ -162,11 +164,13 @@ def main():
         x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
         y = 100 * (y - camRS.cy) * depth_ / camRS.fy
         z = 100 * depth_
+        print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
         robot2cam = np.linalg.inv(cam2robotRS)
         ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
         if ball_pos_robot[2] < 10:
           print("moving robot closer to ball")
-          control.update_robot_gotoV2([x, y])
+          print(f'ball w.r.t to robot = {ball_pos_robot}')
+          control.update_robot_gotoV2([ball_pos_robot[0], ball_pos_robot[1]])
           control.stop_drive()
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
@@ -181,7 +185,7 @@ def main():
         #   continue
         # if DETECT_ONE_BALL is True:
         #   break
-    elif len(contoursDai) > 0:
+    elif len(contoursDai) and ENABLE_DAI_BALL_DETECTION:
         #get focal length of dai camera
         fx = camera_paramsDai[0]
         fy = camera_paramsDai[1]
@@ -212,10 +216,12 @@ def main():
           # move the robot forward
             print("moving robot forward")
             control.rotateRobotPI(theta)
+
           # control.drive(direction="forward", speed=30, drive_time=0.1)
     else:
-        print("rotating robot clockwise as we didn't detect any balls")
-        control.rotateRobot(seconds=0.1, dir=vex.ROTATION_DIRECTION["clockwise"], speed=vex.MINIMUM_INPLACE_ROTATION_SPEED+50)
+        print(f"rotating robot {control.search_direction} as we didn't detect any balls")
+        dir = vex.ROTATION_DIRECTION[control.search_direction]
+        control.rotateRobot(seconds=0.05, dir=dir, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED*dir)
   
     # if len(contours) == 0 and len(contoursDai) > 0:
     #   # move the robot forward
