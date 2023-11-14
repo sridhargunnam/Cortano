@@ -15,6 +15,10 @@ class Config:
   ROBOT_WIDTH = 42 # cm
   ROBOT_HEIGHT = 30 # cm
   ROBOT_RADIUS = math.sqrt(ROBOT_LENGTH**2 + ROBOT_WIDTH**2) / 2
+  WHEEL_RADIUS = 5.08 # in cm , 2 inch
+  WHEEL_CIRCUMFERENCE = 2 * math.pi * WHEEL_RADIUS
+  WHEEL_DISTANCE = 20 # cm
+  
   # FIELD = "GAME"
   CREATE_MASK = False
   MASK_PATH = "/home/nvidia/wsp/clawbot/Cortano/mask.png"
