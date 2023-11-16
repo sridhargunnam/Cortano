@@ -117,14 +117,14 @@ class RealSenseCamera:
     return False, None, None
 
   def __del__(self):
-    if self.pipeline:
-      self.pipeline.stop()
-      self.pipeline = None
-      # delete cv2 window if it exists
-      try:
+    try:
+      if self.pipeline:
+        self.pipeline.stop()
+        self.pipeline = None
+        # delete cv2 window if it exists
         cv2.destroyAllWindows()
-      except:
-        pass
+    except:
+      pass
 
   def read(self, scale=False): # will also store in buffer to be read
     ret, color, depth = self.capture()

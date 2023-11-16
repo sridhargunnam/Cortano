@@ -27,7 +27,7 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
         
         # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = [contour for contour in contours if cv2.contourArea(contour) > 100]
+        contours = [contour for contour in contours if cv2.contourArea(contour) > 30]
 
         total_contours = len(contours)
         centroids = []
@@ -36,9 +36,9 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
-            else:
-                cx, cy = 0, 0
-            centroids.append((cx, cy))
+            # else:
+            #     cx, cy = 0, 0
+                centroids.append((cx, cy))
         
         # Filtering contours based on centroid distance
         unique_contours = []

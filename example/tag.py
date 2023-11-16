@@ -92,6 +92,8 @@ On the field, 4 inch x 4 inch AprilTags will be placed every 4 feet from each ot
 """
 import vex_serial as vex
 import mask_gen as msk
+import matplotlib.pyplot as plt
+
 
 import ball_detection_opencv as ball_detection
 def main():
@@ -125,6 +127,17 @@ def main():
   mask = cv2.warpPerspective(mask, colorTodepthExtrinsics, (mask.shape[1], mask.shape[0]))
   #apply the mask on the rs depth image and visualize it
   
+  objective_map = np.zeros((config.FIELD_HEIGHT, config.FIELD_WIDTH), np.uint8)
+  objective_map[:, int(config.FIELD_WIDTH/2 - config.CLAW_LENGTH):int(config.FIELD_WIDTH/2 + config.CLAW_LENGTH) ] = 1
+  # Visualizing the objective_map
+  plt.figure(figsize=(6, 6))
+  plt.imshow(objective_map, cmap='gray')
+  plt.title('Objective Map Visualization')
+  plt.xlabel('Width')
+  plt.ylabel('Height')
+  plt.show()
+
+
   while True:
     dt = datetime.now()
     colorDai, depthDai = camDai.read()
@@ -134,24 +147,33 @@ def main():
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
     contours = ball_detection.ball_detection(colorRS)
     contoursDai = ball_detection.ball_detection(colorDai)
-    print(f'len contours = {len(contours)}')
-    print(f'len contoursDai = {len(contoursDai)}')
+    # print(f'len contours = {len(contours)} , len contoursDai = {len(contoursDai)}')
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
     ENABLE_RS_BALL_DETECTION = True
     ENABLE_DAI_BALL_DETECTION = False
-    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION:
-      for contour in contours:
+    # get the RS countour with max area and assign to temp_countour
+    temp_countour = None
+    for contour in contours:
+      if temp_countour is None:
         temp_countour = contour
-        if DETECT_ONE_BALL is True:
-          # write a lambda function to get the contour with the largest area
-          temp_countour = max(contours, key=lambda x: cv2.contourArea(x))
+      else:
+        if cv2.contourArea(contour) > cv2.contourArea(temp_countour):
+          temp_countour = contour   
 
+    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION:
+        # temp_countour = max(contours, key=lambda x: cv2.contourArea(x))
+          # write a lambda function to get the contour with the largest area
+        # print(cv2.contourArea(temp_countour))
         (x, y), radius = cv2.minEnclosingCircle(temp_countour)
         center = (int(x), int(y))
         depth_ = depthRS[int(y)][int(x)]
-
-        
         cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
+        
+        #check if x, y, z are valid and not zero
+        if np.abs(x) == 0 or np.abs(y) == 0 or depth_ == 0:
+          continue
+
+
         # get the average depth of the ball based on the contour and depth image
         # convert to meters
         # get the depth scale of the camera
@@ -164,14 +186,22 @@ def main():
         x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
         y = 100 * (y - camRS.cy) * depth_ / camRS.fy
         z = 100 * depth_
-        print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
+        # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
         robot2cam = np.linalg.inv(cam2robotRS)
         ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-        if ball_pos_robot[2] < 10:
-          print("moving robot closer to ball")
-          print(f'ball w.r.t to robot = {ball_pos_robot}')
+        # print(robot2cam)
+        print(ball_pos_robot)
+                #if the ball is too close(<4 cm) to the robot use claw to hold it and lift it
+        if ball_pos_robot[0] < 4 and ball_pos_robot[1] < 4:
+          ball_caught = control.claw(control.clawAction.Close)
+          if ball_caught:
+            control.stop_drive()
+          
+        if ball_pos_robot[2] < 10 and np.abs(ball_pos_robot[1]) < 200 and np.abs(ball_pos_robot[1]) < 200:
           control.update_robot_gotoV2([ball_pos_robot[0], ball_pos_robot[1]])
-          control.stop_drive()
+        # print("moving robot closer to ball")
+        # print(f'ball w.r.t to robot = {ball_pos_robot}')
+        # control.stop_drive()
         # camera to robot transformation
         # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
         # find ball position in robot frame
@@ -203,6 +233,7 @@ def main():
         y = (y - cy) * z / fy
         robot2cam = np.linalg.inv(cam2robotDai)
         ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+
         if ball_pos_robot[2] < 10:
           print(f'x = {x}, y = {y}, z = {z}')
           print(ball_pos_robot)

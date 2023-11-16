@@ -22,5 +22,8 @@ class Config:
   
   
   # FIELD = "GAME"
+  FIELD_WIDTH = 366 # cm
+  FIELD_HEIGHT = 366 # cm
+  CLAW_LENGTH = 14 # cm
   CREATE_MASK = False
   MASK_PATH = "/home/nvidia/wsp/clawbot/Cortano/mask.png"

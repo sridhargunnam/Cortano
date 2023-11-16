@@ -299,12 +299,19 @@ class clawAction:
 class VexControl:
     def __init__(self, robot):
         self.robot = robot
+        self.angle = 0
+        self.x = 0
+        self.y = 0
+        self.next_x = 0
+        self.next_y = 0
+        self.next_angle = 0
         self.prev_dist_error = 0
         self.dist_integral = 0
         self.prev_theta_error = 0
         self.theta_integral = 0
         self.search_direction = "clockwise"
     
+       # 
     def setSearchDirection(self, direction):
         # assert if direction is not clockwise or counter_clockwise
         assert  direction == "clockwise" or direction == "counter_clockwise"
@@ -340,7 +347,15 @@ class VexControl:
             motor_values[claw_motor] = 1 * value
         self.robot.motors(motor_values)
         time.sleep(drive_time)
-        self.stop_drive()
+        if self.robot.sensors()[2] == 1 and action == clawAction.Close:
+            print("claw closed")
+            self.stop_drive()
+            return 1
+        else:
+            print("claw open")
+            self.claw(value, clawAction.Open, claw_motor, drive_time)
+            self.stop_drive()
+            return 0
 
     def update_robot_move_arm(self, armPosition=ARM_POSITION.low, motor=2, error=20):
       POTENTIOMETRIC_SENSOR_MAX_VALUE = 2582
@@ -396,6 +411,10 @@ class VexControl:
       dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
       theta = np.degrees(np.arctan2(dpos[0], dpos[1])) #+ offset
       theta = (theta + 180) % 360 - 180  # [-180, 180]
+      if theta > 0:
+         self.search_direction = "counter_clockwise" # dir need to set reversely, needs to fix it
+      else:
+          self.search_direction = "clockwise"
       if dist < 10:
         Pforward = 5
       else:
@@ -405,21 +424,14 @@ class VexControl:
       else:
         Ptheta = -0.5
       motor_values = [0]*10 #self.robot.motor
-      # if np.abs(theta) < 30:
       motor_values[0] = int(Pforward * dist + Ptheta * theta)
       motor_values[9] = int(-Pforward * dist + Ptheta * theta)
-      # else:
-      #     motor_values[0] = int(127 if theta > 0 else -127)
-      #     motor_values[9] = int(127 if theta > 0 else -127)
-      # if dist < 1 and np.abs(theta) > 30:
-      #     motor_values[0] = int(127 if theta > 0 else -127)
-      #     motor_values[9] = int(127 if theta > 0 else -127)
       self.robot.motors(motor_values)
       print(f'x = {goal[0]}, y = {goal[1]}')
       print(f'dist = {dist}, theta = {theta}, Pf = {Pforward * dist}, Pt = {Ptheta * theta}')
       print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
-      sleep_time = 0.2
-      multiplication_factor = (np.abs(theta))/90
+      sleep_time = 0.1
+      multiplication_factor = 1 #(np.abs(theta))/90
       effective_sleep_time = sleep_time * multiplication_factor
       print(f'effective_sleep_time = {effective_sleep_time}')
       time.sleep(effective_sleep_time)
@@ -427,35 +439,43 @@ class VexControl:
     def update_robot_goto(self, goal,left_motor=0, right_motor=9):
         dpos = [goal[0], goal[1]] 
         dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
-        theta = np.degrees(np.arctan2(dpos[1], dpos[0]))
+        theta = np.degrees(np.arctan2(dpos[0], dpos[1]))
         # thetaWithNormal = 90 - theta
         # theta = thetaWithNormal
         theta = (theta + 180) % 360 - 180  # [-180, 180]
         print(f'dist = {dist}, theta = {theta}')
         # exit(0)
         # PI Control for distance
-        Kp_dist = 0.5
-        Ki_dist = 0.1
+        if dist < 10:
+           Kp_dist = 5
+        else:
+            Kp_dist = 1
+        # Kp_dist = 5
+        Ki_dist = 0.000
         dist_error = dist
         self.dist_integral += dist_error
         P_dist = Kp_dist * dist_error
         I_dist = Ki_dist * self.dist_integral
 
         # PI Control for orientation
-        Kp_theta = 2
-        Ki_theta = 0.05
+        if np.abs(theta) < 30:
+            Kp_theta = -1
+        else:
+            Kp_theta = -0.5
+        # Kp_theta = 2
+        Ki_theta = 0.000
         theta_error = theta
         self.theta_integral += theta_error
         P_theta = Kp_theta * theta_error
         I_theta = Ki_theta * self.theta_integral
-        MAX_VALUE_FOR_ROTATION = 60
+        # MAX_VALUE_FOR_ROTATION = 60
         motor_values = self.robot.motor
-        if (np.abs(theta) < 30 and np.abs(theta) > 5) and np.abs(dist) > 10:
-            motor_values[left_motor] = int(P_dist * dist + P_theta * theta)
-            motor_values[right_motor] = int(-P_dist * dist + P_theta * theta)
-        else:
-            motor_values[left_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
-            motor_values[right_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
+        if ( np.abs(theta) > 1 or dpos[1] > 1):
+          motor_values[left_motor] = int(P_dist * dist + P_theta * theta + I_dist + I_theta)
+          motor_values[right_motor] = int(-P_dist * dist + P_theta * theta + I_dist + I_theta)
+        # else:
+        #     motor_values[left_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
+        #     motor_values[right_motor] = int(-MAX_VALUE_FOR_ROTATION if theta > 0 else MAX_VALUE_FOR_ROTATION)
         self.robot.motors(motor_values)
         # if dist < 1 and np.abs(theta) > 30:
         #     motor_values[left_motor] = int(MAX_VALUE_FOR_ROTATION if theta > 0 else -MAX_VALUE_FOR_ROTATION)
@@ -463,7 +483,13 @@ class VexControl:
         # Update previous errors
         self.prev_dist_error = dist_error
         self.prev_theta_error = theta_error
-        time.sleep(0.2)
+        effective_sleep_time = 0.2 # make this a function of theta, and distance if needed
+        #print all debug values here
+        print(f'x = {goal[0]}, y = {goal[1]}')
+        print(f'dist = {dist}, theta = {theta}')
+        print(f'P_dist = {P_dist}, P_theta = {P_theta}, I_dist = {I_dist}, I_theta = {I_theta}')
+        print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
+        time.sleep(effective_sleep_time)
 
 #     ROTATION_DIRECTION = {
 #     "counter_clockwise": 1,
