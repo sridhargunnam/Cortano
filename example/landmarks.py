@@ -111,7 +111,75 @@ for i in range(36):
         T[:3,3] = [-66 + 12 * (i - 30), 0, 12]
     map_apriltag_poses_game[i + 1] = T
 
-map_apriltag_poses = map_apriltag_poses_home
+import numpy as np
+
+northmap_apriltag_poses = {}
+southmap_apriltag_poses = {}
+for i in range(18):
+    T = np.identity(4)
+    T[:3,1] = np.array([0, 0, -1])
+    # apriltag +x is in map +y
+    # apriltag +z is in map -x
+    if i < 3:
+        T[:3,0] = [0, 1, 0]
+        T[:3,2] = [-1, 0, 0]
+        T[:3,3] = [-72, 12 + 24 * i, 12]
+    # apriltag +x is in map +x
+    # apriltag +z is in map +y
+    elif 3 <= i < 9:
+        T[:3,0] = [1, 0, 0]
+        T[:3,2] = [0, 1, 0]
+        T[:3,3] = [-60 + 24 * (i - 3), 72, 12]
+    # apriltag +x is in map -y
+    # apriltag +z is in map +x
+    elif 9 <= i < 12:
+        T[:3,0] = [0, -1, 0]
+        T[:3,2] = [1, 0, 0]
+        T[:3,3] = [72, 60 - 24 * (i - 9), 12]
+    # apriltag +x is in map -x
+    # apriltag +z is in map -y
+    elif 12 <= i < 18:
+        T[:3,0] = [-1, 0, 0]
+        T[:3,2] = [0, -1, 0]
+        T[:3,3] = [60 - 24 * (i - 12), 0, 12]
+    northmap_apriltag_poses[i] = T
+for i in range(12, 30):
+    T = np.identity(4)
+    T[:3,1] = np.array([0, 0, -1])
+    # apriltag +x is in map +x
+    # apriltag +z is in map +y
+    if 12 <= i < 18:
+        T[:3,0] = [1, 0, 0]
+        T[:3,2] = [0, 1, 0]
+        T[:3,3] = [60 - 24 * (i - 12), 0, 12]
+    # apriltag +x is in map +y
+    # apriltag +z is in map -x
+    if 18 <= i < 21:
+        T[:3,0] = [0, 1, 0]
+        T[:3,2] = [-1, 0, 0]
+        T[:3,3] = [-72, -12 - 24 * (i - 18), 12]
+    # apriltag +x is in map -x
+    # apriltag +z is in map -y
+    elif 21 <= i < 27:
+        T[:3,0] = [-1, 0, 0]
+        T[:3,2] = [0, -1, 0]
+        T[:3,3] = [-60 + 24 * (i - 21), -72, 12]
+    # apriltag +x is in map -y
+    # apriltag +z is in map +x
+    elif 27 <= i < 30:
+        T[:3,0] = [0, -1, 0]
+        T[:3,2] = [1, 0, 0]
+        T[:3,3] = [72, -60 + 24 * (i - 27), 12]
+    southmap_apriltag_poses[i] = T
+
+# if __name__ == "__main__":
+#     for tagid, pose in northmap_apriltag_poses.items():
+#         print("North Tag %d:" % tagid)
+#         print(pose)
+#     for tagid, pose in southmap_apriltag_poses.items():
+#         print("South Tag %d:" % tagid)
+#         print(pose)
+map_apriltag_poses = northmap_apriltag_poses
 # if config_loc.FIELD == "HOME":
 #     map_apriltag_poses = map_apriltag_poses_home
 # if config_loc.FIELD == "BEDROOM":

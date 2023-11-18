@@ -1,20 +1,23 @@
 # this file can be delteted. It is just for testing the apriltag detection
-import camera
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-from pyapriltags import Detector
+
 from datetime import datetime
-import sys
+from io import BytesIO
+from multiprocessing import Process, Queue
+from pyapriltags import Detector
+from scipy.spatial.transform import Rotation as R
+import camera
 import config 
+import cv2
 import landmarks
+import numpy as np
+import socket
+import struct
+import sys
+
 config = config.Config()
 config.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 config.FIELD == "HOME"
-
-import cv2
-import numpy as np
 
 
 def readCalibrationFile(path=config.CALIB_PATH):
@@ -31,7 +34,7 @@ class ATag:
                           quad_sigma=0.0,
                           refine_edges=1,
                           decode_sharpening=1,
-                          debug=config.GEN_DEBUG_IMAGES)
+                          debug=False)# config.GEN_DEBUG_IMAGES)
     self.camera_params = camera_params
     pass
 
@@ -90,15 +93,28 @@ Robots are allowed to start in any position in their starting pose, but cannot s
 At the start of the round, 30 tennis balls are placed on each side of the field in an undisclosed symmetric formation, to prevent pre-programming.
 On the field, 4 inch x 4 inch AprilTags will be placed every 4 feet from each other (with exception of corners) on each side. These tags can be used to help with localization. 
 """
-import vex_serial as vex
 import mask_gen as msk
 import matplotlib.pyplot as plt
 
+import socket
+import json
+def send_command(command, args):
+    try:
+      print("sending ", command, args)
+      client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      client_socket.connect(('localhost', 6000))
+      command_data = json.dumps({'command': command, 'args': args})
+      client_socket.send(command_data.encode())
+      client_socket.close()
+    except:
+      # print("failed to send", command, args)
+      pass
 
-import ball_detection_opencv as ball_detection
+import object_detection
 def main():
-  robot = vex.VexCortex("/dev/ttyUSB0")
-  control = vex.VexControl(robot)
+  # robot = vex.VexCortex("/dev/ttyUSB0")
+  # control = vex.VexControl(robot)
+  command_queue = Queue()
   np.set_printoptions(precision=2, suppress=True)
   calib = np.loadtxt("calib.txt", delimiter=",")
   rsCamToRobot = calib[:4,:]
@@ -135,70 +151,111 @@ def main():
   plt.title('Objective Map Visualization')
   plt.xlabel('Width')
   plt.ylabel('Height')
-  plt.show()
-
+  # plt.show()
+  ball_map = np.zeros((config.FIELD_HEIGHT, int(config.FIELD_WIDTH/2)), np.uint8)
 
   while True:
     dt = datetime.now()
     colorDai, depthDai = camDai.read()
     colorRS, depthRS = camRS.read()   
     depthRS = cv2.bitwise_and(depthRS, depthRS, mask=mask)
+    #save the images for debugging
+    if config.GEN_DEBUG_IMAGES:
+      cv2.imwrite("colorDai.jpg", colorDai)
+      cv2.imwrite("depthDai.jpg", depthDai)
+      cv2.imwrite("colorRS.jpg", colorRS)
+      cv2.imwrite("depthRS.jpg", depthRS)
+    # tagRS, tag_id, Lm2Cam = atag.getTagAndPose(colorRS, tag_size)
     tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
-    contours = ball_detection.ball_detection(colorRS)
-    contoursDai = ball_detection.ball_detection(colorDai)
+    if colorRS is None or depthRS is None or colorDai is None or depthDai is None:
+      continue
+    detections = object_detection.run_object_detection(colorRS)
+    contours = [] #ball_detection.ball_detection(colorRS)
+    contoursDai = [] #ball_detection.ball_detection(colorDai)
     # print(f'len contours = {len(contours)} , len contoursDai = {len(contoursDai)}')
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
     ENABLE_RS_BALL_DETECTION = True
     ENABLE_DAI_BALL_DETECTION = False
-    # get the RS countour with max area and assign to temp_countour
-    temp_countour = None
-    for contour in contours:
-      if temp_countour is None:
-        temp_countour = contour
-      else:
-        if cv2.contourArea(contour) > cv2.contourArea(temp_countour):
-          temp_countour = contour   
 
-    if len(contours) > 0 and ENABLE_RS_BALL_DETECTION:
-        # temp_countour = max(contours, key=lambda x: cv2.contourArea(x))
-          # write a lambda function to get the contour with the largest area
-        # print(cv2.contourArea(temp_countour))
-        (x, y), radius = cv2.minEnclosingCircle(temp_countour)
-        center = (int(x), int(y))
-        depth_ = depthRS[int(y)][int(x)]
-        cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
-        
-        #check if x, y, z are valid and not zero
-        if np.abs(x) == 0 or np.abs(y) == 0 or depth_ == 0:
-          continue
+    if len(detections) > 0 and ENABLE_RS_BALL_DETECTION:
+        # get the center of the bounding box, and average of the width and height of the bounding box, and calculate the x, y with respect to the field
+        # this is the center of the object
+        closest_ball = None
+        for detection in detections:
+          ID = detection.ClassID
+          label = object_detection.net.GetClassDesc(ID)
+          if label not in ['orange', 'sports ball']:
+              continue
+          top = int(detection.Top)
+          left = int(detection.Left)
+          bottom = int(detection.Bottom)
+          right = int(detection.Right)
+          center_x = (left + right) / 2
+          center_y = (top + bottom) / 2
+          width = right - left
+          height = bottom - top
+          radius = (width + height) / 4
+          center = (int(center_x), int(center_y))
+          depth_ = depthRS[int(center_y)][int(center_x)]
+          cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
 
 
-        # get the average depth of the ball based on the contour and depth image
-        # convert to meters
-        # get the depth scale of the camera
-        depth_scale = camRS.depth_scale
-        depth_ = depth_ * depth_scale
-        # cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        # print("depth = ", depth_)
+          # get the average depth of the ball based on the contour and depth image
+          # convert to meters
+          # get the depth scale of the camera
+          depth_scale = camRS.depth_scale
+          depth_ = depth_ * depth_scale
+          # cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+          # print("depth = ", depth_)
 
-        # get the x, y, z from image frame to camera frame
-        x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
-        y = 100 * (y - camRS.cy) * depth_ / camRS.fy
-        z = 100 * depth_
-        # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
-        robot2cam = np.linalg.inv(cam2robotRS)
-        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-        # print(robot2cam)
-        print(ball_pos_robot)
-                #if the ball is too close(<4 cm) to the robot use claw to hold it and lift it
-        if ball_pos_robot[0] < 4 and ball_pos_robot[1] < 4:
-          ball_caught = control.claw(control.clawAction.Close)
-          if ball_caught:
-            control.stop_drive()
+          # get the x, y, z from image frame to camera frame
+          x = center_x
+          y = center_y
+          x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
+          y = 100 * (y - camRS.cy) * depth_ / camRS.fy
+          z = 100 * depth_
+          # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
+          robot2cam = np.linalg.inv(cam2robotRS)
+          ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+          # print(robot2cam)
+          if abs(ball_pos_robot[2]) > 10:
+            print("ball position at unusual height ", ball_pos_robot)
+            continue
+          print(ball_pos_robot)
+          if closest_ball is None:
+            closest_ball = ball_pos_robot
+          else:
+            if np.linalg.norm(ball_pos_robot) < np.linalg.norm(closest_ball):
+              closest_ball = ball_pos_robot
+          if Robot2Field is not None:
+            ball2Field = Robot2Field @ ball_pos_robot
+            print("ball2Field = ", ball2Field)
+            # update ball_map, making sure that the ball2Field is not out of bounds
+            if (ball2Field[0]> 0 and ball2Field[0] < config.FIELD_HEIGHT) and ( ball2Field[1]> 0 and ball2Field[1] < int(config.FIELD_WIDTH/2)):
+              ball_map[int(ball2Field[0]), int(ball2Field[1])] = 1
+          else:
+            continue
           
-        if ball_pos_robot[2] < 10 and np.abs(ball_pos_robot[1]) < 200 and np.abs(ball_pos_robot[1]) < 200:
-          control.update_robot_gotoV2([ball_pos_robot[0], ball_pos_robot[1]])
+
+          # get the closest ball to the robot and move the robot towards it
+          # angle of the ball w.r.t robot 
+          theta = np.degrees(np.arctan2(closest_ball[0], closest_ball[1]))
+          print(f"theta = {theta}")
+          print("sending command to vex")
+          # if np.abs(ball_pos_robot[0]) < 10 and np.abs(ball_pos_robot[1]) < 10:
+          #   send_command('stop_drive', None)
+          # elif np.abs(theta) > 30:
+          #   send_command('rotateRobotPI', theta)
+            # ball_caught = control.claw(control.clawAction.Close)
+            # if ball_caught:
+            #   control.stop_drive()
+          # else:  
+          #   send_command('update_robot_gotoV2', [ball_pos_robot[0], ball_pos_robot[1]]) 
+
+                #if the ball is too close(<4 cm) to the robot use claw to hold it and lift it
+        # if ball_pos_robot[2] < 10 and np.abs(ball_pos_robot[1]) < 200 and np.abs(ball_pos_robot[1]) < 200:
+        #   control.update_robot_gotoV2([ball_pos_robot[0], ball_pos_robot[1]])
         # print("moving robot closer to ball")
         # print(f'ball w.r.t to robot = {ball_pos_robot}')
         # control.stop_drive()
@@ -246,13 +303,19 @@ def main():
           if len(contours) == 0 and len(contoursDai) > 0:
           # move the robot forward
             print("moving robot forward")
-            control.rotateRobotPI(theta)
+            # control.rotateRobotPI(theta)
 
           # control.drive(direction="forward", speed=30, drive_time=0.1)
     else:
-        print(f"rotating robot {control.search_direction} as we didn't detect any balls")
-        dir = vex.ROTATION_DIRECTION[control.search_direction]
-        control.rotateRobot(seconds=0.05, dir=dir, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED*dir)
+        
+        print(f"rotating robot as we didn't detect any balls")
+        # dir = vex.ROTATION_DIRECTION[control.search_direction]
+        theta = 10 - (90) # 90 is the offset
+        # send_command('rotateRobotPI', theta)
+        # import time
+        # time.sleep(5)
+
+        # control.rotateRobot(seconds=0.05, dir=dir, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED*dir)
   
     # if len(contours) == 0 and len(contoursDai) > 0:
     #   # move the robot forward

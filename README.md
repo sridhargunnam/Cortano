@@ -60,6 +60,10 @@ pip install PyOpenGL
 pip install py-lz4framed
 pip install lz4
 
+# jetson inference 
+to make jetson inference work in the virtual env I needed to manually copy the site-packages to virtual env
+cp  /usr/lib/python3.8/dist-packages/jetson*  /home/nvidia/wsp/clawbot/clawbot/lib/python3.8/site-packages/ -r 
+https://github.com/dusty-nv/jetson-inference/issues/1285#issuecomment-1197359239
 
 docker:
 sudo docker pull nvcr.io/nvidia/l4t-ml:r35.2.1-py3

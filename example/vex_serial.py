@@ -2,8 +2,11 @@ import sys
 import glob
 import serial
 import time
-from multiprocessing import Process, Array, RawValue, Value
+from multiprocessing import Process, Queue, Array, RawValue, Value
 from ctypes import c_double, c_bool, c_int
+import socket 
+import json
+
 
 ROTATION_DIRECTION = {
     "counter_clockwise": 1,
@@ -311,7 +314,8 @@ class VexControl:
         self.theta_integral = 0
         self.search_direction = "clockwise"
     
-       # 
+    def printQueueMessage(self, message):
+        print(message)
     def setSearchDirection(self, direction):
         # assert if direction is not clockwise or counter_clockwise
         assert  direction == "clockwise" or direction == "counter_clockwise"
@@ -420,9 +424,9 @@ class VexControl:
       else:
         Pforward = 3
       if np.abs(theta) < 30:
-        Ptheta = -1
+        Ptheta = -5
       else:
-        Ptheta = -0.5
+        Ptheta = -1
       motor_values = [0]*10 #self.robot.motor
       motor_values[0] = int(Pforward * dist + Ptheta * theta)
       motor_values[9] = int(-Pforward * dist + Ptheta * theta)
@@ -430,7 +434,7 @@ class VexControl:
       print(f'x = {goal[0]}, y = {goal[1]}')
       print(f'dist = {dist}, theta = {theta}, Pf = {Pforward * dist}, Pt = {Ptheta * theta}')
       print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
-      sleep_time = 0.1
+      sleep_time = 0.05
       multiplication_factor = 1 #(np.abs(theta))/90
       effective_sleep_time = sleep_time * multiplication_factor
       print(f'effective_sleep_time = {effective_sleep_time}')
@@ -509,18 +513,22 @@ class VexControl:
         if abs(error) < tolerance:
           return 
         Kp = 10
-        Ki = 1
+        Ki = 0
         self.theta_integral += error
         pi_output = Kp * error + Ki * self.theta_integral
         # Map the PI output to the motor speeds
-        self.robot.motor[0] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
-        self.robot.motor[9] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        motor_values = self.robot.motor
+        motor_values[0] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        motor_values[9] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        # self.robot.motor[0] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
+        # self.robot.motor[9] = np.clip(int(speed * np.sign(pi_output)), -speed, speed)
         print(f'error = {error}, pi_output = {pi_output}')
-        print(f'motor[0] = {self.robot.motor[0]}, motor[9] = {self.robot.motor[9]}')
+        # self.robot.motors(motor_values)
+        print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
         time.sleep(0.2)
         self.stop_drive()
 
-    def rotateRobot(self, seconds, dir, speed):
+    def rotateRobot(self, seconds, dir=-1, speed=MINIMUM_INPLACE_ROTATION_SPEED):
         for i in range(int(seconds*100)):
             self.robot.motor[0] = speed * dir
             self.robot.motor[9] = speed * dir
@@ -599,12 +607,28 @@ class VexControl:
         # self.robot.motors(motor_values)
         # time.sleep(0.5)
         # self.stop
-       
-       
+
+def listener(queue, vex_control):
+    while True:
+        message = queue.get()
+        if message:
+            command, args = message
+            if hasattr(vex_control, command):
+                method = getattr(vex_control, command)
+                method(args)
+
+import select
+      
 
 if __name__ == "__main__":
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind(('localhost', 6000))
+    server_socket.listen(1)
+    server_socket.setblocking(0)  # Set the socket to non-blocking mode
+
     # input argument is stop
     if len(sys.argv) > 1 and sys.argv[1] == "stop":
         control.stop_drive()
@@ -618,12 +642,63 @@ if __name__ == "__main__":
     # Also stop the robot if the program is terminated or user presses Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-  
+
+    latest_command = None
+
+
+    while True:
+        ready = select.select([server_socket], [], [], 0.1)  # Non-blocking select
+        if ready[0]:
+            client_socket, addr = server_socket.accept()
+            message = client_socket.recv(1024)
+            client_socket.close()
+
+            # Update the latest command
+            latest_command = json.loads(message)
+
+        # Check and execute only the latest command
+        if latest_command:
+            command = latest_command['command']
+            args = latest_command.get('args', [])
+            if hasattr(control, command):
+                method = getattr(control, command)
+                if callable(method):
+                    method(args)
+                    latest_command = None  # Reset after execution
+                else:
+                    print(f"Command {command} is not callable")
+            else:
+                print(f"Unknown command: {command}")
+ 
+    # while True:
+    #     client_socket, addr = server_socket.accept()
+    #     message = client_socket.recv(1024)
+    #     client_socket.close()
+
+    #     # Process the received message
+    #     command_data = json.loads(message)
+    #     # Assuming command_data is a dict with 'command' and 'args'
+    #     command = command_data['command']
+    #     args = command_data['args', []]
+    #     try:
+    #       # Dynamically calling the method based on the command
+    #       if hasattr(control, command):
+    #           method = getattr(control, command)
+    #           if callable(method):
+    #               method(args)  # Call the method with args
+    #           else:
+    #               print(f"Command {command} is not callable")
+    #       else:
+    #           print(f"Unknown command: {command}")
+    #     except Exception as e:
+    #       print(f"Error while executing command {command}: {e}")
+    #       pass
+
+    
 
     #tested code
     # control.drive(direction="forward", speed=30, drive_time=1)
-    control.calibrateMotors()
-    # control.drive(direction="backward", speed=30, drive_time=1)
+    # control.calibrateMotors()
     # start_time = time.time()
     # while time.time() - start_time < 5:
     # control.rotateRobot(seconds=0.2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)

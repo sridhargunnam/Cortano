@@ -24,18 +24,18 @@ daiQueue = queue.Queue(100)
 from vex_serial import VexCortex 
 
 class RealSenseCamera:
-  def __init__(self, width=640, height=360, debug_mode=True):
+  def __init__(self, width=640, height=360, fps=30, debug_mode=True):
     self.debug_mode = debug_mode
-    self.initCamera(width, height)
+    self.initCamera(width, height, fps)
 
-  def initCamera(self, width, height):
+  def initCamera(self, width, height, fps):
     self.width = width
     self.height = height
     self.shape = (height, width)
     self.pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, fps)
+    config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, fps)
     profile = self.pipeline.start(config)
     # intel realsense on jetson nano sometimes get misdetected as 2.1 even though it has 3.2 USB
     # profile = self.pipeline.start()
