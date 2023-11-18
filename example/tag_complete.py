@@ -27,10 +27,10 @@ config.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 config.FIELD == "GAME"
 
-RS_CAMERA_QUEUE_SIZE = 100
-DAI_CAMERA_QUEUE_SIZE = 100
-TAG_DETECTION_QUEUE_SIZE = 100
-BALL_DETECTION_QUEUE_SIZE = 100
+RS_CAMERA_QUEUE_SIZE = 1
+DAI_CAMERA_QUEUE_SIZE = 1
+TAG_DETECTION_QUEUE_SIZE = 1
+BALL_DETECTION_QUEUE_SIZE = 1
 
 def readCalibrationFile(path=config.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -159,7 +159,7 @@ def main():
     command_queue = mp.Queue()
     calib = np.loadtxt("calib.txt", delimiter=",")
     rsCamToRobot = calib[:4,:]
-    # daiCamToRobot = calib[4:,:]
+    daiCamToRobot = calib[4:,:]
 
     # Initialize camera parameters
     cx = mp.Value('d', 640.0)
@@ -195,7 +195,6 @@ def main():
 
     # Main loop for processing data
     while True:
-        print("in main loop")
         try:
             # Retrieve data from detection queues
             rs_ball_detections = rs_ball_detection_queue.get()
@@ -208,10 +207,8 @@ def main():
                 radius = (width + height) / 4
                 center = (int(center_x), int(center_y))
                 cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
-  
                 depth_ = depthRS[int(center_y)][int(center_x)]
                 depth_ = depth_ * depth_scale.value
-                print("In main depth_scale = ", depth_scale.value)
             cv2.imshow('RealSense', colorRS)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
