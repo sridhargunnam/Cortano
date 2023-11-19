@@ -17,7 +17,7 @@ import sys
 config = config.Config()
 config.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
-config.FIELD == "HOME"
+config.FIELD == "GAME"
 
 
 def readCalibrationFile(path=config.CALIB_PATH):

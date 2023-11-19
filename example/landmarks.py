@@ -3,7 +3,7 @@ import numpy as np
 # origin is the corner of the balcony, at entrance
 import config
 config_loc = config.Config()
-config_loc.FIELD = "HOME"
+config_loc.FIELD = "GAME"
 map_apriltag_poses = {}
 map_apriltag_poses_home = {}
 map_apriltag_poses_bedroom = {}
@@ -189,8 +189,34 @@ map_apriltag_poses = northmap_apriltag_poses
 # else:
 #     print("Error: invalid field type")
 #     exit(1)
+def convert_inch_to_cm(T):
+    """
+    Convert the x, y, z values in the transformation matrix from inches to centimeters.
+
+    Parameters:
+    T (numpy.ndarray): A 4x4 transformation matrix where the last column of the first
+                       three rows represent the x, y, z coordinates in inches.
+
+    Returns:
+    numpy.ndarray: The transformed matrix with x, y, z values in centimeters.
+    """
+    # Create a copy of the matrix to avoid modifying the original matrix
+    T_converted = T.copy()
+    
+    # Conversion factor from inches to centimeters
+    inches_to_cm = 2.54
+    
+    # Converting x, y, z values from inches to centimeters
+    T_converted[:3, 3] *= inches_to_cm
+    
+    return T_converted
+
+for tagid, pose in map_apriltag_poses.items():
+    map_apriltag_poses[tagid] = convert_inch_to_cm(pose)
 
 if __name__ == "__main__":
     for tagid, pose in map_apriltag_poses.items():
+        map_apriltag_poses[tagid] = convert_inch_to_cm(pose)
+    # for tagid, pose in map_apriltag_poses.items():
         print("Tag %d:" % tagid)
         print(pose)

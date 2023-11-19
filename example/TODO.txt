@@ -1,3 +1,4 @@
+# Create Mask for removing the places where tag should be detected. 
 # FIX control gain parameters and add support for IMu readings for theta
 # get the object detection working in depth Ai, use it to calculate the x, y, z of the ball.
 # When the realsense can't detect the ball we need the x, y, z of the ball from DAI to get the ball's x, y w.r.t robot. 

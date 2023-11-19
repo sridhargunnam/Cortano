@@ -351,14 +351,12 @@ class VexControl:
             motor_values[claw_motor] = 1 * value
         self.robot.motors(motor_values)
         time.sleep(drive_time)
+        self.stop_drive()
         if self.robot.sensors()[2] == 1 and action == clawAction.Close:
-            print("claw closed")
-            self.stop_drive()
+            print("ball held\n")
             return 1
         else:
-            print("claw open")
-            self.claw(value, clawAction.Open, claw_motor, drive_time)
-            self.stop_drive()
+            print("ball missed\n")
             return 0
 
     def update_robot_move_arm(self, armPosition=ARM_POSITION.low, motor=2, error=20):
@@ -618,11 +616,57 @@ def listener(queue, vex_control):
                 method(args)
 
 import select
-      
+import curses
+import time      
+import cv2   
 
-if __name__ == "__main__":
+def keyboard_control(stdscr, control, robot):
+    # Set up curses environment
+    curses.cbreak()
+    stdscr.nodelay(True)
+    stdscr.clear()
+
+    while True:
+        char = stdscr.getch()
+
+        if char == ord('w'):
+            control.drive(direction="forward", speed=30, drive_time=1)
+        elif char == ord('s'):
+            control.drive(direction="backward", speed=30, drive_time=1)
+        elif char == ord('a'):
+            control.rotateRobot(seconds=0.05, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+        elif char == ord('d'):
+            control.rotateRobot(seconds=0.05, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED) 
+        elif char == ord('['):
+            control.claw(20, clawAction.Close, drive_time=1.5)
+        elif char == ord(']'):
+            control.claw(20, clawAction.Open, drive_time=1.5)
+        elif char == ord('-'):
+            control.update_robot_move_arm(armPosition=ARM_POSITION.low)
+            control.stop_drive()
+        elif char == ord('='):  # Note: '+' is usually combined with shift, so '=' is used
+            control.update_robot_move_arm(armPosition=ARM_POSITION.high)
+        elif char == ord('q'):
+            control.stop_drive()
+            robot.stop()
+            exit(0)
+
+
+        time.sleep(0.1)
+        control.stop_drive()
+
+        if char == curses.KEY_RESIZE:
+            stdscr.clear()  # Clear the screen if terminal size changes
+
+def main():
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
+    control.stop_drive()
+    # exit(0)
+    manual_control = True
+    if manual_control:
+      curses.wrapper(keyboard_control, control, robot)
+    #
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(('localhost', 6000))
@@ -669,57 +713,8 @@ if __name__ == "__main__":
                     print(f"Command {command} is not callable")
             else:
                 print(f"Unknown command: {command}")
- 
-    # while True:
-    #     client_socket, addr = server_socket.accept()
-    #     message = client_socket.recv(1024)
-    #     client_socket.close()
 
-    #     # Process the received message
-    #     command_data = json.loads(message)
-    #     # Assuming command_data is a dict with 'command' and 'args'
-    #     command = command_data['command']
-    #     args = command_data['args', []]
-    #     try:
-    #       # Dynamically calling the method based on the command
-    #       if hasattr(control, command):
-    #           method = getattr(control, command)
-    #           if callable(method):
-    #               method(args)  # Call the method with args
-    #           else:
-    #               print(f"Command {command} is not callable")
-    #       else:
-    #           print(f"Unknown command: {command}")
-    #     except Exception as e:
-    #       print(f"Error while executing command {command}: {e}")
-    #       pass
 
-    
-
-    #tested code
-    # control.drive(direction="forward", speed=30, drive_time=1)
-    # control.calibrateMotors()
-    # start_time = time.time()
-    # while time.time() - start_time < 5:
-    # control.rotateRobot(seconds=0.2, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # control.rotateRobot(seconds=0.4, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
-    # # start_time = time.time()
-    # while time.time() - start_time < 30:
-    #   control.claw(20, clawAction.Open, drive_time=1.5)
-    #   time.sleep(0.5)
-    #   control.claw(20, clawAction.Close, drive_time=1.5)
-    #   time.sleep(0.5)
-    '''    control.claw(20, clawAction.Close, drive_time=1.5)
-    start_time = time.time()
-    while time.time() - start_time < 5:
-        print(robot.sensors())
-    # [1587, 0, 1] the last sensor corresponds to the bottom limit switch, and will be 1 if the claw is closed
-    
-    control.claw(30, clawAction.Open, drive_time=0.8)
-    start_time = time.time()
-    while time.time() - start_time < 5:
-        print(robot.sensors())'''
-    
     #untested code
     # control.update_robot_goto([-15,38])
     # move the robot arm 
@@ -739,3 +734,6 @@ if __name__ == "__main__":
     # signal.signal(signal.SIGTERM, signal_handler)
     control.stop_drive()
     robot.stop()
+
+if __name__ == "__main__":
+    main()
