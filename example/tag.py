@@ -33,7 +33,7 @@ class ATag:
                           quad_decimate=1.0,
                           quad_sigma=0.0,
                           refine_edges=1,
-                          decode_sharpening=1,
+                          decode_sharpening=1.2,
                           debug=False)# config.GEN_DEBUG_IMAGES)
     self.camera_params = camera_params
     pass
@@ -45,13 +45,20 @@ class ATag:
       #get the tag with highest confidence
       max_confidence = 0
       max_confidence_tag = None
+      min_pose_err = config.TAG_POSE_ERROR_THRESHOLD
       for tag in self.tags:
+        # print all tag information like pose err and decision margin
+        if tag.tag_id == 6:
+          print(f'tag.decision_margin = {tag.decision_margin}, tag.pose_err = {tag.pose_err}, tag.tag_id = {tag.tag_id}')
+          print(tag.pose_t)
+        
         if config.TAG_POLICY == "HIGHEST_CONFIDENCE":
-          if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD: 
+          if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > config.TAG_POSE_ERROR_THRESHOLD:
             print(f'tag.decision_margin = {tag.decision_margin} < {config.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
-        if tag.decision_margin > max_confidence:
+        if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
           max_confidence = tag.decision_margin
+          min_pose_err = tag.pose_err
           max_confidence_tag = tag
       if max_confidence_tag is not None:
         # tag_pose = max_confidence_tag.pose_t
@@ -165,9 +172,17 @@ def main():
       cv2.imwrite("depthDai.jpg", depthDai)
       cv2.imwrite("colorRS.jpg", colorRS)
       cv2.imwrite("depthRS.jpg", depthRS)
-    # tagRS, tag_id, Lm2Cam = atag.getTagAndPose(colorRS, tag_size)
+    tagRS, tag_idRS, Lm2CamRS = atag.getTagAndPose(colorRS, tag_size)
     tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
+    print(f'Dai tag_id = {tag_idRS}')
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
+    print(f'rs tag_id = {tag_id}')
+    Robot2FieldRS = atag.getRobotPoseFromTagPose(tagRS, tag_id, Lm2Cam, cam2robotRS)
+    if Robot2Field is not None:
+      print("Robot2Field = \n", Robot2Field[0:3,3])
+    if Robot2FieldRS is not None:
+      print("Robot2FieldRS = \n", Robot2FieldRS[0:3,3])
+
     if colorRS is None or depthRS is None or colorDai is None or depthDai is None:
       continue
     detections = object_detection.run_object_detection(colorRS)
@@ -183,18 +198,15 @@ def main():
         # this is the center of the object
         closest_ball = None
         for detection in detections:
-          ID = detection.ClassID
-          label = object_detection.net.GetClassDesc(ID)
-          if label not in ['orange', 'sports ball']:
-              continue
-          top = int(detection.Top)
-          left = int(detection.Left)
-          bottom = int(detection.Bottom)
-          right = int(detection.Right)
-          center_x = (left + right) / 2
-          center_y = (top + bottom) / 2
-          width = right - left
-          height = bottom - top
+          # ID = detection.ClassID
+          # label = object_detection.net.GetClassDesc(ID)
+          # if label not in ['orange', 'sports ball']:
+              # continue
+          #  result[i] = {'center_x': result[i][0], 'center_y': result[i][1], 'width': result[i][2], 'height': result[i][3]}
+          center_x = detections[0]['center_x']
+          center_y = detections[0]['center_y']
+          width = detections[0]['width']
+          height = detections[0]['height']
           radius = (width + height) / 4
           center = (int(center_x), int(center_y))
           depth_ = depthRS[int(center_y)][int(center_x)]
@@ -237,41 +249,7 @@ def main():
           else:
             continue
           
-
-          # get the closest ball to the robot and move the robot towards it
-          # angle of the ball w.r.t robot 
           theta = np.degrees(np.arctan2(closest_ball[0], closest_ball[1]))
-          print(f"theta = {theta}")
-          print("sending command to vex")
-          # if np.abs(ball_pos_robot[0]) < 10 and np.abs(ball_pos_robot[1]) < 10:
-          #   send_command('stop_drive', None)
-          # elif np.abs(theta) > 30:
-          #   send_command('rotateRobotPI', theta)
-            # ball_caught = control.claw(control.clawAction.Close)
-            # if ball_caught:
-            #   control.stop_drive()
-          # else:  
-          #   send_command('update_robot_gotoV2', [ball_pos_robot[0], ball_pos_robot[1]]) 
-
-                #if the ball is too close(<4 cm) to the robot use claw to hold it and lift it
-        # if ball_pos_robot[2] < 10 and np.abs(ball_pos_robot[1]) < 200 and np.abs(ball_pos_robot[1]) < 200:
-        #   control.update_robot_gotoV2([ball_pos_robot[0], ball_pos_robot[1]])
-        # print("moving robot closer to ball")
-        # print(f'ball w.r.t to robot = {ball_pos_robot}')
-        # control.stop_drive()
-        # camera to robot transformation
-        # cam2robot = np.loadtxt("calib.txt", delimiter=",")[4:,:]
-        # find ball position in robot frame
-        # try:
-        #   robot2cam = np.linalg.inv(cam2robotRS)
-        #   ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-        #   print("ball_pos_robot = ", ball_pos_robot)
-        #   ball2Field1 = Robot2Field @ ball_pos_robot
-        #   # print("ball2Field1 = ", ball2Field1)
-        # except:
-        #   continue
-        # if DETECT_ONE_BALL is True:
-        #   break
     elif len(contoursDai) and ENABLE_DAI_BALL_DETECTION:
         #get focal length of dai camera
         fx = camera_paramsDai[0]
@@ -290,38 +268,25 @@ def main():
         y = (y - cy) * z / fy
         robot2cam = np.linalg.inv(cam2robotDai)
         ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-
-        if ball_pos_robot[2] < 10:
-          print(f'x = {x}, y = {y}, z = {z}')
-          print(ball_pos_robot)
-          print("moving robot closer to ball")
-          theta = np.degrees(np.arctan2(ball_pos_robot[1], ball_pos_robot[0]))
-          print(f'theta = {theta}')
-          # control.update_robot_gotoV1([x, y])
-          # control.stop_drive()
-
-          if len(contours) == 0 and len(contoursDai) > 0:
-          # move the robot forward
-            print("moving robot forward")
-            # control.rotateRobotPI(theta)
-
-          # control.drive(direction="forward", speed=30, drive_time=0.1)
-    else:
-        
-        print(f"rotating robot as we didn't detect any balls")
-        # dir = vex.ROTATION_DIRECTION[control.search_direction]
-        theta = 10 - (90) # 90 is the offset
-        # send_command('rotateRobotPI', theta)
-        # import time
-        # time.sleep(5)
-
-        # control.rotateRobot(seconds=0.05, dir=dir, speed=vex.MINIMUM_INPLACE_ROTATION_SPEED*dir)
-  
-    # if len(contours) == 0 and len(contoursDai) > 0:
-    #   # move the robot forward
-    #   print("moving robot forward")
-    #   control.drive(direction="forward", speed=30, drive_time=0.2)
       # continue
+    if tagRS is not None:
+      # print the time it took to detect the tag well formatted
+      # print("Time to detect tag: ", datetime.now() - dt)
+      if tagRS.decision_margin < 50:
+          continue
+      font_scale = 1 
+      font_color = (0, 255, 0)
+      font_thickness = 2
+      text_offset_y = 30  # Vertical offset between text lines
+      # Display tag ID
+      #rotate the text by 90 degrees before displaying
+      cv2.putText(colorRS, str(tagRS.tag_id), (int(tagRS.center[0]), int(tagRS.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      # Display only the 1 most significant digit for pose_R and pose_t
+      pose_R_single_digit = np.round(tagRS.pose_R[0, 0], 1)  # Round to 1 decimal place
+      pose_t_single_digit = np.round(tagRS.pose_t[0], 1)  # Round to 1 decimal place
+      cv2.putText(colorRS, str(pose_R_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      cv2.putText(colorRS, str(pose_t_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+      
     if tag is not None:
       # print the time it took to detect the tag well formatted
       # print("Time to detect tag: ", datetime.now() - dt)
@@ -339,6 +304,8 @@ def main():
       cv2.putText(colorDai, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
       cv2.putText(colorDai, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
     # stack color images from RS and Dai
+    #rotate the  realseanse image
+    colorRS = cv2.rotate(colorRS, cv2.ROTATE_90_COUNTERCLOCKWISE)
     resize_scale = colorRS.shape[0] / colorDai.shape[0]
     resized_colorDai = cv2.resize(colorDai, (int(colorDai.shape[1] * resize_scale), colorRS.shape[0]))
 

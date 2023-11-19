@@ -8,7 +8,7 @@ def distance(p1, p2):
     return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 def ball_detection(image, debug=False, min_distance=30): # Added min_distance parameter
-    while True:
+    # while True:
         start_time = time.time()
         # Read the image
         # image, depth  = cam.read()
@@ -71,10 +71,13 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
         # Show the result
         if debug:
             # cv2.imshow('Depth', depth_3d)
-            cv2.imshow('Color', image)
+            # downscale = 0.5 to view 
+            cv2.imshow('Color', cv2.resize(image, (0,0), fx=0.25, fy=0.25))
+            # cv2.imshow('Color', image)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
-                break
+                exit(0)
+                
 
 # def ball_detection(cam, debug=False):
 #     while True:
@@ -127,5 +130,7 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
 #                 break
 
 if __name__ == "__main__":
-    cam = camera.RealSenseCamera(1280,720)
-    ball_detection(cam, debug=True)    
+    # cam = camera.RealSenseCamera(1280,720)
+    cam = camera.DepthAICamera(1920,1080)
+    while True:
+        ball_detection(cam.read()[0], debug=True)    

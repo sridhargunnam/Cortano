@@ -324,6 +324,7 @@ class CalibrateCamera:
  
  def calibrateCameraWrtLandMark(self,tag_size=5, tag_id=0, viz=False):
     # make 4 * 4 transformation matrix
+    cfg = config.Config()
     T = np.eye(4)
     at_detector = Detector(families='tag16h5',
                           nthreads=1,
@@ -342,7 +343,7 @@ class CalibrateCamera:
         cv2.cvtColor(self.color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size=tag_size)
       found_tag = False
       for tag in tags:
-          if tag.decision_margin < 50: 
+          if tag.decision_margin < cfg.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > cfg.TAG_POSE_ERROR_THRESHOLD: 
             continue
           found_tag = True
           # if tag.tag_id != 0:
@@ -877,7 +878,7 @@ config = config.Config()
 
 def runCameraCalib(input="Load"):
   np.set_printoptions(precision=2, suppress=True)
-  if input == "calib":
+  if input == "calib_setup1": # dai and rs camera have common field of vie wand are looking at the same tag
       print("Running Camera Calibration")
       rsCam = RealSenseCamera(1280, 720)
       rsCamCalib = CalibrateCamera(rsCam)
@@ -900,6 +901,28 @@ def runCameraCalib(input="Load"):
       daiCamToRobot = calib[4:,:]
       print("rsCamToRobot = \n", rsCamToRobot)
       print("daiCamToRobot = \n", daiCamToRobot)
+  elif input == "calib_setup2":
+      print("Running Camera Calibration")
+      rsCam = RealSenseCamera(1280, 720)
+      rsCamCalib = CalibrateCamera(rsCam)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
+      print("rsCamToRobot = \n", rsCamToRobot)
+
+
+      input = input("Press c  to continue calibrating dai camera or q to quit")
+      if input == "q":
+        np.savetxt("calib.txt", np.concatenate((rsCamToRobot, np.loadtxt("calib.txt", delimiter=",")[4:,:]), axis=0), delimiter=",")     
+        exit(0)
+      elif input == "c":
+        print("continuing")
+        # daiCam = DepthAICamera(1280,720, object_detection=False)
+        daiCam = DepthAICamera(1920,1080,object_detection=False)
+        daiCamCalib = CalibrateCamera(daiCam)
+        # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+        # print("daiCam2LM = \n", daiCam2LM)
+        daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+        print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
+        np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
   else:
       print("incorrect argument")
   
@@ -952,8 +975,18 @@ import landmarks as lm
 if __name__ == "__main__":
   np.set_printoptions(precision=2, suppress=True)
   if len(sys.argv) > 1:
-    runCameraCalib("calib")
-    exit(0)
+    if sys.argv[1] == "calib_setup1":
+      runCameraCalib("calib_setup1")
+      exit(0)
+    elif sys.argv[1] == "calib_setup2":
+      runCameraCalib("calib_setup2")
+      exit(0)
+    elif sys.argv[1] == "calib":
+      runCameraCalib("calib_setup2")
+      exit(0)
+    else:
+      print("incorrect argument")
+      exit(0)
 
   # for tagid, pose in lm.map_apriltag_poses_home:
   #   print("tagid = ", tagid)

@@ -20,6 +20,7 @@ import time
 import traceback
 import mask_gen as msk
 import matplotlib.pyplot as plt
+import ball_detection_opencv as ball_detection_opencv
 # Global constants
 
 cfg = config.Config()
@@ -27,10 +28,10 @@ cfg.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 cfg.FIELD == "GAME"
 
-RS_CAMERA_QUEUE_SIZE       = 10
-DAI_CAMERA_QUEUE_SIZE      = 10
-TAG_DETECTION_QUEUE_SIZE   = 10
-BALL_DETECTION_QUEUE_SIZE  = 10
+RS_CAMERA_QUEUE_SIZE       = 1
+DAI_CAMERA_QUEUE_SIZE      = 1
+TAG_DETECTION_QUEUE_SIZE   = 1
+BALL_DETECTION_QUEUE_SIZE  = 1
 
 def readCalibrationFile(path=cfg.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -56,25 +57,27 @@ class ATag:
     if self.tags is not None:
       #get the tag with highest confidence
       max_confidence = 0
-      max_confidence_tag = None
+      max_confidence_least_pose_err_tag = None
+      min_pose_err = cfg.TAG_POSE_ERROR_THRESHOLD
       for tag in self.tags:
         if cfg.TAG_POLICY == "HIGHEST_CONFIDENCE":
-          if tag.decision_margin < cfg.TAG_DECISION_MARGIN_THRESHOLD: 
+          if tag.decision_margin < cfg.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > cfg.TAG_POSE_ERROR_THRESHOLD: 
             print(f'tag.decision_margin = {tag.decision_margin} < {cfg.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
-        if tag.decision_margin > max_confidence:
+        if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
           max_confidence = tag.decision_margin
-          max_confidence_tag = tag
-      if max_confidence_tag is not None:
-        # tag_pose = max_confidence_tag.pose_t
-        tag_id = max_confidence_tag.tag_id
-        R = max_confidence_tag.pose_R
-        t = max_confidence_tag.pose_t
+          min_pose_err = tag.pose_err
+          max_confidence_least_pose_err_tag = tag
+      if max_confidence_least_pose_err_tag is not None:
+        # tag_pose = max_confidence_least_pose_err_tag.pose_t
+        tag_id = max_confidence_least_pose_err_tag.tag_id
+        R = max_confidence_least_pose_err_tag.pose_R
+        t = max_confidence_least_pose_err_tag.pose_t
         # make 4 * 4 transformation matrix
         T = np.eye(4)
         T[0:3, 0:3] = R
         T[0:3, 3] = t.ravel()
-        return max_confidence_tag, tag_id, T
+        return max_confidence_least_pose_err_tag, tag_id, T
     return None, None, None
   
 
@@ -88,10 +91,12 @@ class ATag:
       np.set_printoptions(precision=2, suppress=True)
       # print(f'tag_id = {tag_id} in landmarks.map_apriltag_poses')
       Field2Robot = landmarks.map_apriltag_poses[tag_id] @ np.linalg.inv(Lm2Cam) @ Cam2Robot
-      print(f'landmarks.map_apriltag_poses[{tag_id}] = \n{landmarks.map_apriltag_poses[tag_id]}')
-      print("Lm2Cam = \n", Lm2Cam)
-      print("Cam2Robot = \n", Cam2Robot)
-      print("Field2Robot = \n", Field2Robot)
+      print_tag_info = False
+      if print_tag_info:
+        print(f'landmarks.map_apriltag_poses[{tag_id}] = \n{landmarks.map_apriltag_poses[tag_id]}')
+        print("Lm2Cam = \n", Lm2Cam)
+        print("Cam2Robot = \n", Cam2Robot)
+        print("Field2Robot = \n", Field2Robot)
       # np.savetxt("debug_transformation.txt", np.vstack((Lm2Cam, Cam2Robot)), delimiter=",")
       return Field2Robot
     else:
@@ -183,6 +188,8 @@ def tag_detection_process(camera_queue, tag_detection_queue, robot_state, camera
         robot_state_local[1] = Robot2Field[1, 3]
         robot_state_local[2] = Robot2Field[2, 3]
         robot_state_local[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
+        # convert to degrees
+        print("Robot x,y, theta = ", robot_state_local[0], robot_state_local[1], robot_state_local[3])
         robot_state.put(robot_state_local)
         tag_detection_queue.put(Robot2Field)
       # else:
@@ -285,7 +292,7 @@ def main():
             rs_ball_detections = rs_ball_detection_queue.get()
             colorRS, depthRS = rs_queue_viz.get()
             tag, tag_id, Lm2Cam = atag.getTagAndPose(colorRS, tag_size)
-            # print("tag_id = ", tag_id)
+            print("tag_id = ", tag_id)
             Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, rsCamToRobot)
             # print("Robot2Field = ", Robot2Field)
             if Robot2Field is not None:
@@ -293,7 +300,7 @@ def main():
               robot_state_fused[1] = Robot2Field[1, 3]
               robot_state_fused[2] = Robot2Field[2, 3]
               robot_state_fused[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
-              # print("robot_state_fused = ", robot_state_fused)
+              print("robots x, y, theta are ", robot_state_fused[0], robot_state_fused[1], robot_state_fused[3])
             for result in rs_ball_detections:
                 center_x = result['center_x']
                 center_y = result['center_y']
@@ -330,11 +337,15 @@ def main():
 
               color_combined = np.hstack((colorRS, resized_colorDAI))
 
+              #downscale = 0.25 to view
+              # cv2.imshow('color_combined', cv2.resize(color_combined, (0,0), fx=0.25, fy=0.25))
               # cv2.imshow('color_combined', color_combined)
               # if cv2.waitKey(1) & 0xFF == ord('q'):
               #     break
             else:
-              cv2.imshow('colorRS', colorRS)
+              # downscale = 0.25 to view
+              cv2.imshow('colorRS', cv2.resize(colorRS, (0,0), fx=0.25, fy=0.25))
+              # cv2.imshow('colorRS', colorRS)
               if cv2.waitKey(1) & 0xFF == ord('q'):
                   break
             # Process data for visualization and VEX control commands

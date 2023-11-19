@@ -202,21 +202,29 @@ def convert_inch_to_cm(T):
     """
     # Create a copy of the matrix to avoid modifying the original matrix
     T_converted = T.copy()
-    
     # Conversion factor from inches to centimeters
     inches_to_cm = 2.54
-    
     # Converting x, y, z values from inches to centimeters
     T_converted[:3, 3] *= inches_to_cm
-    
+    return T_converted
+
+def fix_Y_offset(T):
+    T_converted = T.copy()
+    T_converted[2, 3] = 28.5
     return T_converted
 
 for tagid, pose in map_apriltag_poses.items():
+    # print(pose)
     map_apriltag_poses[tagid] = convert_inch_to_cm(pose)
+    # print(map_apriltag_poses[tagid])
+    # map_apriltag_poses[tagid] = fix_Y_offset(map_apriltag_poses[tagid])
+    # print(map_apriltag_poses[tagid])
+    # exit(0)
 
 if __name__ == "__main__":
     for tagid, pose in map_apriltag_poses.items():
         map_apriltag_poses[tagid] = convert_inch_to_cm(pose)
+        map_apriltag_poses[tagid] = fix_Y_offset(pose)        
     # for tagid, pose in map_apriltag_poses.items():
         print("Tag %d:" % tagid)
         print(pose)
