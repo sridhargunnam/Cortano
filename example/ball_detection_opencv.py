@@ -2,10 +2,20 @@ import cv2
 import numpy as np
 import time 
 import camera
+import multiprocessing as mp
 
 def distance(p1, p2):
     """Calculate distance between two points."""
     return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+def run_object_detection_mp(rs_queue_ocv, rs_ocv_ball_detection_queue, depth_scale=1.0):
+    while True:
+        if rs_queue_ocv.empty():
+            continue
+        image = rs_queue_ocv.get()
+        if image is None:
+            break
+        rs_ocv_ball_detection_queue.put(ball_detection(image))
 
 def ball_detection(image, debug=False, min_distance=30): # Added min_distance parameter
     # while True:
@@ -47,7 +57,11 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
                 unique_contours.append(contours[i])
 
         if not debug:
-            return unique_contours
+            result = []
+            for i in range(len(contours)):
+                (center_x, center_y), radius = cv2.minEnclosingCircle(contours[i])
+                result.append ({'center_x': center_x, 'center_y': center_y, 'width': radius, 'height': radius})
+            return result
     
         print("total_contours = ", total_contours, "unique_contours = ", len(unique_contours))
         # Draw circles around detected tennis balls

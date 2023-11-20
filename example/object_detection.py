@@ -24,25 +24,25 @@ def run_object_detection(color_frame, debug=False):
         print(f"An error occurred during object detection: {e}")
         if not debug:
             return []
-    # Draw bounding boxes and labels on the image
-    for detection in detections:
-        ID = detection.ClassID
-        label = net.GetClassDesc(ID)
-        if label not in ['orange', 'sports ball']:
-            continue
-        top = int(detection.Top)
-        left = int(detection.Left)
-        bottom = int(detection.Bottom)
-        right = int(detection.Right)
-        cv2.rectangle(color_image, (left, top), (right, bottom), (255, 0, 0), 2)
-        cv2.putText(color_image, label, (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 2)
-
-    # Show the live camera feed
     if debug:
+        # Draw bounding boxes and labels on the image
+        for detection in detections:
+            ID = detection.ClassID
+            label = net.GetClassDesc(ID)
+            if label not in ['orange', 'sports ball']:
+                continue
+            top = int(detection.Top)
+            left = int(detection.Left)
+            bottom = int(detection.Bottom)
+            right = int(detection.Right)
+            cv2.rectangle(color_image, (left, top), (right, bottom), (255, 0, 0), 2)
+            cv2.putText(color_image, label, (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 2)
         cv2.imshow('RealSense', color_frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             exit(0)
     else:
+
+        # Show the live camera feed
         #get the center of the bounding box, and average of the width and height of the bounding box and return it
         #this is the center of the object
         result = []

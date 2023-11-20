@@ -53,7 +53,7 @@ def main():
             image1, _ = rsCamera.read()
             if image1 is not None:
                 break
-        # time.sleep(10)
+        time.sleep(1)
         while True:
             image2, _ = rsCamera.read()
             if image2 is not None:

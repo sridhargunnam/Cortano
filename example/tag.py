@@ -43,18 +43,18 @@ class ATag:
       cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size)
     if self.tags is not None:
       #get the tag with highest confidence
-      max_confidence = 0
-      max_confidence_tag = None
+      max_confidence = config.TAG_DECISION_MARGIN_THRESHOLD
       min_pose_err = config.TAG_POSE_ERROR_THRESHOLD
+      max_confidence_tag = None
       for tag in self.tags:
         # print all tag information like pose err and decision margin
-        if tag.tag_id == 6:
-          print(f'tag.decision_margin = {tag.decision_margin}, tag.pose_err = {tag.pose_err}, tag.tag_id = {tag.tag_id}')
-          print(tag.pose_t)
+        # if tag.tag_id == 6:
+          # print(f'tag.decision_margin = {tag.decision_margin}, tag.pose_err = {tag.pose_err}, tag.tag_id = {tag.tag_id}')
+          # print(tag.pose_t)
         
         if config.TAG_POLICY == "HIGHEST_CONFIDENCE":
           if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > config.TAG_POSE_ERROR_THRESHOLD:
-            print(f'tag.decision_margin = {tag.decision_margin} < {config.TAG_DECISION_MARGIN_THRESHOLD}')
+            # print(f'tag.decision_margin = {tag.decision_margin} < {config.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
         if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
           max_confidence = tag.decision_margin
@@ -116,8 +116,11 @@ def send_command(command, args):
     except:
       # print("failed to send", command, args)
       pass
-
-import object_detection
+ENABLE_NN = True
+if ENABLE_NN:
+  import object_detection
+ENABLE_OCV = True
+import ball_detection_opencv
 def main():
   # robot = vex.VexCortex("/dev/ttyUSB0")
   # control = vex.VexControl(robot)
@@ -174,148 +177,171 @@ def main():
       cv2.imwrite("depthRS.jpg", depthRS)
     tagRS, tag_idRS, Lm2CamRS = atag.getTagAndPose(colorRS, tag_size)
     tag, tag_id, Lm2Cam = atag.getTagAndPose(colorDai, tag_size)
-    print(f'Dai tag_id = {tag_idRS}')
+    # print(f'Dai tag_id = {tag_idRS}')
     Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, cam2robotDai)
-    print(f'rs tag_id = {tag_id}')
+    # print(f'rs tag_id = {tag_id}')
     Robot2FieldRS = atag.getRobotPoseFromTagPose(tagRS, tag_id, Lm2Cam, cam2robotRS)
-    if Robot2Field is not None:
-      print("Robot2Field = \n", Robot2Field[0:3,3])
-    if Robot2FieldRS is not None:
-      print("Robot2FieldRS = \n", Robot2FieldRS[0:3,3])
+    print_robot_pos = False
+    if print_robot_pos:
+      if Robot2Field is not None:
+        print("Robot2Field = ", Robot2Field[0:3,3])
+      if Robot2FieldRS is not None:
+        print("Robot2FieldRS = ", Robot2FieldRS[0:3,3])
 
     if colorRS is None or depthRS is None or colorDai is None or depthDai is None:
       continue
-    detections = object_detection.run_object_detection(colorRS)
-    contours = [] #ball_detection.ball_detection(colorRS)
-    contoursDai = [] #ball_detection.ball_detection(colorDai)
+    detections = []
+    detections_nn = []
+    detectionsDai = []
+    detections_RS = []
+    if ENABLE_NN:
+      detections_nn = object_detection.run_object_detection(colorRS)        
+    if ENABLE_OCV:
+      detections_RS = ball_detection_opencv.ball_detection(colorRS)
+      # detectionsDai = ball_detection_opencv.ball_detection(colorDai)
+    if len(detections_nn) > 0:
+      detections = detections_nn
+    elif len(detections_RS) > 0:
+      detections = detections_RS
+
+    detectionsDai = [] 
     # print(f'len contours = {len(contours)} , len contoursDai = {len(contoursDai)}')
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
     ENABLE_RS_BALL_DETECTION = True
     ENABLE_DAI_BALL_DETECTION = False
+    if True:
+       pass
+    if True:
+      if len(detections) > 0 and ENABLE_RS_BALL_DETECTION:
+          # get the center of the bounding box, and average of the width and height of the bounding box, and calculate the x, y with respect to the field
+          # this is the center of the object
+          closest_ball_pos_robot = None
+          closest_ball_XY = None
+          for detection in detections:
+            # detection = result[i]
+            center_x = detection['center_x']
+            center_y = detection['center_y']
+            width = detection['width']
+            height = detection['height']
+            radius = (width + height) / 4
+            center = (int(center_x), int(center_y))
+            depth_ = depthRS[int(center_y)][int(center_x)]
+            # cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
+            depth_scale = camRS.depth_scale
+            depth_ = depth_ * depth_scale
 
-    if len(detections) > 0 and ENABLE_RS_BALL_DETECTION:
-        # get the center of the bounding box, and average of the width and height of the bounding box, and calculate the x, y with respect to the field
-        # this is the center of the object
-        closest_ball = None
-        for detection in detections:
-          # ID = detection.ClassID
-          # label = object_detection.net.GetClassDesc(ID)
-          # if label not in ['orange', 'sports ball']:
-              # continue
-          #  result[i] = {'center_x': result[i][0], 'center_y': result[i][1], 'width': result[i][2], 'height': result[i][3]}
-          center_x = detections[0]['center_x']
-          center_y = detections[0]['center_y']
-          width = detections[0]['width']
-          height = detections[0]['height']
-          radius = (width + height) / 4
-          center = (int(center_x), int(center_y))
-          depth_ = depthRS[int(center_y)][int(center_x)]
-          cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
-
-
-          # get the average depth of the ball based on the contour and depth image
-          # convert to meters
-          # get the depth scale of the camera
-          depth_scale = camRS.depth_scale
-          depth_ = depth_ * depth_scale
-          # cv2.putText(color, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-          # print("depth = ", depth_)
-
-          # get the x, y, z from image frame to camera frame
-          x = center_x
-          y = center_y
-          x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
-          y = 100 * (y - camRS.cy) * depth_ / camRS.fy
-          z = 100 * depth_
-          # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
-          robot2cam = np.linalg.inv(cam2robotRS)
+            # get the x, y, z from image frame to camera frame
+            x = center_x
+            y = center_y
+            x = 100 * (x - camRS.cx) * depth_ / camRS.fx  # multiply by 100 to convert to centimeters
+            y = 100 * (y - camRS.cy) * depth_ / camRS.fy
+            z = 100 * depth_
+            
+            # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
+            robot2cam = np.linalg.inv(cam2robotRS)
+            ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+            if Robot2Field is not None:
+              ball2Field = Robot2Field @ ball_pos_robot
+              # update ball_map, making sure that the ball2Field is not out of bounds
+              if (ball2Field[0]> 0 and ball2Field[0] < config.FIELD_HEIGHT) and ( ball2Field[1]> 0 and ball2Field[1] < int(config.FIELD_WIDTH/2)):
+                ball_map[int(ball2Field[0]), int(ball2Field[1])] = 1
+            else:
+              continue
+            if abs(ball_pos_robot[2]) > 10:
+              print("ball position at unusual height ", ball_pos_robot)
+              continue
+            else:
+               cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
+            if closest_ball_pos_robot is None:
+              closest_ball_pos_robot = ball_pos_robot
+            else:
+              if np.linalg.norm(ball_pos_robot) < np.linalg.norm(closest_ball_pos_robot):
+                closest_ball_pos_robot = ball_pos_robot
+                closest_ball_XY = ball2Field
+            
+            theta = np.degrees(np.arctan2(closest_ball_pos_robot[0], closest_ball_pos_robot[1]))
+            send_command("rotate", theta)
+            if abs(theta) < 30:
+               send_command("stop_drive", None) 
+      elif len(detectionsDai) and ENABLE_DAI_BALL_DETECTION: 
+          #get focal length of dai camera
+          fx = camera_paramsDai[0]
+          fy = camera_paramsDai[1]
+          cx = camera_paramsDai[2]
+          cy = camera_paramsDai[3]
+          # if the circle's center is not in the center of the image, rotate the robot
+          temp_countour = max(detectionsDai, key=lambda x: cv2.contourArea(x))
+          (x, y), radius = cv2.minEnclosingCircle(temp_countour)
+          center = (int(x), int(y))
+          cv2.circle(colorDai, center, int(radius), (0, 255, 0), 2)
+          # calculate approx theta
+          # print(f'fx = {fx}, fy = {fy}')
+          z = 0.5 * SIZE_OF_TENNIS_BALL * fx / radius
+          x = (x - cx) * z / fx
+          y = (y - cy) * z / fy
+          robot2cam = np.linalg.inv(cam2robotDai)
           ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-          # print(robot2cam)
-          if abs(ball_pos_robot[2]) > 10:
-            print("ball position at unusual height ", ball_pos_robot)
+        # continue
+      if tagRS is not None:
+        # print the time it took to detect the tag well formatted
+        # print("Time to detect tag: ", datetime.now() - dt)
+        if tagRS.decision_margin < 50:
             continue
-          print(ball_pos_robot)
-          if closest_ball is None:
-            closest_ball = ball_pos_robot
-          else:
-            if np.linalg.norm(ball_pos_robot) < np.linalg.norm(closest_ball):
-              closest_ball = ball_pos_robot
-          if Robot2Field is not None:
-            ball2Field = Robot2Field @ ball_pos_robot
-            print("ball2Field = ", ball2Field)
-            # update ball_map, making sure that the ball2Field is not out of bounds
-            if (ball2Field[0]> 0 and ball2Field[0] < config.FIELD_HEIGHT) and ( ball2Field[1]> 0 and ball2Field[1] < int(config.FIELD_WIDTH/2)):
-              ball_map[int(ball2Field[0]), int(ball2Field[1])] = 1
-          else:
+        font_scale = 1 
+        font_color = (0, 255, 0)
+        font_thickness = 2
+        text_offset_y = 30  # Vertical offset between text lines
+        # Display tag ID
+        #rotate the text by 90 degrees before displaying
+        cv2.putText(colorRS, str(tagRS.tag_id), (int(tagRS.center[0]), int(tagRS.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        # Display only the 1 most significant digit for pose_R and pose_t
+        pose_R_single_digit = np.round(tagRS.pose_R[0, 0], 1)  # Round to 1 decimal place
+        pose_t_single_digit = np.round(tagRS.pose_t[0], 1)  # Round to 1 decimal place
+        cv2.putText(colorRS, str(pose_R_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        cv2.putText(colorRS, str(pose_t_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        for idx in range(len(tagRS.corners)):
+                        cv2.line(colorRS, tuple(tagRS.corners[idx-1, :].astype(int)), tuple(tagRS.corners[idx, :].astype(int)), (0, 255, 0))
+        cv2.putText(colorRS, str(tagRS.tag_id),
+                    org=(tagRS.center[0].astype(int), tagRS.center[1].astype(int)),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=0.8,
+                    color=(0, 0, 255))
+      if tag is not None:
+        # print the time it took to detect the tag well formatted
+        # print("Time to detect tag: ", datetime.now() - dt)
+        if tag.decision_margin < 50:
             continue
-          
-          theta = np.degrees(np.arctan2(closest_ball[0], closest_ball[1]))
-    elif len(contoursDai) and ENABLE_DAI_BALL_DETECTION:
-        #get focal length of dai camera
-        fx = camera_paramsDai[0]
-        fy = camera_paramsDai[1]
-        cx = camera_paramsDai[2]
-        cy = camera_paramsDai[3]
-        # if the circle's center is not in the center of the image, rotate the robot
-        temp_countour = max(contoursDai, key=lambda x: cv2.contourArea(x))
-        (x, y), radius = cv2.minEnclosingCircle(temp_countour)
-        center = (int(x), int(y))
-        cv2.circle(colorDai, center, int(radius), (0, 255, 0), 2)
-        # calculate approx theta
-        print(f'fx = {fx}, fy = {fy}')
-        z = 0.5 * SIZE_OF_TENNIS_BALL * fx / radius
-        x = (x - cx) * z / fx
-        y = (y - cy) * z / fy
-        robot2cam = np.linalg.inv(cam2robotDai)
-        ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-      # continue
-    if tagRS is not None:
-      # print the time it took to detect the tag well formatted
-      # print("Time to detect tag: ", datetime.now() - dt)
-      if tagRS.decision_margin < 50:
-          continue
-      font_scale = 1 
-      font_color = (0, 255, 0)
-      font_thickness = 2
-      text_offset_y = 30  # Vertical offset between text lines
-      # Display tag ID
-      #rotate the text by 90 degrees before displaying
-      cv2.putText(colorRS, str(tagRS.tag_id), (int(tagRS.center[0]), int(tagRS.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      # Display only the 1 most significant digit for pose_R and pose_t
-      pose_R_single_digit = np.round(tagRS.pose_R[0, 0], 1)  # Round to 1 decimal place
-      pose_t_single_digit = np.round(tagRS.pose_t[0], 1)  # Round to 1 decimal place
-      cv2.putText(colorRS, str(pose_R_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      cv2.putText(colorRS, str(pose_t_single_digit), (int(tagRS.center[0]), int(tagRS.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      
-    if tag is not None:
-      # print the time it took to detect the tag well formatted
-      # print("Time to detect tag: ", datetime.now() - dt)
-      if tag.decision_margin < 50:
-          continue
-      font_scale = 0.5  # Adjust this value for a smaller font size
-      font_color = (0, 255, 0)
-      font_thickness = 2
-      text_offset_y = 30  # Vertical offset between text lines
-      # Display tag ID
-      cv2.putText(colorDai, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      # Display only the 1 most significant digit for pose_R and pose_t
-      pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
-      pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
-      cv2.putText(colorDai, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-      cv2.putText(colorDai, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
-    # stack color images from RS and Dai
-    #rotate the  realseanse image
-    colorRS = cv2.rotate(colorRS, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    resize_scale = colorRS.shape[0] / colorDai.shape[0]
-    resized_colorDai = cv2.resize(colorDai, (int(colorDai.shape[1] * resize_scale), colorRS.shape[0]))
+        font_scale = 0.5  # Adjust this value for a smaller font size
+        font_color = (0, 255, 0)
+        font_thickness = 2
+        text_offset_y = 30  # Vertical offset between text lines
+        # Display tag ID
+        cv2.putText(colorDai, str(tag.tag_id), (int(tag.center[0]), int(tag.center[1])), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        # Display only the 1 most significant digit for pose_R and pose_t
+        pose_R_single_digit = np.round(tag.pose_R[0, 0], 1)  # Round to 1 decimal place
+        pose_t_single_digit = np.round(tag.pose_t[0], 1)  # Round to 1 decimal place
+        cv2.putText(colorDai, str(pose_R_single_digit), (int(tag.center[0]), int(tag.center[1]) + text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        cv2.putText(colorDai, str(pose_t_single_digit), (int(tag.center[0]), int(tag.center[1]) + 2 * text_offset_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, cv2.LINE_AA)
+        for idx in range(len(tag.corners)):
+                        cv2.line(colorDai, tuple(tag.corners[idx-1, :].astype(int)), tuple(tag.corners[idx, :].astype(int)), (0, 255, 0))
+        cv2.putText(colorDai, str(tag.tag_id),
+                    org=(tag.center[0].astype(int), tag.center[1].astype(int)),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=0.8,
+                    color=(0, 0, 255))
+      # stack color images from RS and Dai
+      #rotate the  realseanse image
+      colorRS = cv2.rotate(colorRS, cv2.ROTATE_90_COUNTERCLOCKWISE)
+      resize_scale = colorRS.shape[0] / colorDai.shape[0]
+      resized_colorDai = cv2.resize(colorDai, (int(colorDai.shape[1] * resize_scale), colorRS.shape[0]))
 
-    color = np.hstack((colorRS, resized_colorDai))
-    # downsize the image for display
-    color = cv2.resize(color, (int(color.shape[1] / 2), int(color.shape[0] / 2)))
-    cv2.imshow("color", color)
-    if cv2.waitKey(1) == 27:
-      cv2.destroyAllWindows()
-      exit(0)
+      color = np.hstack((colorRS, resized_colorDai))
+      # downsize the image for display
+      color = cv2.resize(color, (int(color.shape[1] / 2), int(color.shape[0] / 2)))
+      cv2.imshow("color", color)
+      if cv2.waitKey(1) == 27:
+        cv2.destroyAllWindows()
+        exit(0)
 
 if __name__ == "__main__":
   main()

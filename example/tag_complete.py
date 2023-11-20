@@ -28,10 +28,10 @@ cfg.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 cfg.FIELD == "GAME"
 
-RS_CAMERA_QUEUE_SIZE       = 100
-DAI_CAMERA_QUEUE_SIZE      = 100
-TAG_DETECTION_QUEUE_SIZE   = 100
-BALL_DETECTION_QUEUE_SIZE  = 100
+RS_CAMERA_QUEUE_SIZE       = 1
+DAI_CAMERA_QUEUE_SIZE      = 1
+TAG_DETECTION_QUEUE_SIZE   = 1
+BALL_DETECTION_QUEUE_SIZE  = 1
 
 def readCalibrationFile(path=cfg.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -67,10 +67,10 @@ class ATag:
       for tag in self.tags:
         if cfg.TAG_POLICY == "HIGHEST_CONFIDENCE":
           if tag.decision_margin < cfg.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > cfg.TAG_POSE_ERROR_THRESHOLD: 
-            print(f'tag.decision_margin = {tag.decision_margin} < {cfg.TAG_DECISION_MARGIN_THRESHOLD}')
+            # print(f'tag.decision_margin = {tag.decision_margin} < {cfg.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
         if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
-          print(f'tag.id = {tag.tag_id}, tag.decision_margin = {tag.decision_margin} > {max_confidence} and tag.pose_err = {tag.pose_err} < {min_pose_err}')
+          # print(f'tag.id = {tag.tag_id}, tag.decision_margin = {tag.decision_margin} > {max_confidence} and tag.pose_err = {tag.pose_err} < {min_pose_err}')
           max_confidence = tag.decision_margin
           min_pose_err = tag.pose_err
           max_confidence_least_pose_err_tag = tag
@@ -121,7 +121,7 @@ def send_command(command, args):
       pass
 
 # Step 2: Define camera process functions
-def rs_camera_process(camera_params, rs_queue, rs_queue_viz, rs_queue_tag):
+def rs_camera_process(camera_params, rs_queue_nn, rs_queue_viz, rs_queue_tag, rs_queue_ocv):
     try:
       # Initialize RealSense camera
       camRS = camera.RealSenseCamera(1280,720) 
@@ -139,14 +139,11 @@ def rs_camera_process(camera_params, rs_queue, rs_queue_viz, rs_queue_tag):
         if color is None or depth is None:
           continue
         # rotate the color and depthe and put it in the queue
-        rs_queue.put((color, depth))
+        rs_queue_nn.put(color)
+        rs_queue_ocv.put(color)
         rs_queue_viz.put((color, depth))
         # convert to gray for tag detection
         gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
-        # check if the queue is full, if yes replace the oldest image
-        # if rs_queue_tag.full():
-        #   rs_queue_tag.get()
-        # put the gray image in the queue
         rs_queue_tag.put(gray)
     except Exception as e:
         print("failed to initialize rs camera", e)
@@ -171,7 +168,8 @@ def dai_camera_process(camera_params, dai_queue, dai_queue_viz, dai_queue_tag):
           continue
         dai_queue.put((color, depth))
         dai_queue_viz.put((color, depth))
-        dai_queue_tag.put((color, depth))
+        gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
+        dai_queue_tag.put(gray)
     except:
       print("failed to initialize dai camera")
       pass
@@ -229,8 +227,8 @@ def ball_detection_process(camera_queue, ball_detection_queue):
       while True:
           # print("inside ball detection process")
           if not camera_queue.empty():
-              color, depth = camera_queue.get()
-              if color is None or depth is None:
+              color = camera_queue.get()
+              if color is None:
                   continue
               detections = object_detection.run_object_detection(color)
               if len(detections) > 0:
@@ -283,7 +281,7 @@ def main():
     rs_fy = mp.Value('d', 617.0)
     rs_cx = mp.Value('d', 640.0)
     rs_cy = mp.Value('d', 360.0)
-    rs_depth_scale = mp.Value('d', 0.001)
+    rs_depth_scale = mp.Value('d', 0.0010000000474974513)
     rs_camera_params = [rs_fx, rs_fy, rs_cx, rs_cy, rs_depth_scale]
     dai_fx = mp.Value('d', 617.0)
     dai_fy = mp.Value('d', 617.0)
@@ -291,20 +289,22 @@ def main():
     dai_cy = mp.Value('d', 360.0)
     dai_camera_params= [dai_fx, dai_fy, dai_cx, dai_cy]
     # Initialize queues
-    rs_queue = MyQueue("rs_queue", RS_CAMERA_QUEUE_SIZE)
+    rs_queue_nn = MyQueue("rs_queue", RS_CAMERA_QUEUE_SIZE)
+    rs_queue_ocv = MyQueue("rs_queue", RS_CAMERA_QUEUE_SIZE)
     rs_queue_tag = MyQueue("rs_queue_tag", RS_CAMERA_QUEUE_SIZE)
     rs_queue_viz = MyQueue("rs_queue_viz", RS_CAMERA_QUEUE_SIZE)
     rs_tag_detection_queue = MyQueue("rs_tag_detection_queue", TAG_DETECTION_QUEUE_SIZE)
     rs_ball_detection_queue = MyQueue("rs_ball_detection_queue", BALL_DETECTION_QUEUE_SIZE)
+    rs_ocv_ball_detection_queue = MyQueue("rs_ocv_ball_detection_queue", BALL_DETECTION_QUEUE_SIZE)
     if ENABLE_DAI:
-      dai_queue = MyQueue(DAI_CAMERA_QUEUE_SIZE)
-      dai_queue_tag = MyQueue(DAI_CAMERA_QUEUE_SIZE)
-      dai_queue_viz = MyQueue(RS_CAMERA_QUEUE_SIZE)
-      dai_tag_detection_queue = MyQueue(TAG_DETECTION_QUEUE_SIZE)
-      dai_ball_detection_queue = MyQueue(BALL_DETECTION_QUEUE_SIZE)
+      dai_queue = MyQueue("dai_queue", DAI_CAMERA_QUEUE_SIZE)
+      dai_queue_tag = MyQueue("dai_queue_tag", DAI_CAMERA_QUEUE_SIZE)
+      dai_queue_viz = MyQueue("dai_queue_viz", RS_CAMERA_QUEUE_SIZE)
+      dai_tag_detection_queue = MyQueue("dai_tag_detection_queue", TAG_DETECTION_QUEUE_SIZE)
+      dai_ball_detection_queue = MyQueue("dai_ball_detection_queue", BALL_DETECTION_QUEUE_SIZE)
 
     # Start camera processes
-    rs_camera = mp.Process(target=rs_camera_process, args=(rs_camera_params,rs_queue,rs_queue_viz,rs_queue_tag))
+    rs_camera = mp.Process(target=rs_camera_process, args=(rs_camera_params,rs_queue_nn,rs_queue_viz,rs_queue_tag, rs_queue_ocv))
     rs_camera.start()
     
 
@@ -314,8 +314,10 @@ def main():
       rs_tag_detection.start()
     else:
       atag = ATag(camera_params=[i.value for i in rs_camera_params][0:4])
-    rs_ball_detection = mp.Process(target=ball_detection_process, args=(rs_queue, rs_ball_detection_queue,))
+    rs_ball_detection = mp.Process(target=ball_detection_process, args=(rs_queue_nn, rs_ball_detection_queue,))
     rs_ball_detection.start()
+    rs_ocv_ball_dection = mp.Process(target=ball_detection_opencv.run_object_detection_mp, args=(rs_queue_ocv, rs_ocv_ball_detection_queue, rs_depth_scale.value, ))
+    rs_ocv_ball_dection.start()
 
     if ENABLE_DAI:
       dai_camera = mp.Process(target=dai_camera_process, args=(dai_camera_params, dai_queue, dai_queue_viz,dai_queue_tag))
@@ -334,6 +336,8 @@ def main():
     while True:
         try:
             # Retrieve data from detection queues
+            if rs_ocv_ball_detection_queue.empty():
+               pass
             if rs_ball_detection_queue.empty():
                pass
               #  print("rs ball detection is empty")
@@ -341,8 +345,32 @@ def main():
                 # print("rs queue viz is empty")
                 # time.sleep(0.1)
                 continue
-            rs_ball_detections = rs_ball_detection_queue.get()
             colorRS, depthRS = rs_queue_viz.get()
+            def visualize_ball_detection(color, depth, ball_detections, ball_color):
+              for detection in ball_detections:
+                  center_x = detection['center_x']
+                  center_y = detection['center_y']
+                  width = detection['width']
+                  height = detection['height']
+                  radius = (width + height) / 4
+                  center = (int(center_x), int(center_y))
+                  cv2.circle(color, center, int(radius), ball_color, 2)
+                  depth = depth[int(center_y)][int(center_x)]
+                  depth = depth * 0.0010000000474974513
+            rs_ball_detections = rs_ball_detection_queue.get()
+            rs_ocv_ball_detections = rs_ocv_ball_detection_queue.get()
+            color_green = (0, 255, 0) # green
+            color_red = (0, 0, 255) # red
+            if colorRS is None or depthRS is None:
+              continue
+            elif colorRS.shape == 3 and depthRS.shape == 2:
+              visualize_ball_detection(colorRS, depthRS, rs_ball_detections, color_green)
+              visualize_ball_detection(colorRS, depthRS, rs_ocv_ball_detections, color_red)
+            else:
+              print("colorRS shape = ", colorRS.shape)
+              print("depthRS shape = ", depthRS.shape)
+
+              
             if ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
               if not rs_tag_detection_queue.empty():
                 Robot2Field, tag = rs_tag_detection_queue.get()
@@ -373,16 +401,6 @@ def main():
                 robot_state_fused[2] = Robot2Field[2, 3]
                 robot_state_fused[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
                 print("robots x, y, theta are ", robot_state_fused[0], robot_state_fused[1], robot_state_fused[3])
-              for result in rs_ball_detections:
-                  center_x = result['center_x']
-                  center_y = result['center_y']
-                  width = result['width']
-                  height = result['height']
-                  radius = (width + height) / 4
-                  center = (int(center_x), int(center_y))
-                  cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
-                  depth_ = depthRS[int(center_y)][int(center_x)]
-                  depth_ = depth_ * rs_depth_scale.value
             if ENABLE_DAI:
               dai_ball_detections = dai_ball_detection_queue.get()
               colorDAI, depthDAI = dai_queue_viz.get()
@@ -415,8 +433,11 @@ def main():
             # if cv2.waitKey(1) & 0xFF == ord('q'):
             #     break
             # else:
+            # downscale and rotate 90 degrees for viewing
             downscale = 0.25
+            colorRS = cv2.rotate(colorRS, cv2.ROTATE_90_COUNTERCLOCKWISE)
             cv2.imshow('colorRS', cv2.resize(colorRS, (0,0), fx=downscale, fy=downscale))
+
             # cv2.imshow('colorRS', colorRS)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -436,6 +457,7 @@ def main():
     if ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
       rs_tag_detection.terminate()
     rs_ball_detection.terminate()
+    rs_ocv_ball_dection.terminate()
     if ENABLE_DAI:
       dai_camera.terminate()
       dai_tag_detection.terminate()
