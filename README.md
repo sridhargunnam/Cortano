@@ -85,6 +85,9 @@ cd /home/nvidia/wsp/clawbot/Cortano
 2. Integrate april tags based pose correction
 3. PID testing
 
+# Random Note
+The usb hub won't work if you turn on the jetson while the vex is running and connected to the usb hub.
+
 # for GPU and CPU stats
  tegrastats --interval 1 --logfile tegrastats.txt 
 slam.py is ~1 fps, gpu slam is ~3 fps
