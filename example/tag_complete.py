@@ -28,10 +28,10 @@ cfg.TAG_POLICY = "FIRST"
 # config.FIELD == "BEDROOM"
 cfg.FIELD == "GAME"
 
-RS_CAMERA_QUEUE_SIZE       = 1
-DAI_CAMERA_QUEUE_SIZE      = 1
-TAG_DETECTION_QUEUE_SIZE   = 1
-BALL_DETECTION_QUEUE_SIZE  = 1
+RS_CAMERA_QUEUE_SIZE       = 100
+DAI_CAMERA_QUEUE_SIZE      = 100
+TAG_DETECTION_QUEUE_SIZE   = 100
+BALL_DETECTION_QUEUE_SIZE  = 100
 
 def readCalibrationFile(path=cfg.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
@@ -51,12 +51,17 @@ class ATag:
     self.camera_params = camera_params
     pass
 
-  def getTagAndPose(self,color, tag_size=cfg.TAG_SIZE_3IN):
+  def getTagAndPose(self,img, tag_size=cfg.TAG_SIZE_3IN):
+    # check if img is color or gray 
+    if len(img.shape) == 3:
+      gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+      gray = img
     self.tags = self.at_detector.detect(
-      cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size)
+      gray, True, self.camera_params[0:4], tag_size)
     if self.tags is not None:
       #get the tag with highest confidence
-      max_confidence = 0
+      max_confidence = cfg.TAG_DECISION_MARGIN_THRESHOLD
       max_confidence_least_pose_err_tag = None
       min_pose_err = cfg.TAG_POSE_ERROR_THRESHOLD
       for tag in self.tags:
@@ -65,6 +70,7 @@ class ATag:
             print(f'tag.decision_margin = {tag.decision_margin} < {cfg.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
         if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
+          print(f'tag.id = {tag.tag_id}, tag.decision_margin = {tag.decision_margin} > {max_confidence} and tag.pose_err = {tag.pose_err} < {min_pose_err}')
           max_confidence = tag.decision_margin
           min_pose_err = tag.pose_err
           max_confidence_least_pose_err_tag = tag
@@ -116,23 +122,35 @@ def send_command(command, args):
 
 # Step 2: Define camera process functions
 def rs_camera_process(camera_params, rs_queue, rs_queue_viz, rs_queue_tag):
-    # Initialize RealSense camera
-    camRS = camera.RealSenseCamera(1280,720) 
-    fx, fy, cx, cy, depth_scale = camera_params
-    cx.value = camRS.cx
-    cy.value = camRS.cy
-    fx.value = camRS.fx
-    fy.value = camRS.fy
-    depth_scale.value = camRS.depth_scale
+    try:
+      # Initialize RealSense camera
+      camRS = camera.RealSenseCamera(1280,720) 
+      fx, fy, cx, cy, depth_scale = camera_params
+      cx.value = camRS.cx
+      cy.value = camRS.cy
+      fx.value = camRS.fx
+      fy.value = camRS.fy
+      depth_scale.value = camRS.depth_scale
 
-    # Capture images and put them into the rs_queue
-    while True:
-      color, depth = camRS.read()
-      if color is None or depth is None:
-        continue
-      rs_queue.put((color, depth))
-      rs_queue_viz.put((color, depth))
-      # rs_queue_tag.put((color, depth))
+      # Capture images and put them into the rs_queue
+      while True:
+        # print("inside rs camera process")
+        color, depth = camRS.read()
+        if color is None or depth is None:
+          continue
+        # rotate the color and depthe and put it in the queue
+        rs_queue.put((color, depth))
+        rs_queue_viz.put((color, depth))
+        # convert to gray for tag detection
+        gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
+        # check if the queue is full, if yes replace the oldest image
+        # if rs_queue_tag.full():
+        #   rs_queue_tag.get()
+        # put the gray image in the queue
+        rs_queue_tag.put(gray)
+    except Exception as e:
+        print("failed to initialize rs camera", e)
+        sys.exit(1)
 
     
 
@@ -168,8 +186,7 @@ def tag_detection_process(camera_queue, tag_detection_queue, robot_state, camera
   tag_size = local_config.TAG_SIZE_3IN
   try:
     robot_state_local = [0.0, 0.0, 0.0, 0.0]
-    with camera_params.get_lock():
-      camera_params_local = [i.value for i in camera_params]
+    camera_params_local = [i.value for i in camera_params][0:4]
     if camera_type.value == 0: # rs camera
       CamToRobot = readCalibrationFile()[0]
       atag = ATag(camera_params_local)
@@ -177,56 +194,88 @@ def tag_detection_process(camera_queue, tag_detection_queue, robot_state, camera
       CamToRobot = readCalibrationFile()[1]
       atag = ATag(camera_params_local)
     while True:
-      color, _ = camera_queue.get()
-      if color is None:
-        print("didnt get color in tag detection process", camera_type.value)
-        continue
-      tag, tag_id, tag_pose = atag.getTagAndPose(color, tag_size)
-      Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, tag_pose, CamToRobot)
-      if Robot2Field is not None:
-        robot_state_local[0] = Robot2Field[0, 3]
-        robot_state_local[1] = Robot2Field[1, 3]
-        robot_state_local[2] = Robot2Field[2, 3]
-        robot_state_local[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
-        # convert to degrees
-        print("Robot x,y, theta = ", robot_state_local[0], robot_state_local[1], robot_state_local[3])
-        robot_state.put(robot_state_local)
-        tag_detection_queue.put(Robot2Field)
-      # else:
-        # tag_detection_queue.put(None)
-  except:
-    print("failed to initialize/run tag detection process")
-    pass
+      try :
+        # print("inside tag detection process")
+        gray = camera_queue.get()
+        if gray is None:
+          print("didnt get color in tag detection process", camera_type.value)
+          continue
+        tag, tag_id, tag_pose = atag.getTagAndPose(gray, tag_size)
+        Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, tag_pose, CamToRobot)
+        if Robot2Field is not None:
+          robot_state_local[0] = Robot2Field[0, 3]
+          robot_state_local[1] = Robot2Field[1, 3]
+          robot_state_local[2] = Robot2Field[2, 3]
+          robot_state_local[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
+          # convert to degrees
+          print("Robot x,y, theta = ", robot_state_local[0], robot_state_local[1], robot_state_local[3])
+          robot_state.put(robot_state_local)
+          tag_detection_queue.put([Robot2Field, tag])
+        else:
+          tag_detection_queue.put([None, None])
+      except Exception as e:
+        print("tag detection process failed - inner step", e)
+        sys.exit(1)
+  except Exception as e:
+    print("tag detection process failed", e)
+    sys.exit(1)
+
+     
 
 def ball_detection_process(camera_queue, ball_detection_queue):
     # Ball detection logic using ball_detection_opencv
     # Consume images from camera_queue, process them, and put results in ball_detection_queue
-    while True:
-        if not camera_queue.empty():
-            color, depth = camera_queue.get()
-            if color is None or depth is None:
-                continue
-            detections = object_detection.run_object_detection(color)
-            if len(detections) > 0:
-                ball_detection_queue.put(detections)
-            else:
-                ball_detection_queue.put([])
+    try :
+      while True:
+          # print("inside ball detection process")
+          if not camera_queue.empty():
+              color, depth = camera_queue.get()
+              if color is None or depth is None:
+                  continue
+              detections = object_detection.run_object_detection(color)
+              if len(detections) > 0:
+                  ball_detection_queue.put(detections)
+              else:
+                  ball_detection_queue.put([])
+    except Exception as e:
+        print("ball detection process failed", e)
+        sys.exit(1)
 
+class MyQueue:
+    def __init__(self, name="noname", max_size=1):
+        self.name = name
+        self.queue = mp.Queue(max_size)
+
+    def put(self, item):
+        if self.queue.full():
+            self.queue.get()  # Remove the oldest item
+        self.queue.put(item)
+
+    def get(self):
+        if self.queue.empty():
+            print(f"{self.name} queue is empty")
+            # sys.exit(1)        
+        return self.queue.get()
+    def empty(self):
+        return self.queue.empty() 
+  
 
 
 # Step 4: Define the main function
 def main():
     ENABLE_DAI = False
+    ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS = True
     # x, y, z, theta # z is supposed to be zero as it's 4 wheel robot
-    rs_robot_state    = mp.Queue(RS_CAMERA_QUEUE_SIZE)#mp.Array('d', [0.0, 0.0, 0.0, 0.0])
-    dai_robot_state   = mp.Queue(RS_CAMERA_QUEUE_SIZE)#mp.Array('d', [0.0, 0.0, 0.0, 0.0])
+    rs_robot_state    = MyQueue(RS_CAMERA_QUEUE_SIZE)#mp.Array('d', [0.0, 0.0, 0.0, 0.0])
+    dai_robot_state   = MyQueue(RS_CAMERA_QUEUE_SIZE)#mp.Array('d', [0.0, 0.0, 0.0, 0.0])
     robot_state_fused =  [0.0, 0.0, 0.0, 0.0]
-    command_queue = mp.Queue()
+    command_queue = MyQueue(1)
     calib = np.loadtxt("calib.txt", delimiter=",")
     rsCamToRobot = calib[:4,:]
     daiCamToRobot = calib[4:,:]
     camera_type_rs = mp.Value('i', 0) # 0 for rs, 1 for dai
     camera_type_dai = mp.Value('i', 1) # 0 for rs, 1 for dai
+
 
 
     # Initialize camera parameters
@@ -242,17 +291,17 @@ def main():
     dai_cy = mp.Value('d', 360.0)
     dai_camera_params= [dai_fx, dai_fy, dai_cx, dai_cy]
     # Initialize queues
-    rs_queue = mp.Queue(RS_CAMERA_QUEUE_SIZE)
-    rs_queue_tag = mp.Queue(RS_CAMERA_QUEUE_SIZE)
-    rs_queue_viz = mp.Queue(RS_CAMERA_QUEUE_SIZE)
-    # rs_tag_detection_queue = mp.Queue(TAG_DETECTION_QUEUE_SIZE)
-    rs_ball_detection_queue = mp.Queue(BALL_DETECTION_QUEUE_SIZE)
+    rs_queue = MyQueue("rs_queue", RS_CAMERA_QUEUE_SIZE)
+    rs_queue_tag = MyQueue("rs_queue_tag", RS_CAMERA_QUEUE_SIZE)
+    rs_queue_viz = MyQueue("rs_queue_viz", RS_CAMERA_QUEUE_SIZE)
+    rs_tag_detection_queue = MyQueue("rs_tag_detection_queue", TAG_DETECTION_QUEUE_SIZE)
+    rs_ball_detection_queue = MyQueue("rs_ball_detection_queue", BALL_DETECTION_QUEUE_SIZE)
     if ENABLE_DAI:
-      dai_queue = mp.Queue(DAI_CAMERA_QUEUE_SIZE)
-      dai_queue_tag = mp.Queue(DAI_CAMERA_QUEUE_SIZE)
-      dai_queue_viz = mp.Queue(RS_CAMERA_QUEUE_SIZE)
-      dai_tag_detection_queue = mp.Queue(TAG_DETECTION_QUEUE_SIZE)
-      dai_ball_detection_queue = mp.Queue(BALL_DETECTION_QUEUE_SIZE)
+      dai_queue = MyQueue(DAI_CAMERA_QUEUE_SIZE)
+      dai_queue_tag = MyQueue(DAI_CAMERA_QUEUE_SIZE)
+      dai_queue_viz = MyQueue(RS_CAMERA_QUEUE_SIZE)
+      dai_tag_detection_queue = MyQueue(TAG_DETECTION_QUEUE_SIZE)
+      dai_ball_detection_queue = MyQueue(BALL_DETECTION_QUEUE_SIZE)
 
     # Start camera processes
     rs_camera = mp.Process(target=rs_camera_process, args=(rs_camera_params,rs_queue,rs_queue_viz,rs_queue_tag))
@@ -260,9 +309,12 @@ def main():
     
 
     # Start detection processes
-    # rs_tag_detection = mp.Process(target=tag_detection_process, args=(rs_queue_tag, rs_tag_detection_queue, rs_robot_state, rs_camera_params, camera_type_rs,))
+    if ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
+      rs_tag_detection = mp.Process(target=tag_detection_process, args=(rs_queue_tag, rs_tag_detection_queue, rs_robot_state, rs_camera_params, camera_type_rs,))
+      rs_tag_detection.start()
+    else:
+      atag = ATag(camera_params=[i.value for i in rs_camera_params][0:4])
     rs_ball_detection = mp.Process(target=ball_detection_process, args=(rs_queue, rs_ball_detection_queue,))
-    # rs_tag_detection.start()
     rs_ball_detection.start()
 
     if ENABLE_DAI:
@@ -274,7 +326,7 @@ def main():
       dai_ball_detection.start()
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
 
-    atag = ATag(camera_params=[i.value for i in rs_camera_params][0:4])
+ 
     if cfg.FIELD == "GAME":
       tag_size = cfg.TAG_SIZE_3IN
 
@@ -287,30 +339,50 @@ def main():
               #  print("rs ball detection is empty")
             if rs_queue_viz.empty():
                 # print("rs queue viz is empty")
-                time.sleep(0.1)
+                # time.sleep(0.1)
                 continue
             rs_ball_detections = rs_ball_detection_queue.get()
             colorRS, depthRS = rs_queue_viz.get()
-            tag, tag_id, Lm2Cam = atag.getTagAndPose(colorRS, tag_size)
-            print("tag_id = ", tag_id)
-            Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, rsCamToRobot)
-            # print("Robot2Field = ", Robot2Field)
-            if Robot2Field is not None:
-              robot_state_fused[0] = Robot2Field[0, 3]
-              robot_state_fused[1] = Robot2Field[1, 3]
-              robot_state_fused[2] = Robot2Field[2, 3]
-              robot_state_fused[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
-              print("robots x, y, theta are ", robot_state_fused[0], robot_state_fused[1], robot_state_fused[3])
-            for result in rs_ball_detections:
-                center_x = result['center_x']
-                center_y = result['center_y']
-                width = result['width']
-                height = result['height']
-                radius = (width + height) / 4
-                center = (int(center_x), int(center_y))
-                cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
-                depth_ = depthRS[int(center_y)][int(center_x)]
-                depth_ = depth_ * rs_depth_scale.value
+            if ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
+              if not rs_tag_detection_queue.empty():
+                Robot2Field, tag = rs_tag_detection_queue.get()
+                if Robot2Field is not None:
+                  robot_state_fused[0] = Robot2Field[0, 3]
+                  robot_state_fused[1] = Robot2Field[1, 3]
+                  robot_state_fused[2] = Robot2Field[2, 3]
+                  robot_state_fused[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
+                  print("robots x, y, theta are ", robot_state_fused[0], robot_state_fused[1], robot_state_fused[3])
+                  # visualize the tag on the image
+                  if tag is not None:
+                    for idx in range(len(tag.corners)):
+                      cv2.line(colorRS, tuple(tag.corners[idx-1, :].astype(int)), tuple(tag.corners[idx, :].astype(int)), (0, 255, 0))
+                    cv2.putText(colorRS, str(tag.tag_id),
+                                org=(tag.center[0].astype(int), tag.center[1].astype(int)),
+                                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                fontScale=0.8,
+                                color=(0, 0, 255))
+                
+            else: # ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
+              tag, tag_id, Lm2Cam = atag.getTagAndPose(colorRS, tag_size)
+              print("tag_id = ", tag_id)
+              Robot2Field = atag.getRobotPoseFromTagPose(tag, tag_id, Lm2Cam, rsCamToRobot)
+              # print("Robot2Field = ", Robot2Field)
+              if Robot2Field is not None:
+                robot_state_fused[0] = Robot2Field[0, 3]
+                robot_state_fused[1] = Robot2Field[1, 3]
+                robot_state_fused[2] = Robot2Field[2, 3]
+                robot_state_fused[3] = R.from_matrix(Robot2Field[0:3, 0:3]).as_euler('xyz', degrees=True)[2]
+                print("robots x, y, theta are ", robot_state_fused[0], robot_state_fused[1], robot_state_fused[3])
+              for result in rs_ball_detections:
+                  center_x = result['center_x']
+                  center_y = result['center_y']
+                  width = result['width']
+                  height = result['height']
+                  radius = (width + height) / 4
+                  center = (int(center_x), int(center_y))
+                  cv2.circle(colorRS, center, int(radius), (0, 255, 0), 2)
+                  depth_ = depthRS[int(center_y)][int(center_x)]
+                  depth_ = depth_ * rs_depth_scale.value
             if ENABLE_DAI:
               dai_ball_detections = dai_ball_detection_queue.get()
               colorDAI, depthDAI = dai_queue_viz.get()
@@ -337,29 +409,32 @@ def main():
 
               color_combined = np.hstack((colorRS, resized_colorDAI))
 
-              #downscale = 0.25 to view
-              # cv2.imshow('color_combined', cv2.resize(color_combined, (0,0), fx=0.25, fy=0.25))
-              # cv2.imshow('color_combined', color_combined)
-              # if cv2.waitKey(1) & 0xFF == ord('q'):
-              #     break
-            else:
-              # downscale = 0.25 to view
-              cv2.imshow('colorRS', cv2.resize(colorRS, (0,0), fx=0.25, fy=0.25))
-              # cv2.imshow('colorRS', colorRS)
-              if cv2.waitKey(1) & 0xFF == ord('q'):
-                  break
+            #downscale = 0.25 to view
+            # cv2.imshow('color_combined', cv2.resize(color_combined, (0,0), fx=0.25, fy=0.25))
+            # cv2.imshow('color_combined', color_combined)
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     break
+            # else:
+            downscale = 0.25
+            cv2.imshow('colorRS', cv2.resize(colorRS, (0,0), fx=downscale, fy=downscale))
+            # cv2.imshow('colorRS', colorRS)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
             # Process data for visualization and VEX control commands
-            pass
+            # pass
         except KeyboardInterrupt:
             break
         except Exception as e:
             print('Error:', e)
             traceback.print_exc()
+            # sys.exit(1)
             time.sleep(1)
+
 
     # Cleanup and close processes
     rs_camera.terminate()
-    # rs_tag_detection.terminate()
+    if ENABLE_TAG_DETECTION_IN_SEPARATE_PROCESS:
+      rs_tag_detection.terminate()
     rs_ball_detection.terminate()
     if ENABLE_DAI:
       dai_camera.terminate()
