@@ -14,13 +14,13 @@ import socket
 import struct
 import sys
 
-config = config.Config()
-config.TAG_POLICY = "FIRST"
-# config.FIELD == "BEDROOM"
-config.FIELD == "GAME"
+cfg = config.Config()
+cfg.TAG_POLICY = "FIRST"
+# cfg.FIELD == "BEDROOM"
+cfg.FIELD == "GAME"
 
 
-def readCalibrationFile(path=config.CALIB_PATH):
+def readCalibrationFile(path=cfg.CALIB_PATH):
   calib = np.loadtxt(path, delimiter=",")
   rsCamToRobot = calib[:4,:]
   daiCamToRobot = calib[4:,:]
@@ -34,17 +34,17 @@ class ATag:
                           quad_sigma=0.0,
                           refine_edges=1,
                           decode_sharpening=1.2,
-                          debug=False)# config.GEN_DEBUG_IMAGES)
+                          debug=False)# cfg.GEN_DEBUG_IMAGES)
     self.camera_params = camera_params
     pass
 
-  def getTagAndPose(self,color, tag_size=config.TAG_SIZE_3IN):
+  def getTagAndPose(self,color, tag_size=cfg.TAG_SIZE_3IN):
     self.tags = self.at_detector.detect(
       cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), True, self.camera_params[0:4], tag_size)
     if self.tags is not None:
       #get the tag with highest confidence
-      max_confidence = config.TAG_DECISION_MARGIN_THRESHOLD
-      min_pose_err = config.TAG_POSE_ERROR_THRESHOLD
+      max_confidence = cfg.TAG_DECISION_MARGIN_THRESHOLD
+      min_pose_err = cfg.TAG_POSE_ERROR_THRESHOLD
       max_confidence_tag = None
       for tag in self.tags:
         # print all tag information like pose err and decision margin
@@ -52,9 +52,9 @@ class ATag:
           # print(f'tag.decision_margin = {tag.decision_margin}, tag.pose_err = {tag.pose_err}, tag.tag_id = {tag.tag_id}')
           # print(tag.pose_t)
         
-        if config.TAG_POLICY == "HIGHEST_CONFIDENCE":
-          if tag.decision_margin < config.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > config.TAG_POSE_ERROR_THRESHOLD:
-            # print(f'tag.decision_margin = {tag.decision_margin} < {config.TAG_DECISION_MARGIN_THRESHOLD}')
+        if cfg.TAG_POLICY == "HIGHEST_CONFIDENCE":
+          if tag.decision_margin < cfg.TAG_DECISION_MARGIN_THRESHOLD and tag.pose_err > cfg.TAG_POSE_ERROR_THRESHOLD:
+            # print(f'tag.decision_margin = {tag.decision_margin} < {cfg.TAG_DECISION_MARGIN_THRESHOLD}')
             continue
         if tag.decision_margin > max_confidence and tag.pose_err < min_pose_err:
           max_confidence = tag.decision_margin
@@ -90,6 +90,10 @@ class ATag:
     else:
       return None
 
+ROTATION_DIRECTION = {
+    "counter_clockwise": 1,
+    "clockwise": -1
+}
 
 """
 function to get the robot pose from the tag pose, 
@@ -105,7 +109,9 @@ import matplotlib.pyplot as plt
 
 import socket
 import json
-def send_command(command, args):
+import time
+def send_command(command, args=None):
+    pass 
     try:
       print("sending ", command, args)
       client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -129,19 +135,21 @@ def main():
   calib = np.loadtxt("calib.txt", delimiter=",")
   rsCamToRobot = calib[:4,:]
   daiCamToRobot = calib[4:,:]
-  camRS = camera.RealSenseCamera(1280,720) 
+  # camRS = camera.RealSenseCamera(1280,720) 
+  camRS = camera.RealSenseCamera(640,360, 30) 
   camera_paramsRS = camRS.getCameraIntrinsics()
   cam2robotRS = rsCamToRobot
+  # camDai = camera.DepthAICamera(1920, 1080)
   camDai = camera.DepthAICamera(1920, 1080)
   camera_paramsDai = camDai.getCameraIntrinsics() #1280,720)
   cam2robotDai = daiCamToRobot
   
   atag = ATag(camera_paramsDai)
   # detect the tag and get the pose
-  if config.FIELD == "HOME" or config.FIELD == "GAME":
-    tag_size = config.TAG_SIZE_3IN # centimeters
-  elif config.FIELD == "BEDROOM":
-    tag_size = config.TAG_SIZE_6IN
+  if cfg.FIELD == "HOME" or cfg.FIELD == "GAME":
+    tag_size = cfg.TAG_SIZE_3IN # centimeters
+  elif cfg.FIELD == "BEDROOM":
+    tag_size = cfg.TAG_SIZE_6IN
   
   DETECT_ONE_BALL = True
   mask = cv2.bitwise_not(msk.load_mask())
@@ -153,8 +161,8 @@ def main():
   mask = cv2.warpPerspective(mask, colorTodepthExtrinsics, (mask.shape[1], mask.shape[0]))
   #apply the mask on the rs depth image and visualize it
   
-  objective_map = np.zeros((config.FIELD_HEIGHT, config.FIELD_WIDTH), np.uint8)
-  objective_map[:, int(config.FIELD_WIDTH/2 - config.CLAW_LENGTH):int(config.FIELD_WIDTH/2 + config.CLAW_LENGTH) ] = 1
+  objective_map = np.zeros((cfg.FIELD_HEIGHT, cfg.FIELD_WIDTH), np.uint8)
+  objective_map[:, int(cfg.FIELD_WIDTH/2 - cfg.CLAW_LENGTH):int(cfg.FIELD_WIDTH/2 + cfg.CLAW_LENGTH) ] = 1
   # Visualizing the objective_map
   plt.figure(figsize=(6, 6))
   plt.imshow(objective_map, cmap='gray')
@@ -162,15 +170,31 @@ def main():
   plt.xlabel('Width')
   plt.ylabel('Height')
   # plt.show()
-  ball_map = np.zeros((config.FIELD_HEIGHT, int(config.FIELD_WIDTH/2)), np.uint8)
-
+  ball_map = np.zeros((cfg.FIELD_HEIGHT, int(cfg.FIELD_WIDTH/2)), np.uint8)
+  start_time = time.time()
+  random_rotation_time = np.random.uniform(0.05, 0.15)
+  # convert random_rotation_time to double
+  test_rotation = False
+  if test_rotation:
+    random_rotation_time = np.double(random_rotation_time)
+    send_command("rotateRobot",  [random_rotation_time, ROTATION_DIRECTION["clockwise"], 127]) 
   while True:
-    dt = datetime.now()
-    colorDai, depthDai = camDai.read()
-    colorRS, depthRS = camRS.read()   
+    if test_rotation:
+      end_time = time.time()
+      if end_time - start_time > 30:
+        send_command("stop_drive") 
+        cv2.destroyAllWindows()
+        exit(0)        
+    while True:
+      colorDai, depthDai = camDai.read()
+      colorRS, depthRS = camRS.read()   
+      if colorRS is None or depthRS is None or colorDai is None or depthDai is None:
+         continue
+      else:
+        break
     depthRS = cv2.bitwise_and(depthRS, depthRS, mask=mask)
     #save the images for debugging
-    if config.GEN_DEBUG_IMAGES:
+    if cfg.GEN_DEBUG_IMAGES:
       cv2.imwrite("colorDai.jpg", colorDai)
       cv2.imwrite("depthDai.jpg", depthDai)
       cv2.imwrite("colorRS.jpg", colorRS)
@@ -188,8 +212,6 @@ def main():
       if Robot2FieldRS is not None:
         print("Robot2FieldRS = ", Robot2FieldRS[0:3,3])
 
-    if colorRS is None or depthRS is None or colorDai is None or depthDai is None:
-      continue
     detections = []
     detections_nn = []
     detectionsDai = []
@@ -199,18 +221,20 @@ def main():
     if ENABLE_OCV:
       detections_RS = ball_detection_opencv.ball_detection(colorRS)
       # detectionsDai = ball_detection_opencv.ball_detection(colorDai)
+    print(f'len detections_nn = {len(detections_nn)}, len detections_RS = {len(detections_RS)}')  
     if len(detections_nn) > 0:
       detections = detections_nn
+      print("current detestion is from nn")
     elif len(detections_RS) > 0:
       detections = detections_RS
+      print("current detestion is from ocv")
 
     detectionsDai = [] 
     # print(f'len contours = {len(contours)} , len contoursDai = {len(contoursDai)}')
     SIZE_OF_TENNIS_BALL = 6.54 # centimeters
     ENABLE_RS_BALL_DETECTION = True
     ENABLE_DAI_BALL_DETECTION = False
-    if True:
-       pass
+
     if True:
       if len(detections) > 0 and ENABLE_RS_BALL_DETECTION:
           # get the center of the bounding box, and average of the width and height of the bounding box, and calculate the x, y with respect to the field
@@ -240,10 +264,19 @@ def main():
             # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
             robot2cam = np.linalg.inv(cam2robotRS)
             ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
+            xrange = (-3, +3)
+            yrange = (5, 20)
+            zrage = (-3, 10)
+            # check if the ball is in the range of the robot to catch it
+            if ball_pos_robot[0] > xrange[0] and ball_pos_robot[0] < xrange[1] and ball_pos_robot[1] > yrange[0] and ball_pos_robot[1] < yrange[1] and ball_pos_robot[2] > zrage[0] and ball_pos_robot[2] < zrage[1]:
+              print("ball can be caught")
+              send_command("drive", ['forward', 30, 0.8])
+
+            print(f'Ball w.r.t to robot x = {ball_pos_robot[0]}, y = {ball_pos_robot[1]}, z = {ball_pos_robot[2]}')
             if Robot2Field is not None:
               ball2Field = Robot2Field @ ball_pos_robot
               # update ball_map, making sure that the ball2Field is not out of bounds
-              if (ball2Field[0]> 0 and ball2Field[0] < config.FIELD_HEIGHT) and ( ball2Field[1]> 0 and ball2Field[1] < int(config.FIELD_WIDTH/2)):
+              if (ball2Field[0]> 0 and ball2Field[0] < cfg.FIELD_HEIGHT) and ( ball2Field[1]> 0 and ball2Field[1] < int(cfg.FIELD_WIDTH/2)):
                 ball_map[int(ball2Field[0]), int(ball2Field[1])] = 1
             else:
               continue
@@ -260,9 +293,23 @@ def main():
                 closest_ball_XY = ball2Field
             
             theta = np.degrees(np.arctan2(closest_ball_pos_robot[0], closest_ball_pos_robot[1]))
-            send_command("rotate", theta)
-            if abs(theta) < 30:
-               send_command("stop_drive", None) 
+            print("theta = ", theta)
+            # control.rotateRobot(seconds=0.05, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED) 
+            if abs(theta) < 5:
+              print(f"target met theta = {theta}")
+              send_command("stop_drive") 
+              cv2.destroyAllWindows()
+              exit(0) 
+            if theta > 0:
+              send_command("rotateRobot", [0.05, ROTATION_DIRECTION["clockwise"], 127])
+            else:
+              send_command("rotateRobot", [0.05, ROTATION_DIRECTION["counter_clockwise"], 127])
+
+            # send_command("rotate", theta)
+            #    send_command("stop_drive") 
+            #    print("target met")
+            #    cv2.destroyAllWindows()
+            #    exit(0)
       elif len(detectionsDai) and ENABLE_DAI_BALL_DETECTION: 
           #get focal length of dai camera
           fx = camera_paramsDai[0]
@@ -282,6 +329,9 @@ def main():
           robot2cam = np.linalg.inv(cam2robotDai)
           ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
         # continue
+      else:
+        send_command("rotateRobot", [0.05, ROTATION_DIRECTION["clockwise"], 127]) 
+        # send_command("stop_drive")
       if tagRS is not None:
         # print the time it took to detect the tag well formatted
         # print("Time to detect tag: ", datetime.now() - dt)
@@ -334,7 +384,7 @@ def main():
       colorRS = cv2.rotate(colorRS, cv2.ROTATE_90_COUNTERCLOCKWISE)
       resize_scale = colorRS.shape[0] / colorDai.shape[0]
       resized_colorDai = cv2.resize(colorDai, (int(colorDai.shape[1] * resize_scale), colorRS.shape[0]))
-
+      
       color = np.hstack((colorRS, resized_colorDai))
       # downsize the image for display
       color = cv2.resize(color, (int(color.shape[1] / 2), int(color.shape[0] / 2)))

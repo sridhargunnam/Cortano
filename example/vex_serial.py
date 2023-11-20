@@ -321,7 +321,10 @@ class VexControl:
         assert  direction == "clockwise" or direction == "counter_clockwise"
         self.search_direction = direction
 
-    def drive(self, direction, speed, drive_time=1, left_motor=0, right_motor=9):
+    def drive(self, args):
+        direction, speed, drive_time = args
+        left_motor=0
+        right_motor=9
         if direction == "forward":
           left_drive = 1
           right_drive = -1
@@ -353,10 +356,10 @@ class VexControl:
         time.sleep(drive_time)
         self.stop_drive()
         if self.robot.sensors()[2] == 1 and action == clawAction.Close:
-            print("ball held\n")
+            print("ball held")
             return 1
         else:
-            print("ball missed\n")
+            print("ball missed")
             return 0
 
     def update_robot_move_arm(self, armPosition=ARM_POSITION.low, motor=2, error=20):
@@ -526,7 +529,8 @@ class VexControl:
         time.sleep(0.2)
         self.stop_drive()
 
-    def rotateRobot(self, seconds, dir=-1, speed=MINIMUM_INPLACE_ROTATION_SPEED):
+    def rotateRobot(self, args):#seconds, dir=-1, speed=MINIMUM_INPLACE_ROTATION_SPEED):
+        seconds, dir, speed = args
         for i in range(int(seconds*100)):
             self.robot.motor[0] = speed * dir
             self.robot.motor[9] = speed * dir
@@ -630,13 +634,15 @@ def keyboard_control(stdscr, control, robot):
         char = stdscr.getch()
 
         if char == ord('w'):
-            control.drive(direction="forward", speed=30, drive_time=1)
+            # control.drive(direction="forward", speed=30, drive_time=1)
+            control.drive(['forward', 30, 0.7])
         elif char == ord('s'):
-            control.drive(direction="backward", speed=30, drive_time=1)
+            # control.drive(direction="backward", speed=30, drive_time=1)
+            control.drive(['backward', 30, 0.7])
         elif char == ord('a'):
-            control.rotateRobot(seconds=0.05, dir=ROTATION_DIRECTION["counter_clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED)
+            control.rotateRobot([0.05, ROTATION_DIRECTION["counter_clockwise"], MINIMUM_INPLACE_ROTATION_SPEED])
         elif char == ord('d'):
-            control.rotateRobot(seconds=0.05, dir=ROTATION_DIRECTION["clockwise"], speed=MINIMUM_INPLACE_ROTATION_SPEED) 
+            control.rotateRobot([0.05, ROTATION_DIRECTION["clockwise"], MINIMUM_INPLACE_ROTATION_SPEED]) 
         elif char == ord('['):
             control.claw(20, clawAction.Close, drive_time=1.5)
         elif char == ord(']'):
@@ -704,10 +710,14 @@ def main():
         if latest_command:
             command = latest_command['command']
             args = latest_command.get('args', [])
+            print(f"Executing command: {command} with args: {args}")
             if hasattr(control, command):
                 method = getattr(control, command)
                 if callable(method):
-                    method(args)
+                    if args is None:
+                        method()
+                    else:
+                      method(args)
                     latest_command = None  # Reset after execution
                 else:
                     print(f"Command {command} is not callable")

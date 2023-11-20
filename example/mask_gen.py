@@ -114,9 +114,9 @@ def is_point_in_mask(point, mask):
     return mask[y, x] > 0
 
 if config.CREATE_MASK is True:
-    create_mask(1280, 720)
-    apply_mask_to_feed(1280, 720)
+    create_mask(640, 360)
+    apply_mask_to_feed(640, 360)
 
 if __name__ == "__main__":
-    create_mask(1280, 720)
-    apply_mask_to_feed(1280, 720)
+    create_mask(640, 360)
+    apply_mask_to_feed(640, 360)

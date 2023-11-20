@@ -11,6 +11,7 @@ from pyapriltags import Detector
 from scipy.spatial.transform import Rotation as R
 import logging
 #!/usr/bin/env python3
+import config
 
 #For tiny yolo
 from pathlib import Path
@@ -873,16 +874,16 @@ class DepthAICamera:
         # time.sleep(1)
   
 import config
-config = config.Config()
+cfg = config.Config()
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
 
 def runCameraCalib(input="Load"):
   np.set_printoptions(precision=2, suppress=True)
   if input == "calib_setup1": # dai and rs camera have common field of vie wand are looking at the same tag
       print("Running Camera Calibration")
-      rsCam = RealSenseCamera(1280, 720)
+      rsCam = RealSenseCamera(640,360)
       rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
       print("rsCamToRobot = \n", rsCamToRobot)
 
       # daiCam = DepthAICamera(1280,720, object_detection=False)
@@ -890,7 +891,7 @@ def runCameraCalib(input="Load"):
       daiCamCalib = CalibrateCamera(daiCam)
       # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       # print("daiCam2LM = \n", daiCam2LM)
-      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
       np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
   elif input == "Load":
@@ -905,7 +906,7 @@ def runCameraCalib(input="Load"):
       print("Running Camera Calibration")
       rsCam = RealSenseCamera(1280, 720)
       rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
+      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
       print("rsCamToRobot = \n", rsCamToRobot)
 
 
@@ -920,7 +921,7 @@ def runCameraCalib(input="Load"):
         daiCamCalib = CalibrateCamera(daiCam)
         # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
         # print("daiCam2LM = \n", daiCam2LM)
-        daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=config.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+        daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
         print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
         np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
   else:
@@ -982,7 +983,7 @@ if __name__ == "__main__":
       runCameraCalib("calib_setup2")
       exit(0)
     elif sys.argv[1] == "calib":
-      runCameraCalib("calib_setup2")
+      runCameraCalib("calib_setup1")
       exit(0)
     else:
       print("incorrect argument")

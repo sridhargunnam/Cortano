@@ -69,7 +69,7 @@ def run_object_detection(color_frame, debug=False):
 
 import camera
 if __name__ == "__main__":
-    camRS = camera.RealSenseCamera(1280,720) 
+    camRS = camera.RealSenseCamera(640,360) 
     while True:
         color_frame = camRS.read()[0]
         if color_frame is None:
