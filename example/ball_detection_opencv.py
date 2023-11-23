@@ -78,15 +78,18 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
             # cv2.putText(image, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
             # cv2.putText(depth_3d, str(depth_), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
+        #displayed fps is incorrect
+        # end_time = time.time()
+        # fps = 1.0 / (end_time - start_time)
+        # start_time = end_time
 
-        fps = 1.0 / (time.time() - start_time)
-        cv2.putText(image, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        # cv2.putText(depth_3d, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        # cv2.putText(image, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        # # cv2.putText(depth_3d, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         # Show the result
         if debug:
             # cv2.imshow('Depth', depth_3d)
-            # downscale = 0.5 to view 
-            cv2.imshow('Color', cv2.resize(image, (0,0), fx=0.25, fy=0.25))
+            downscale = 1 #to view 
+            cv2.imshow('Color', cv2.resize(image, (0,0), fx=downscale, fy=downscale))
             # cv2.imshow('Color', image)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
@@ -145,6 +148,16 @@ def ball_detection(image, debug=False, min_distance=30): # Added min_distance pa
 
 if __name__ == "__main__":
     # cam = camera.RealSenseCamera(1280,720)
-    cam = camera.DepthAICamera(1920,1080)
+    # cam = camera.DepthAICamera(1920,1080)
+    cam = camera.DepthAICamera(640,360)
+    start_time = time.time()
     while True:
-        ball_detection(cam.read()[0], debug=True)    
+        image = cam.read()[0]
+        if image is None:
+            continue
+        else:
+            ball_detection(cam.read()[0], debug=True)    
+            end_time = time.time()
+            fps = 1.0 / (end_time - start_time)
+            start_time = end_time
+            print("FPS: {:.2f}".format(fps))

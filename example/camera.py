@@ -399,9 +399,9 @@ class CalibrateCamera:
 
 # from vex_serial import VexControl
 class DepthAICamera:
-  def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=False):
+  def __init__(self, width=1920, height=1080, object_detection=False, viz= False,  debug_mode=False, fps=30):
     self.debug_mode = debug_mode
-    self.initCamera(width, height, object_detection)
+    self.initCamera(width, height, object_detection, fps)
     self.viz = viz
     # self.robot = VexCortex("/dev/ttyUSB0")
     # self.control = VexControl(self.robot)
@@ -416,7 +416,7 @@ class DepthAICamera:
     # if self.robot:
     #   self.robot.stop()
 
-  def initCamera(self, width, height, object_detection):
+  def initCamera(self, width, height, object_detection, fps):
     self.width = width
     self.height = height
     # Create pipeline
@@ -432,6 +432,7 @@ class DepthAICamera:
       lr_check = True
       self.camRgb = self.pipeline.create(dai.node.ColorCamera)
       self.camRgb.setPreviewSize(width, height)
+      self.camRgb.setFps(fps)
       self.camRgb.setInterleaved(True)
       self.camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
 
@@ -887,7 +888,7 @@ def runCameraCalib(input="Load"):
       print("rsCamToRobot = \n", rsCamToRobot)
 
       # daiCam = DepthAICamera(1280,720, object_detection=False)
-      daiCam = DepthAICamera(1920,1080,object_detection=False)
+      daiCam = DepthAICamera(640,360,object_detection=False)
       daiCamCalib = CalibrateCamera(daiCam)
       # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
       # print("daiCam2LM = \n", daiCam2LM)

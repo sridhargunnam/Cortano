@@ -314,6 +314,14 @@ class VexControl:
         self.theta_integral = 0
         self.search_direction = "clockwise"
     
+    def catch_ball(self):
+      #  self.claw(20, 'open',)
+       self.drive(('forward', 30, 0.8))
+       self.claw(20, 'close', 1, 0.8)
+       self.drive('backward', 30, 0.2)
+       self.update_robot_move_arm(armPosition=ARM_POSITION.high)
+
+
     def printQueueMessage(self, message):
         print(message)
     def setSearchDirection(self, direction):
@@ -345,8 +353,11 @@ class VexControl:
     def stop_drive(self):
         motor_values = 10 * [0]
         self.robot.motors(motor_values)
-    
-    def claw(self, value, action=clawAction.Close, claw_motor=1, drive_time=0.5):
+    def getSensorValues(self):
+        return self.robot.sensors()
+    def claw(self, args):
+        # value, action=clawAction.Close, claw_motor=1, drive_time=0.5
+        value, action, claw_motor, drive_time = args
         motor_values = self.robot.motor
         if action == clawAction.Close:
             motor_values[claw_motor] = -1 * value
@@ -416,30 +427,14 @@ class VexControl:
       dist = np.sqrt(dpos[0] ** 2 + dpos[1] ** 2)
       theta = np.degrees(np.arctan2(dpos[0], dpos[1])) #+ offset
       theta = (theta + 180) % 360 - 180  # [-180, 180]
-      if theta > 0:
-         self.search_direction = "counter_clockwise" # dir need to set reversely, needs to fix it
-      else:
-          self.search_direction = "clockwise"
-      if dist < 10:
-        Pforward = 5
-      else:
-        Pforward = 3
-      if np.abs(theta) < 30:
-        Ptheta = -5
-      else:
-        Ptheta = -1
-      motor_values = [0]*10 #self.robot.motor
+      print(f'dist = {dist}, theta = {theta}')
+      Pforward = 50
+      Ptheta = 5
+      motor_values = self.robot.motor
       motor_values[0] = int(Pforward * dist + Ptheta * theta)
       motor_values[9] = int(-Pforward * dist + Ptheta * theta)
       self.robot.motors(motor_values)
-      print(f'x = {goal[0]}, y = {goal[1]}')
-      print(f'dist = {dist}, theta = {theta}, Pf = {Pforward * dist}, Pt = {Ptheta * theta}')
-      print(f'motor[0] = {motor_values[0]}, motor[9] = {motor_values[9]}')
-      sleep_time = 0.05
-      multiplication_factor = 1 #(np.abs(theta))/90
-      effective_sleep_time = sleep_time * multiplication_factor
-      print(f'effective_sleep_time = {effective_sleep_time}')
-      time.sleep(effective_sleep_time)
+      time.sleep(0.5)
 
     def update_robot_goto(self, goal,left_motor=0, right_motor=9):
         dpos = [goal[0], goal[1]] 
@@ -531,11 +526,12 @@ class VexControl:
 
     def rotateRobot(self, args):#seconds, dir=-1, speed=MINIMUM_INPLACE_ROTATION_SPEED):
         seconds, dir, speed = args
-        for i in range(int(seconds*100)):
-            self.robot.motor[0] = speed * dir
-            self.robot.motor[9] = speed * dir
-            time.sleep(1/100)
-            self.stop_drive()
+        # for i in range(int(seconds*100)):
+        self.robot.motor[0] = speed * dir
+        self.robot.motor[9] = speed * dir
+            # time.sleep(1/100)
+            # self.stop_drive()
+        time.sleep(seconds)
         self.stop_drive()
 
     def testRotate(self, rot_speed=30, rot_time=1, rot_dir=1):
@@ -644,9 +640,9 @@ def keyboard_control(stdscr, control, robot):
         elif char == ord('d'):
             control.rotateRobot([0.05, ROTATION_DIRECTION["clockwise"], MINIMUM_INPLACE_ROTATION_SPEED]) 
         elif char == ord('['):
-            control.claw(20, clawAction.Close, drive_time=1.5)
+            control.claw([20, "close", 1, 0.8])
         elif char == ord(']'):
-            control.claw(20, clawAction.Open, drive_time=1.5)
+            control.claw([20, "open", 1, 1.5])
         elif char == ord('-'):
             control.update_robot_move_arm(armPosition=ARM_POSITION.low)
             control.stop_drive()
@@ -664,12 +660,31 @@ def keyboard_control(stdscr, control, robot):
         if char == curses.KEY_RESIZE:
             stdscr.clear()  # Clear the screen if terminal size changes
 
+def execute_and_respond(client_socket, control, command, args):
+    # This function will execute the command and send the response back to the client
+    try:
+        print(f"Executing command: {command} with args: {args}")
+        if callable(getattr(control, command)):
+            method = getattr(control, command)
+            result = method(args) if args else method()  # Execute the method
+            time.sleep(3)
+            result = [[control.robot.sensors()[0], control.robot.sensors()[1], control.robot.sensors()[1]], result]
+            response = json.dumps({'status': 'success', 'result': result})
+        else:
+            response = json.dumps({'status': 'error', 'message': 'Command not callable'})
+    except Exception as e:
+        response = json.dumps({'status': 'error', 'message': str(e)})
+
+    client_socket.send(response.encode())
+    client_socket.close()
+
 def main():
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
     control.stop_drive()
     # exit(0)
     manual_control = True
+    # manual_control = False
     if manual_control:
       curses.wrapper(keyboard_control, control, robot)
     #
@@ -694,35 +709,24 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     latest_command = None
-
-
     while True:
+        # print sensor values 
+        print("sensor values = ", robot.sensors())
         ready = select.select([server_socket], [], [], 0.1)  # Non-blocking select
         if ready[0]:
             client_socket, addr = server_socket.accept()
             message = client_socket.recv(1024)
-            client_socket.close()
-
+            # client_socket.close()
             # Update the latest command
             latest_command = json.loads(message)
-
-        # Check and execute only the latest command
         if latest_command:
             command = latest_command['command']
             args = latest_command.get('args', [])
             print(f"Executing command: {command} with args: {args}")
-            if hasattr(control, command):
-                method = getattr(control, command)
-                if callable(method):
-                    if args is None:
-                        method()
-                    else:
-                      method(args)
-                    latest_command = None  # Reset after execution
-                else:
-                    print(f"Command {command} is not callable")
-            else:
-                print(f"Unknown command: {command}")
+            execute_and_respond(client_socket, control, command, args)
+            latest_command = None  # Reset after execution
+        # Check and execute only the latest command
+
 
 
     #untested code
