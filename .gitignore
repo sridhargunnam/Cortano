@@ -1,3 +1,7 @@
+data/game_data_point/color_data/**
+data/game_data_point/depth_data/**
+data/game_data_point/accel_data.csv
+data/game_data_point/gyro_data.csv
 debug_*.ps 
 debug_*.pnm 
 example/calib
