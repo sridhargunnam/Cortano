@@ -6,7 +6,7 @@ from multiprocessing import Process, Queue, Array, RawValue, Value
 from ctypes import c_double, c_bool, c_int
 import socket 
 import json
-
+import copy
 
 ROTATION_DIRECTION = {
     "counter_clockwise": 1,
@@ -288,6 +288,22 @@ class VexCortex:
     sensor_values = self._sensor_values._data[:num_sensors]
     self._sensor_values._data.release()
     return sensor_values
+  
+  def sensors_external(self):
+    """Get the sensor values
+
+    Returns:
+        List[int]: sensor values
+    """
+    self._sensor_values._data.acquire()
+    num_sensors = self._num_sensors.value
+    sensor_values = self._sensor_values._data[:num_sensors]
+    self._sensor_values._data.release()
+    #make a deep copy of the sensor values to return 
+    return_sensor_values = []
+    for sensor_value in sensor_values:
+      return_sensor_values.append(sensor_value)
+    return return_sensor_values
 
 
 import time
@@ -343,12 +359,13 @@ class VexControl:
           left_drive = 0
           right_drive = 0
         motor_values = self.robot.motor
-        for i in range(max(int(drive_time * 10),1)):
-          motor_values[left_motor] = left_drive * speed
-          motor_values[right_motor] = right_drive * speed
-          self.robot.motors(motor_values)
-          time.sleep(1/10)
-          self.stop_drive()
+        # for i in range(max(int(drive_time * 10),1)):
+        motor_values[left_motor] = left_drive * speed
+        motor_values[right_motor] = right_drive * speed
+        self.robot.motors(motor_values)
+          # time.sleep(1/10)
+        time.sleep(drive_time)
+        self.stop_drive()
     
     def stop_drive(self):
         motor_values = 10 * [0]
@@ -373,18 +390,21 @@ class VexControl:
             print("ball missed")
             return 0
 
-    def update_robot_move_arm(self, armPosition=ARM_POSITION.low, motor=2, error=20):
+    def update_robot_move_arm(self, args):
+      # armPosition=ARM_POSITION.low, motor=2, error=20
+      print("updating robot move arm", args)
+      armPosition, motor, error = args
       POTENTIOMETRIC_SENSOR_MAX_VALUE = 2582
       POTENTIOMETRIC_SENSOR_MIN_VALUE = 1587
-      if armPosition == ARM_POSITION.low:
+      if armPosition == "low":
         goal = POTENTIOMETRIC_SENSOR_MIN_VALUE
-      elif armPosition == ARM_POSITION.mid:
+      elif armPosition == "mid":
         goal = (POTENTIOMETRIC_SENSOR_MAX_VALUE + POTENTIOMETRIC_SENSOR_MIN_VALUE) / 2
-      elif armPosition == ARM_POSITION.high:
+      elif armPosition == "high":
         goal = POTENTIOMETRIC_SENSOR_MAX_VALUE
       # don't take less then 5 seconds to move the arm
       start_time = time.time()
-      while time.time() - start_time < 5:
+      while True:
         try:
           sensor_values = self.robot.sensors()
           if len(sensor_values) == 0:
@@ -399,7 +419,7 @@ class VexControl:
           self.robot.motor[motor] = 50
         if np.abs(sensor_values[0] - goal) < error:
           break
-        time.sleep(0.1)
+        # time.sleep(0.1)
       # self.robot.motor[motor] =  30
       if armPosition == 'high' or armPosition == 'mid':
         self.robot.motor[motor] =  30
@@ -644,10 +664,10 @@ def keyboard_control(stdscr, control, robot):
         elif char == ord(']'):
             control.claw([20, "open", 1, 1.5])
         elif char == ord('-'):
-            control.update_robot_move_arm(armPosition=ARM_POSITION.low)
+            control.update_robot_move_arm([ARM_POSITION.low, 2, 20])
             control.stop_drive()
         elif char == ord('='):  # Note: '+' is usually combined with shift, so '=' is used
-            control.update_robot_move_arm(armPosition=ARM_POSITION.high)
+            control.update_robot_move_arm([ARM_POSITION.high, 2, 20])
         elif char == ord('q'):
             control.stop_drive()
             robot.stop()
@@ -709,9 +729,22 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     latest_command = None
+    error_margin = [5, 0,0]
     while True:
-        # print sensor values 
-        print("sensor values = ", robot.sensors())
+      previous_sensor_values = robot.sensors_external()
+      if len(previous_sensor_values) > 0:
+        print("sensor values = ", previous_sensor_values)
+        break
+
+    while True:
+        time.sleep(0.1)
+        current_sensor_values = robot.sensors_external()
+        if len(current_sensor_values) > 0 :
+          all_errors_within_limit = all(abs(a - b) <= c for a, b, c in zip(previous_sensor_values, current_sensor_values, error_margin))
+          if not all_errors_within_limit:
+              print("sensor values = ", current_sensor_values)
+              previous_sensor_values = current_sensor_values
+        
         ready = select.select([server_socket], [], [], 0.1)  # Non-blocking select
         if ready[0]:
             client_socket, addr = server_socket.accept()

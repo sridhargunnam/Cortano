@@ -241,12 +241,9 @@ def main():
 
     if True:
       if len(detections) > 0 and ENABLE_RS_BALL_DETECTION:
-          # get the center of the bounding box, and average of the width and height of the bounding box, and calculate the x, y with respect to the field
-          # this is the center of the object
           closest_ball_pos_robot = None
           closest_ball_XY = None
           for detection in detections:
-            # detection = result[i]
             center_x = detection['center_x']
             center_y = detection['center_y']
             width = detection['width']
@@ -268,29 +265,24 @@ def main():
             # print(f'Ball w.r.t to camera x = {x}, y = {y}, z = {z}')
             robot2cam = np.linalg.inv(cam2robotRS)
             ball_pos_robot = robot2cam @ np.array([x, y, z, 1])
-            xrange = (-3, +3)
-            yrange = (5, 20)
+            xrange = (-3, 3)
+            yrange = (0, 20)
             zrage = (-3, 10)
             # check if the ball is in the range of the robot to catch it
             if ball_pos_robot[0] > xrange[0] and ball_pos_robot[0] < xrange[1] and ball_pos_robot[1] > yrange[0] and ball_pos_robot[1] < yrange[1] and ball_pos_robot[2] > zrage[0] and ball_pos_robot[2] < zrage[1]:
-              print("ball can be caught")
-              # send_command("catch_ball", None)
-              # self.drive(('forward', 30, 0.8))
-              # self.claw(20, 'close', 1, 0.8)
-              # self.drive('backward', 30, 0.2)
-              # self.update_robot_move_arm(armPosition=ARM_POSITION.high)
-              # 
+              print("ball can be caught")             
               send_command('drive', ['forward', 30, 0.8])
               # time.sleep(2)
-              send_command('claw', [20, 'close', 1, 0.8])
+              send_command('claw', [20, 'close', 1, 1])
               # time.sleep(2)
               send_command('drive', ['backward', 30, 0.2])
               # time.sleep(2)
-              send_command('update_robot_move_arm', [1])
-              # time.sleep(2)
-
-            print(f'Ball w.r.t to robot x = {ball_pos_robot[0]}, y = {ball_pos_robot[1]}, z = {ball_pos_robot[2]}')
-            send_command('update_robot_gotoV2', [[ball_pos_robot[0], ball_pos_robot[1]], 90])
+                # armPosition=ARM_POSITION.low, motor=2, error=20
+              send_command('update_robot_move_arm', ['high', 2, 20])
+              # time.sleep(6)
+            else:
+              print(f'Ball w.r.t to robot x = {ball_pos_robot[0]}, y = {ball_pos_robot[1]}, z = {ball_pos_robot[2]}')
+              send_command('update_robot_gotoV2', [[ball_pos_robot[0], ball_pos_robot[1]], 90])
 
             if Robot2Field is not None:
               ball2Field = Robot2Field @ ball_pos_robot
