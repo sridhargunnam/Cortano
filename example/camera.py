@@ -853,6 +853,8 @@ class DepthAICamera:
               self.robot.stop()
               exit(0)
 
+
+
   # TODO hack untill multiprocess is working
   def goToGoalPosition(self):
        print("going to self.ballY = ", self.ballY)
@@ -877,59 +879,134 @@ class DepthAICamera:
 import config
 cfg = config.Config()
 # SIZE_OF_CALIBRATION_TAG = 5 #cm
+import numpy as np
+import os
+import shutil
+from datetime import datetime
 
-def runCameraCalib(input="Load"):
+def backup_calib_file():
+    if not os.path.exists('calib.txt'):
+        return
+    if not os.path.exists('calib_log'):
+        os.makedirs('calib_log')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    shutil.copy('calib.txt', f'calib_log/calib_{timestamp}.txt')
+
+
+def derive_metrics_from_logs(log_dir, camera_type):
+    x0_list = []
+    y0_list = []
+    z0_list = []
+
+    for filename in os.listdir(log_dir):
+        if filename.startswith("calib_") and filename.endswith(".txt"):
+            with open(os.path.join(log_dir, filename), "r") as f:
+                rsCamConfig = f.readline().strip().split(',')
+                daiCamConfig = f.readline().strip().split(',')
+                calib = np.loadtxt(f, delimiter=",")
+            
+            if camera_type == "rsCamToRobot":
+                camToRobot = calib[:4, :]
+            elif camera_type == "daiCamToRobot":
+                camToRobot = calib[4:, :]
+            else:
+                continue
+
+            x0_list.append(camToRobot[0, -1])
+            y0_list.append(camToRobot[1, -1])
+            z0_list.append(camToRobot[2, -1])
+
+    if x0_list and y0_list and z0_list:
+        x0_array = np.array(x0_list)
+        y0_array = np.array(y0_list)
+        z0_array = np.array(z0_list)
+        
+        mean_x0 = np.mean(x0_array)
+        std_x0 = np.std(x0_array)
+        mean_y0 = np.mean(y0_array)
+        std_y0 = np.std(y0_array)
+        mean_z0 = np.mean(z0_array)
+        std_z0 = np.std(z0_array)
+
+        print(f"{camera_type} Metrics:")
+        print(f"x0 - Mean: {mean_x0}, Standard Deviation: {std_x0}")
+        print(f"y0 - Mean: {mean_y0}, Standard Deviation: {std_y0}")
+        print(f"z0 - Mean: {mean_z0}, Standard Deviation: {std_z0}")
+    else:
+        print(f"No valid data found for {camera_type}.")
+
+def runCameraCalib(input="read"):
   np.set_printoptions(precision=2, suppress=True)
-  if input == "calib_setup1": # dai and rs camera have common field of vie wand are looking at the same tag
-      print("Running Camera Calibration")
-      rsCam = RealSenseCamera(640,360)
-      rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
-      print("rsCamToRobot = \n", rsCamToRobot)
+  if input == "calib_setup1": # dai and rs camera have common field of view and are looking at the same tag
+    print("Running Camera Calibration")
+    rsCam = RealSenseCamera(640,360)
+    rsCamCalib = CalibrateCamera(rsCam)
+    rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
+    print("rsCamToRobot = \n", rsCamToRobot)
 
-      # daiCam = DepthAICamera(1280,720, object_detection=False)
-      daiCam = DepthAICamera(640,360,object_detection=False)
-      daiCamCalib = CalibrateCamera(daiCam)
-      # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
-      # print("daiCam2LM = \n", daiCam2LM)
-      daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
-      print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
-      np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
-  elif input == "Load":
-      # load the camera calibration matrices from the file "calib.txt"
-      print("loading th camera calibration from file")
-      calib = np.loadtxt("calib.txt", delimiter=",")
-      rsCamToRobot = calib[:4,:]
-      daiCamToRobot = calib[4:,:]
-      print("rsCamToRobot = \n", rsCamToRobot)
-      print("daiCamToRobot = \n", daiCamToRobot)
-  elif input == "calib_setup2":
-      print("Running Camera Calibration")
-      rsCam = RealSenseCamera(1280, 720)
-      rsCamCalib = CalibrateCamera(rsCam)
-      rsCamToRobot =   rsCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0,viz=True)
-      print("rsCamToRobot = \n", rsCamToRobot)
-
-
-      input = input("Press c  to continue calibrating dai camera or q to quit")
-      if input == "q":
-        np.savetxt("calib.txt", np.concatenate((rsCamToRobot, np.loadtxt("calib.txt", delimiter=",")[4:,:]), axis=0), delimiter=",")     
-        exit(0)
-      elif input == "c":
-        print("continuing")
-        # daiCam = DepthAICamera(1280,720, object_detection=False)
-        daiCam = DepthAICamera(1920,1080,object_detection=False)
-        daiCamCalib = CalibrateCamera(daiCam)
-        # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
-        # print("daiCam2LM = \n", daiCam2LM)
-        daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
-        print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later loading into np array
-        np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
+    # daiCam = DepthAICamera(1280,720, object_detection=False)
+    daiCam = DepthAICamera(640,360,object_detection=False)
+    daiCamCalib = CalibrateCamera(daiCam)
+    # daiCam2LM = daiCamCalib.calibrateCameraWrtLandMark(tag_size=SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+    # print("daiCam2LM = \n", daiCam2LM)
+    daiCamToRobot =   daiCamCalib.getCamera2Robot(tag_size=cfg.SIZE_OF_CALIBRATION_TAG, tag_id=0, viz=True)
+    print("daiCamToRobot = \n", daiCamToRobot)      #save both the calibration matrices to a file "calib.txt" for later reading into np array
+    # np.savetxt("calib.txt", np.concatenate((rsCamToRobot, daiCamToRobot), axis=0), delimiter=",")     
+    # Save both the calibration matrices and the camera configurations to a file "calib.txt"
+    backup_calib_file()
+    with open("calib.txt", "w") as f:
+        f.write(f"{rsCam.width},{rsCam.height}\n")
+        f.write(f"{daiCam.width},{daiCam.height}\n")
+        np.savetxt(f, rsCamToRobot, delimiter=",")
+        np.savetxt(f, daiCamToRobot, delimiter=",")
+  elif input == "read":
+    # read the camera calibration matrices from the file "calib.txt"
+    print("reading the camera calibration from file")
+    with open("calib.txt", "r") as f:
+        rsCamConfig = f.readline().strip().split(',')
+        daiCamConfig = f.readline().strip().split(',')
+        rsCamWidth, rsCamHeight = int(rsCamConfig[0]), int(rsCamConfig[1])
+        daiCamWidth, daiCamHeight = int(daiCamConfig[0]), int(daiCamConfig[1])
+        calib = np.loadtxt(f, delimiter=",")
+    
+    rsCamToRobot = calib[:4, :]
+    daiCamToRobot = calib[4:, :]
+    print("rsCamToRobot = \n", rsCamToRobot)
+    print("daiCamToRobot = \n", daiCamToRobot)
+    print(f"rsCam configuration: width={rsCamWidth}, height={rsCamHeight}")
+    print(f"daiCam configuration: width={daiCamWidth}, height={daiCamHeight}")   
+    derive_metrics_from_logs("calib_log", "rsCamToRobot")
+    derive_metrics_from_logs("calib_log", "daiCamToRobot")
   else:
-      print("incorrect argument")
+    print("incorrect argument")
   
   return rsCamToRobot, daiCamToRobot
 
+def read_calibration_data():
+    try:
+        with open("calib.txt", "r") as f:
+            rsCamConfig = f.readline().strip().split(',')
+            daiCamConfig = f.readline().strip().split(',')
+            rsCamWidth, rsCamHeight = int(rsCamConfig[0]), int(rsCamConfig[1])
+            daiCamWidth, daiCamHeight = int(daiCamConfig[0]), int(daiCamConfig[1])
+            calib = np.loadtxt(f, delimiter=",")
+        
+        return {
+            'rsCamWidth': rsCamWidth,
+            'rsCamHeight': rsCamHeight,
+            'daiCamWidth': daiCamWidth,
+            'daiCamHeight': daiCamHeight,
+            'calib': calib,
+            'rsCamToRobot': calib[:4, :],
+            'daiCamToRobot': calib[4:, :]
+        }
+    except FileNotFoundError:
+        print("Error: The file 'calib.txt' was not found.")
+        raise
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise
+    
 import time
 from multiprocessing import Process  
 
@@ -974,28 +1051,16 @@ def goToGoalPosition():
         time.sleep(1)
       
 import landmarks as lm
+import argparse
 if __name__ == "__main__":
   np.set_printoptions(precision=2, suppress=True)
-  if len(sys.argv) > 1:
-    if sys.argv[1] == "calib_setup1":
-      runCameraCalib("calib_setup1")
-      exit(0)
-    elif sys.argv[1] == "calib_setup2":
-      runCameraCalib("calib_setup2")
-      exit(0)
-    elif sys.argv[1] == "calib":
-      runCameraCalib("calib_setup1")
-      exit(0)
-    else:
-      print("incorrect argument")
-      exit(0)
-
-  # for tagid, pose in lm.map_apriltag_poses_home:
-  #   print("tagid = ", tagid)
-  #   print("pose = ", pose)
+  parser = argparse.ArgumentParser(description="Camera scripts which includes Calibration, and other functions like object detection")
+  parser.add_argument("command", choices=["calib_setup1", "read"], help="Command to run")
+  args = parser.parse_args()
+  runCameraCalib(args.command)
 
   #create a queue to store the timestamp, x,y,z position, and confidence score, and pass it to the camera object 
-  daiObjectDetection()
+  # daiObjectDetection()
   # daiTagPose()
   # create multiple process, one for object detection and one for robot control
   # p1 = Process(target=daiObjectDetection, args=())
@@ -1006,7 +1071,7 @@ if __name__ == "__main__":
   # p1.join()
   # p2.join()
   # daiCam.runObjectDetection()
-  # rsCamToRobot, daiCamToRobot = runCameraCalib("Load")
+  # rsCamToRobot, daiCamToRobot = runCameraCalib("read")
   # print("rsCamToRobot = \n", rsCamToRobot)
 
 

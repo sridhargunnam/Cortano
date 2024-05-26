@@ -396,6 +396,7 @@ class VexControl:
       armPosition, motor, error = args
       POTENTIOMETRIC_SENSOR_MAX_VALUE = 2582
       POTENTIOMETRIC_SENSOR_MIN_VALUE = 1587
+      goal = POTENTIOMETRIC_SENSOR_MIN_VALUE
       if armPosition == "low":
         goal = POTENTIOMETRIC_SENSOR_MIN_VALUE
       elif armPosition == "mid":
