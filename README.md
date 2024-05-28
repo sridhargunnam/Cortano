@@ -144,3 +144,9 @@ if __name__ == "__main__":
 ```
 
 That's it!
+
+
+Run command:
+cd /home/nvidia/wsp/clawbot/Cortano 
+activate
+python3 example/pub_sub_with_events.py |& tee run.log 
