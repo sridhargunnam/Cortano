@@ -101,20 +101,23 @@ class RealSenseCamera:
     Returns:
         Tuple[bool, np.ndarray, np.ndarray]: status, color image, depth image
     """
-    if self.pipeline:
-      try:
-        frames = self.pipeline.wait_for_frames()
-        aligned_frames = self.align.process(frames)
-        color_frame = aligned_frames.get_color_frame()
-        depth_frame = aligned_frames.get_depth_frame()
-        color_image = np.asanyarray(color_frame.get_data())
-        depth_image = np.asanyarray(depth_frame.get_data())
-        return True, color_image, depth_image
-      except:
-        if self.pipeline:
-          self.pipeline.stop()
-          self.pipeline = None
-
+    retries = 5
+    while retries > 0:
+        try:
+            frames = self.pipeline.wait_for_frames()
+            aligned_frames = self.align.process(frames)
+            color_frame = aligned_frames.get_color_frame()
+            depth_frame = aligned_frames.get_depth_frame()
+            if not color_frame or not depth_frame:
+                raise ValueError("Empty frames received")
+            
+            color_image = np.asanyarray(color_frame.get_data())
+            depth_image = np.asanyarray(depth_frame.get_data())
+            return True, color_image, depth_image
+        except Exception as e:
+            retries -= 1
+            print(f"Error capturing frames: {e}, retries left: {retries}")
+            time.sleep(0.1)  # brief pause before retrying
     return False, None, None
 
   def __del__(self):
@@ -959,6 +962,10 @@ def runCameraCalib(input="read"):
         f.write(f"{daiCam.width},{daiCam.height}\n")
         np.savetxt(f, rsCamToRobot, delimiter=",")
         np.savetxt(f, daiCamToRobot, delimiter=",")
+        # Save RealSense camera intrinsics
+        fx, fy, cx, cy, width, height, depth_scale = rsCam.getCameraIntrinsics()
+        f.write(f"{fx},{fy},{cx},{cy},{width},{height},{depth_scale}\n")
+
   elif input == "read":
     # read the camera calibration matrices from the file "calib.txt"
     print("reading the camera calibration from file")
@@ -967,14 +974,15 @@ def runCameraCalib(input="read"):
         daiCamConfig = f.readline().strip().split(',')
         rsCamWidth, rsCamHeight = int(rsCamConfig[0]), int(rsCamConfig[1])
         daiCamWidth, daiCamHeight = int(daiCamConfig[0]), int(daiCamConfig[1])
-        calib = np.loadtxt(f, delimiter=",")
-    
-    rsCamToRobot = calib[:4, :]
-    daiCamToRobot = calib[4:, :]
+        rsCamToRobot = np.loadtxt(f, max_rows=4, delimiter=",")
+        daiCamToRobot = np.loadtxt(f, max_rows=4, delimiter=",")
+        intrinsicsRs = f.readline().strip().split(',')
+        fx, fy, cx, cy, width, height, depth_scale = map(float, intrinsicsRs)
     print("rsCamToRobot = \n", rsCamToRobot)
     print("daiCamToRobot = \n", daiCamToRobot)
     print(f"rsCam configuration: width={rsCamWidth}, height={rsCamHeight}")
     print(f"daiCam configuration: width={daiCamWidth}, height={daiCamHeight}")   
+    print(f"RealSense Camera Intrinsics: fx={fx}, fy={fy}, cx={cx}, cy={cy}, width={width}, height={height}, depth_scale={depth_scale}")
     derive_metrics_from_logs("calib_log", "rsCamToRobot")
     derive_metrics_from_logs("calib_log", "daiCamToRobot")
   else:
@@ -989,16 +997,26 @@ def read_calibration_data():
             daiCamConfig = f.readline().strip().split(',')
             rsCamWidth, rsCamHeight = int(rsCamConfig[0]), int(rsCamConfig[1])
             daiCamWidth, daiCamHeight = int(daiCamConfig[0]), int(daiCamConfig[1])
-            calib = np.loadtxt(f, delimiter=",")
-        
+            rsCamToRobot = np.loadtxt(f, max_rows=4, delimiter=",")
+            daiCamToRobot = np.loadtxt(f, max_rows=4, delimiter=",")
+            intrinsicsRs = f.readline().strip().split(',')
+            fx, fy, cx, cy, width, height, depth_scale = map(float, intrinsicsRs)
         return {
             'rsCamWidth': rsCamWidth,
             'rsCamHeight': rsCamHeight,
             'daiCamWidth': daiCamWidth,
             'daiCamHeight': daiCamHeight,
-            'calib': calib,
-            'rsCamToRobot': calib[:4, :],
-            'daiCamToRobot': calib[4:, :]
+            'rsCamToRobot': rsCamToRobot,
+            'daiCamToRobot': daiCamToRobot,
+            'intrinsicsRs': {
+                'fx': fx,
+                'fy': fy,
+                'cx': cx,
+                'cy': cy,
+                'width': width,
+                'height': height,
+                'depth_scale': depth_scale
+            }
         }
     except FileNotFoundError:
         print("Error: The file 'calib.txt' was not found.")
