@@ -347,10 +347,10 @@ class VexControl:
 
     def send_to_XY(self, target_x, target_y, left_motor=0, right_motor=9):
         Kp_dist = 0.5
-        Ki_dist = 0.0
+        Ki_dist = 0.05
         Kd_dist = 0.0  # 0.1
-        Kp_theta = 1.5
-        Ki_theta = 0.0
+        Kp_theta = 2.5
+        Ki_theta = 0.2
         Kd_theta = 0.0  # 0.1
 
         # Compute distance and angle to target
