@@ -180,16 +180,16 @@ def main():
                     elif (-8 <= x <= 8 and y <= 20):
                         entering_ball_hold_state = True
                         print("Position is within the grab range. Initiating grab command")
-                        control.drive(['forward', 30, 1])
-                        control.rotateRobot([0.01, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
-                        control.rotateRobot([0.01, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                        control.drive(['forward', 30, 1.2])
+                        control.rotateRobot([0.02, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                        control.rotateRobot([0.02, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
                         control.claw([20, "open", 1, 0.8])
                         control.claw([20, "open", 1, 0.8])
                         control.claw([20, "close", 1, 0.8])
                         control.claw([20, "close", 1, 0.8])
                         control.drive(['backward', 30, 0.7])
                         if control.robot.sensors()[2] == 1:
-                            print("ball held detected")
+                            print("Hurray!! ball held detected")
                     return entering_ball_hold_state
                     # # armPosition=ARM_POSITION.low, motor=2, error=20
                     # send_command('update_robot_move_arm', ['high', 2, 20])
