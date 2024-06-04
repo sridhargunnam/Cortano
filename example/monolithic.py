@@ -104,15 +104,19 @@ def main():
     cam = camera.RealSenseCamera(640, 360)
     objectDetectionMethod = ObjectDetectionML()
     objectDetectionMethodAlternate = ObjectDetectionOpenCV()
-    enable_opencv_when_ML_is_not_available = True 
+    enable_opencv_when_ML_is_not_available = False 
     calib_data = camera.read_calibration_data()
     intrinsicsRs = calib_data['intrinsicsRs']
     rsCamToRobot = calib_data['rsCamToRobot']
     robot = vex.VexCortex("/dev/ttyUSB0")
     control = vex.VexControl(robot)
     control.stop_drive()
+    control.claw([20, "open", 1, 0.8])
+    control.claw([20, "open", 1, 0.8])
+    prev_object_pos_wrt_robot = None
     random_dir = 'backward'
     drive_time = 0.05
+    entering_ball_hold_state = False
     while True:
         drive_time = 0.05
         try:
@@ -124,38 +128,77 @@ def main():
             detections = objectDetectionMethod.detect_objects(color_frame)
             if len(detections) == 0 and enable_opencv_when_ML_is_not_available:
                 detections = objectDetectionMethodAlternate.detect_objects(color_frame)
-            # while len(detections) == 0:
-            #     print("objects not found")
-            #     control.drive([random_dir, 30, drive_time])
-            #     if random_dir == 'backward':
-            #         random_dir = 'forward'
-            #     else:
-            #         random_dir = 'backward'
+            if len(detections) == 0:
+                print("No detections, rotating clockwise.")
+                control.rotateRobot([0.05, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                detections = objectDetectionMethod.detect_objects(color_frame)
+
+            if len(detections) == 0:
+                print("No detections, rotating counterclockwise.")
+                control.rotateRobot([0.05, vex.ROTATION_DIRECTION["counter_clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                detections = objectDetectionMethod.detect_objects(color_frame)
+
+            if len(detections) == 0:
+                print("No detections, moving forward.")
+                control.drive(['forward', 30, 0.7])
+                detections = objectDetectionMethod.detect_objects(color_frame)
+
+            if len(detections) == 0:
+                print("No detections, moving backward.")
+                control.drive(['backward', 30, 0.7])
+                detections = objectDetectionMethod.detect_objects(color_frame)
+
+          
+
+            # if len(detections) == 0:
+            #     print("No detections, rotating clockwise until we find an object.")
+            #     # while
+            #     control.rotateRobot([0.05, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
             #     detections = objectDetectionMethod.detect_objects(color_frame)
-            #     drive_time += 0.01
+                
                 
             for detection in detections:
                 coordinates = get_object_wrt_robot(depth_frame, intrinsicsRs, detection)
                 robot2rsCam = np.linalg.inv(rsCamToRobot)
                 object_pos_wrt_robot = robot2rsCam @ np.array([coordinates['x'], coordinates['y'], coordinates['z'], 1])
+                prev_object_pos_wrt_robot = object_pos_wrt_robot
                 if object_pos_wrt_robot[0] == 0 and object_pos_wrt_robot[2] == 0:
                     print("Abnormality in NN detections x=0, y=0")
                     continue
                 else:
                     print(f"object_pos_wrt_robot x: {object_pos_wrt_robot[0]:.2f}, y: {object_pos_wrt_robot[1]:.2f}, z: {object_pos_wrt_robot[2]:.2f}")
                     # Define the function to send the position to control
-                def send_position_if_valid(x,y):
+                def send_position_if_valid(x,y, entering_ball_hold_state):
                     # x, y = object_pos_wrt_robot
-
                     # Check if x is in the range of -5 to 5 and y is in the range of 15 to 20
-                    if not (-5 <= x <= 5 and y >= 5):
+                    if not (-8 <= x <= 8 and y <= 20):
+                        if entering_ball_hold_state:
+                            entering_ball_hold_state = False
+                            control.claw([20, "open", 1, 0.8])
+                            control.claw([20, "open", 1, 0.8])
                         control.send_to_XY(x, y)
-                    else:
-                        print("Position is within the forbidden range, command not sent.")
+                    elif (-8 <= x <= 8 and y <= 20):
+                        entering_ball_hold_state = True
+                        print("Position is within the grab range. Initiating grab command")
+                        control.drive(['forward', 30, 1])
+                        control.rotateRobot([0.01, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                        control.rotateRobot([0.01, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                        control.claw([20, "open", 1, 0.8])
+                        control.claw([20, "open", 1, 0.8])
+                        control.claw([20, "close", 1, 0.8])
+                        control.claw([20, "close", 1, 0.8])
+                        control.drive(['backward', 30, 0.7])
+                        if control.robot.sensors()[2] == 1:
+                            print("ball held detected")
+                    return entering_ball_hold_state
+                    # # armPosition=ARM_POSITION.low, motor=2, error=20
+                    # send_command('update_robot_move_arm', ['high', 2, 20])
+                    # # send_command('update_robot_move_arm', ['low', 2, 20])
+                    # send_command("stop_drive", None)
 
                     # Example usage
                     # object_pos_wrt_robot = [3, 18]  # Example position
-                send_position_if_valid(object_pos_wrt_robot[0], object_pos_wrt_robot[1])
+                entering_ball_hold_state = send_position_if_valid(object_pos_wrt_robot[0], object_pos_wrt_robot[1], entering_ball_hold_state)
 
                 # control.send_to_XY(object_pos_wrt_robot[0], object_pos_wrt_robot[1])
         except Exception as e:

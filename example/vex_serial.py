@@ -352,7 +352,7 @@ class VexControl:
           Ki_dist = 0.0
           Kd_dist = 0.000  # 0.1
         else:
-          Kp_dist = 5
+          Kp_dist = 6
           Ki_dist = 0.01
           Kd_dist = 0.00  # 0.1
         Kp_theta = 10
@@ -496,13 +496,14 @@ class VexControl:
         if sensor_values[0] > goal:
           self.robot.motor[motor] = -15
         else:
-          self.robot.motor[motor] = 50
+          self.robot.motor[motor] = 60
         if np.abs(sensor_values[0] - goal) < error:
           break
         # time.sleep(0.1)
       # self.robot.motor[motor] =  30
       if armPosition == 'high' or armPosition == 'mid':
-        self.robot.motor[motor] =  30
+        self.robot.motor[motor] =  10
+        time.sleep(0.5)
       
     def update_robot_gotoV1(self, goal):
       dpos = [goal[0], goal[1]] 
@@ -755,7 +756,7 @@ def keyboard_control(stdscr, control, robot):
 
 
         time.sleep(0.1)
-        control.stop_drive()
+        # control.stop_drive()
 
         if char == curses.KEY_RESIZE:
             stdscr.clear()  # Clear the screen if terminal size changes
