@@ -346,12 +346,18 @@ class VexControl:
         self.search_direction = direction
 
     def send_to_XY(self, target_x, target_y, left_motor=0, right_motor=9):
-        Kp_dist = 0.5
-        Ki_dist = 0.05
-        Kd_dist = 0.0  # 0.1
-        Kp_theta = 2.5
-        Ki_theta = 0.2
-        Kd_theta = 0.0  # 0.1
+        disable_Kdist = False
+        if disable_Kdist:
+          Kp_dist = 0.0
+          Ki_dist = 0.0
+          Kd_dist = 0.000  # 0.1
+        else:
+          Kp_dist = 5
+          Ki_dist = 0.01
+          Kd_dist = 0.00  # 0.1
+        Kp_theta = 10
+        Ki_theta = 0.01
+        Kd_theta = 0.000  # 0.1
 
         # Compute distance and angle to target
         dx = target_x - self.x
@@ -412,7 +418,7 @@ class VexControl:
 
         # Sleep for a short duration to simulate control loop timing
         # exit(0)
-        time.sleep(0.1)  # Adjust the sleep time as needed
+        time.sleep(0.01)  # Adjust the sleep time as needed
 
         # Stop the robot
         self.stop_drive()
