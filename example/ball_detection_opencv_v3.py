@@ -93,7 +93,8 @@ def ball_detection(image, depth, intrinsicsRS, rsCamToRobot, debug=True, min_dis
     return result
 
 def main():
-    cam = camera.RealSenseCamera(640, 360)
+    # cam = camera.RealSenseCamera(640, 360)
+    cam = camera.DepthAICamera(640, 360)
 
     calib_data = camera.read_calibration_data()
     intrinsicsRS = calib_data['intrinsicsRs']
