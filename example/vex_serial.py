@@ -1046,6 +1046,7 @@ def keyboard():
     # signal.signal(signal.SIGTERM, signal_handler)
     control.stop_drive()
     robot.stop()
+
 import time
 import logging 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -1060,18 +1061,23 @@ class RobotControl:
         self.ball_held = False
 
     def rotate_robot(self, value):
+        max_speed = 80
+        min_speed = 50
+        measurement_range = 128
+        multi_factor = (max_speed-min_speed)/measurement_range
         if value > 160:
-            speed = min(30 + abs(value - 128), 127)
             direction = -1  # counterclockwise
-            logging.debug(f"Rotating counter clkwise with value: {speed}")
+            logging.debug(f"Rotating counter clkwise")
         elif value < 100:
-            speed = min(30 + abs(128 - value), 127)
             direction = 1  # clockwise 
-            logging.debug(f"Rotating clkwise with value: {speed}")
+            logging.debug(f"Rotating clkwise")
         else:
            direction = 0
-           speed = 0
+          #  speed = 0
+        
+        speed = min(min_speed + abs(measurement_range - value)*multi_factor, max_speed)
 
+        speed = int(speed)
         left_motor_speed = direction * speed
         right_motor_speed = direction * speed
 
@@ -1082,19 +1088,23 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def drive(self, value):
+        max_speed = 80
+        min_speed = 50
+        measurement_range = 128
+        multi_factor = (max_speed-min_speed)/measurement_range
         # pressing down = 255, up = 0
         if value > 160:
-            speed = min( (30 + abs(128 - value)), 60)
             direction = -1  # backward
-            logging.debug(f"Driving backward with value: {speed}")
+            logging.debug(f"Driving backward")
         elif value < 100:
-            speed = min( (30 + abs(128 - value)), 60)
             direction = 1  # forward
-            logging.debug(f"Driving forward with value: {speed}")
+            logging.debug(f"Driving forward")
         else:
            direction = 0
            speed = 0
 
+        speed = min(min_speed + abs(measurement_range - value)*multi_factor, max_speed)
+        speed = int(speed)
         left_drive = direction 
         right_drive = -1 * direction
         left_motor_speed = left_drive * speed
@@ -1137,7 +1147,7 @@ class RobotControl:
             logging.debug(f"Moving arm down: {speed}")
         else:
            if self.ball_held: #continue keeping it up
-              speed = 40
+              speed = 30
               direction = 1  # up
            else:
                direction = -1 
@@ -1155,8 +1165,6 @@ class RobotControl:
         motor_values[self.arm_motor] = 0
         motor_values[self.claw_motor] = 0
         self.robot.motors(motor_values)
-
-
 
 
 import evdev
