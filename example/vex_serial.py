@@ -1059,31 +1059,17 @@ class RobotControl:
         self.claw_motor = 1
 
     def rotate_robot(self, value):
-        logging.debug(f"Rotating robot with value: {value}")
-        if value > 140:
-            speed = abs(value - 128)
-            direction = 1  # clockwise
-        elif value < 116:
-            speed = abs(128 - value)
+        if value > 160:
+            speed = min(30 + abs(value - 128), 127)
             direction = -1  # counterclockwise
-
-        left_motor_speed = direction * speed
-        right_motor_speed = -direction * speed
-
-        motor_values = self.robot.motor
-        motor_values[self.left_motor] = int(left_motor_speed)
-        motor_values[self.right_motor] = int(right_motor_speed)
-
-        self.robot.motors(motor_values)
-
-    def drive(self, value):
-        logging.debug(f"Driving with value: {value}")
-        if value > 140:
-            speed = 255 - value
-            direction = 1  # forward
-        elif value < 116:
-            speed = 128 - value
-            direction = -1  # backward
+            logging.debug(f"Rotating counter clkwise with value: {speed}")
+        elif value < 100:
+            speed = min(30 + abs(128 - value), 127)
+            direction = 1  # clockwise 
+            logging.debug(f"Rotating clkwise with value: {speed}")
+        else:
+           direction = 0
+           speed = 0
 
         left_motor_speed = direction * speed
         right_motor_speed = direction * speed
@@ -1094,27 +1080,61 @@ class RobotControl:
 
         self.robot.motors(motor_values)
 
+    def drive(self, value):
+        # pressing down = 255, up = 0
+        if value > 160:
+            speed = min( (30 + abs(128 - value)), 60)
+            direction = -1  # backward
+            logging.debug(f"Driving backward with value: {speed}")
+        elif value < 100:
+            speed = min( (30 + abs(128 - value)), 60)
+            direction = 1  # forward
+            logging.debug(f"Driving forward with value: {speed}")
+        else:
+           direction = 0
+           speed = 0
+
+        left_drive = direction 
+        right_drive = -1 * direction
+        left_motor_speed = left_drive * speed
+        right_motor_speed = right_drive * speed
+
+        motor_values = self.robot.motor
+        motor_values[self.left_motor] = int(left_motor_speed)
+        motor_values[self.right_motor] = int(right_motor_speed)
+
+        self.robot.motors(motor_values)
+        # time.sleep(0.05)
+
     def move_claw(self, value):
-        logging.debug(f"Moving claw with value: {value}")
         if value > 140:
-            speed = value - 128
+            speed = 50
             direction = 1  # open
+            logging.debug(f"opening claw: {speed}")
         elif value < 116:
-            speed = 128 - value
+            speed = 50
             direction = -1  # close
+            logging.debug(f"Closing claw: {speed}")
+        else:
+           direction = 0
+           speed = 0
 
         motor_values = self.robot.motor
         motor_values[self.claw_motor] = int(direction * speed)
         self.robot.motors(motor_values)
 
     def move_arm(self, value):
-        logging.debug(f"Moving arm with value: {value}")
         if value > 140:
-            speed = value - 128
-            direction = 1  # up
+            speed = 80
+            direction = -1  # up
+            logging.debug(f"Moving arm up: {speed}")
         elif value < 116:
-            speed = 128 - value
-            direction = -1  # down
+            speed = 30
+            direction = 1  # down
+            logging.debug(f"Moving arm down: {speed}")
+        else:
+           direction = -1
+           speed = 0
 
         motor_values = self.robot.motor
         motor_values[self.arm_motor] = int(direction * speed)
@@ -1178,8 +1198,8 @@ def wireless_controller():
                 control.move_claw(abs_event.event.value)
             elif abs_event.event.code == 4:  # Right joystick up-down
                 control.move_arm(abs_event.event.value)
-        time.sleep(0.03)
-        control.stop_drive()
+        # time.sleep(0.05)
+        # control.stop_drive()
 
         # input argument is stop
     if len(sys.argv) > 1 and sys.argv[1] == "stop":
@@ -1197,5 +1217,5 @@ def wireless_controller():
 
 
 if __name__ == "__main__":
-    # keyboard()
-    wireless_controller()
+  # keyboard()
+  wireless_controller()
