@@ -963,7 +963,7 @@ def execute_and_respond(client_socket, control, command, args):
     client_socket.send(response.encode())
     client_socket.close()
 
-def main():
+def keyboard():
     robot = VexCortex("/dev/ttyUSB0")
     control = VexControl(robot)
     control.stop_drive()
@@ -1046,6 +1046,9 @@ def main():
     # signal.signal(signal.SIGTERM, signal_handler)
     control.stop_drive()
     robot.stop()
+import time
+import logging 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RobotControl:
     def __init__(self, robot):
@@ -1056,11 +1059,12 @@ class RobotControl:
         self.claw_motor = 1
 
     def rotate_robot(self, value):
-        if value > 128:
-            speed = value - 128
+        logging.debug(f"Rotating robot with value: {value}")
+        if value > 140:
+            speed = abs(value - 128)
             direction = 1  # clockwise
-        else:
-            speed = 128 - value
+        elif value < 116:
+            speed = abs(128 - value)
             direction = -1  # counterclockwise
 
         left_motor_speed = direction * speed
@@ -1073,10 +1077,11 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def drive(self, value):
-        if value > 128:
+        logging.debug(f"Driving with value: {value}")
+        if value > 140:
             speed = 255 - value
             direction = 1  # forward
-        else:
+        elif value < 116:
             speed = 128 - value
             direction = -1  # backward
 
@@ -1090,10 +1095,11 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def move_claw(self, value):
-        if value > 128:
+        logging.debug(f"Moving claw with value: {value}")
+        if value > 140:
             speed = value - 128
             direction = 1  # open
-        else:
+        elif value < 116:
             speed = 128 - value
             direction = -1  # close
 
@@ -1102,10 +1108,11 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def move_arm(self, value):
-        if value > 128:
+        logging.debug(f"Moving arm with value: {value}")
+        if value > 140:
             speed = value - 128
             direction = 1  # up
-        else:
+        elif value < 116:
             speed = 128 - value
             direction = -1  # down
 
@@ -1114,6 +1121,7 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def stop_drive(self):
+        logging.debug(f"Stopping the robot")
         motor_values = self.robot.motor
         motor_values[self.left_motor] = 0
         motor_values[self.right_motor] = 0
@@ -1146,7 +1154,7 @@ if controller is None:
 print(f"Using device: {controller.name} ({controller.fn})")
 
 
-def main2():
+def wireless_controller():
     robot = VexCortex("/dev/ttyUSB0")
     # control = VexControl(robot)
     # control.stop_drive()
@@ -1170,6 +1178,8 @@ def main2():
                 control.move_claw(abs_event.event.value)
             elif abs_event.event.code == 4:  # Right joystick up-down
                 control.move_arm(abs_event.event.value)
+        time.sleep(0.03)
+        control.stop_drive()
 
         # input argument is stop
     if len(sys.argv) > 1 and sys.argv[1] == "stop":
@@ -1187,5 +1197,5 @@ def main2():
 
 
 if __name__ == "__main__":
-    # main()
-    main2()
+    # keyboard()
+    wireless_controller()
