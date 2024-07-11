@@ -1047,5 +1047,145 @@ def main():
     control.stop_drive()
     robot.stop()
 
+class RobotControl:
+    def __init__(self, robot):
+        self.robot = robot
+        self.left_motor = 0
+        self.right_motor = 9
+        self.arm_motor = 2
+        self.claw_motor = 1
+
+    def rotate_robot(self, value):
+        if value > 128:
+            speed = value - 128
+            direction = 1  # clockwise
+        else:
+            speed = 128 - value
+            direction = -1  # counterclockwise
+
+        left_motor_speed = direction * speed
+        right_motor_speed = -direction * speed
+
+        motor_values = self.robot.motor
+        motor_values[self.left_motor] = int(left_motor_speed)
+        motor_values[self.right_motor] = int(right_motor_speed)
+
+        self.robot.motors(motor_values)
+
+    def drive(self, value):
+        if value > 128:
+            speed = 255 - value
+            direction = 1  # forward
+        else:
+            speed = 128 - value
+            direction = -1  # backward
+
+        left_motor_speed = direction * speed
+        right_motor_speed = direction * speed
+
+        motor_values = self.robot.motor
+        motor_values[self.left_motor] = int(left_motor_speed)
+        motor_values[self.right_motor] = int(right_motor_speed)
+
+        self.robot.motors(motor_values)
+
+    def move_claw(self, value):
+        if value > 128:
+            speed = value - 128
+            direction = 1  # open
+        else:
+            speed = 128 - value
+            direction = -1  # close
+
+        motor_values = self.robot.motor
+        motor_values[self.claw_motor] = int(direction * speed)
+        self.robot.motors(motor_values)
+
+    def move_arm(self, value):
+        if value > 128:
+            speed = value - 128
+            direction = 1  # up
+        else:
+            speed = 128 - value
+            direction = -1  # down
+
+        motor_values = self.robot.motor
+        motor_values[self.arm_motor] = int(direction * speed)
+        self.robot.motors(motor_values)
+
+    def stop_drive(self):
+        motor_values = self.robot.motor
+        motor_values[self.left_motor] = 0
+        motor_values[self.right_motor] = 0
+        motor_values[self.arm_motor] = 0
+        motor_values[self.claw_motor] = 0
+        self.robot.motors(motor_values)
+
+
+
+
+import evdev
+from evdev import InputDevice, categorize, ecodes
+import time
+import numpy as np
+
+# Find the controller device
+devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
+controller = None
+for device in devices:
+    if 'Wireless Controller' in device.name:  # Adjust this string if necessary to match your controller's name
+        controller = device
+        break
+    else:
+        print(device.name)
+
+if controller is None:
+    print("No Sony controller found.")
+    exit()
+
+print(f"Using device: {controller.name} ({controller.fn})")
+
+
+def main2():
+    robot = VexCortex("/dev/ttyUSB0")
+    # control = VexControl(robot)
+    # control.stop_drive()
+
+    control = RobotControl(robot)
+    control.stop_drive()
+
+    for event in controller.read_loop():
+        if event.type == ecodes.EV_KEY:
+            key_event = categorize(event)
+            if key_event.keystate == key_event.key_down or key_event.keystate == key_event.key_up:
+                if key_event.keycode in ['BTN_TR2', 'BTN_TL2']:
+                    control.stop_drive()
+        elif event.type == ecodes.EV_ABS:
+            abs_event = categorize(event)
+            if abs_event.event.code == 0:  # Left joystick sideways
+                control.rotate_robot(abs_event.event.value)
+            elif abs_event.event.code == 1:  # Left joystick up-down
+                control.drive(abs_event.event.value)
+            elif abs_event.event.code == 3:  # Right joystick sideways
+                control.move_claw(abs_event.event.value)
+            elif abs_event.event.code == 4:  # Right joystick up-down
+                control.move_arm(abs_event.event.value)
+
+        # input argument is stop
+    if len(sys.argv) > 1 and sys.argv[1] == "stop":
+        control.stop_drive()
+        robot.stop()
+        exit(0)
+    import signal
+    def signal_handler(sig, frame):
+        control.stop_drive()
+        robot.stop()
+        exit(0)
+    # Also stop the robot if the program is terminated or user presses Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    main2()
