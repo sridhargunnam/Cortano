@@ -91,9 +91,9 @@ class PubSubWrapper:
         self.queues = {}
         self.queue_size = queue_size
 
-    def create_queue(self, topic, queue_size=1):
+    def create_queue(self, topic):
         if topic not in self.queues:
-            self.queues[topic] = mp.Queue(queue_size)
+            self.queues[topic] = mp.Queue(self.queue_size)
 
     def publish(self, topic, data):
         self.create_queue(topic)
@@ -107,8 +107,8 @@ class PubSubWrapper:
         self.create_queue(topic)
         pub.subscribe(callback, topic)
 
-    def get_queue(self, topic, queue_size=1):
-        self.create_queue(topic, queue_size)
+    def get_queue(self, topic):
+        self.create_queue(topic)
         return self.queues[topic]
 
 def camera_process(pubsub, camera_ready_event, detection_ready_event):
@@ -117,20 +117,19 @@ def camera_process(pubsub, camera_ready_event, detection_ready_event):
         try:
             color_frame, depth_frame = cam.read()
             if color_frame is None:
-                print('color_frame is none')
+                print('Camera process: color_frame is None')
                 continue
             print("Camera process: sending an image")
             pubsub.publish('camera/color', color_frame)
             pubsub.publish('camera/depth', depth_frame)
             camera_ready_event.set()  # Signal that the frame is ready
-            # detection_ready_event.wait()  # Wait for detection to complete
-            # detection_ready_event.clear()  # Reset detection event
+            detection_ready_event.wait()  # Wait for detection to complete
+            detection_ready_event.clear()  # Reset detection event
         except Exception as e:
             print(f"Error in camera_process: {e}")
             cam.__del__()  # Clean up resources
             cam = camera.RealSenseCamera(640, 360)  # Reinitialize
-# import tag as tag
-    # atag = tag.ATag(camera_params=)
+
 def object_detection(pubsub, camera_queue, method, camera_ready_event, detection_ready_event):
     detector = method()
     while True:
@@ -139,68 +138,42 @@ def object_detection(pubsub, camera_queue, method, camera_ready_event, detection
             while not camera_queue.empty():
                 color_frame = camera_queue.get(timeout=1)  # Get the most recent frame
             detections = detector.detect_objects(color_frame)
-            # aprilTags  = tag
             pubsub.publish('object/detections', detections)
-            detection_ready_event.set()  # Signal that detection is done
             print(f"Object detection: Published {len(detections)} detections")
+            detection_ready_event.set()  # Signal that detection is done
         except mp.queues.Empty:
             print("Object detection: Timeout waiting for camera frame")
         except Exception as e:
             print(f"Error in object_detection: {e}")
 
-def get_object_wrt_robot(depth_frame, intrinsics, detection):
+def object_mapper(pubsub, object_queue, depth_queue, intrinsics, detection_ready_event, mapping_ready_event):
     fx, fy, cx, cy, width, height, depth_scale = intrinsics.values()
-    try:
-        if detection is not None:
-            center_x = detection['center_x']
-            center_y = detection['center_y']
-            depth_ = depth_frame[int(center_y)][int(center_x)]
-            depth_ = depth_ * depth_scale
-            x = center_x
-            y = center_y
-            if center_x == 0 and center_y == 0:
-                print("Abnormality in NN detections x=0, y=0")
-            else:
-                x = 100 * (x - cx) * depth_ / fx  # Multiply by 100 to convert to centimeters
-                y = 100 * (y - cy) * depth_ / fy
-                z = 100 * depth_
-                object_coordinates = {'x': x, 'y': y, 'z': z}
-                print(f'Object is at (x, y, z): ({x}, {y}, {z})')
-                return object_coordinates
-    except Exception as e:
-        print(f"Error in object_mapper: {e}")
-
-def object_mapper(pubsub, object_queue, depth_queue, camera_ready_event, detection_ready_event, mapping_ready_event):
-    # fx, fy, cx, cy, width, height, depth_scale = calib_data['intrinsicsRs'].values()
-    calib_data = camera.read_calibration_data()
-    # print(calib_data.keys())
-    intrinsicsRs = calib_data['intrinsicsRs']
-    rsCamToRobot = calib_data['rsCamToRobot']
-    # exit(0)
     while True:
         try:
             detection_ready_event.wait()  # Wait for detection to complete
             while not object_queue.empty():
                 detections = object_queue.get(timeout=1)  # Get the most recent detections
-                detection_ready_event.clear()  # clear 
                 print(f"Object mapper: Processing {len(detections)} detections")
             while not depth_queue.empty():
-                depth_frame = depth_queue.get(timeout=1)  #TODO Get the most recent depth frame
-            camera_ready_event.clear()  
-            if detections is not None:
-                for detection in detections:
-                    object_wrt_frame = detection #{'center_x': center_x, 'center_y': center_y, 'radius': radius}
-                    coordinates = get_object_wrt_robot(depth_frame, intrinsicsRs, object_wrt_frame)
-                    robot2rsCam = np.linalg.inv(rsCamToRobot)
-                    object_pos_wrt_robot = robot2rsCam @ np.array([coordinates['x'], coordinates['y'], coordinates['z'], 1])
-                    if object_pos_wrt_robot[0] == 0 and object_pos_wrt_robot[2] == 0:
-                        print("abnormality in NN detections x=0, y=0")
-                        # exit(0)
-                    else:
-                        print(f"x: {object_pos_wrt_robot[0]:.2f}, y: {object_pos_wrt_robot[1]:.2f}, z: {object_pos_wrt_robot[2]:.2f}")
-                        pubsub.publish('location', {'x': object_pos_wrt_robot[0], 'y': object_pos_wrt_robot[2], 'z': object_pos_wrt_robot[1]})
-                        mapping_ready_event.set()  # Signal that mapping is done
-                        print(f'object is at {object_pos_wrt_robot[0]}, {object_pos_wrt_robot[1]}, {object_pos_wrt_robot[2]}')
+                depth_frame = depth_queue.get(timeout=1)  # Get the most recent depth frame
+            if detections is None:
+                continue
+            for detection in detections:
+                center_x = detection['center_x']
+                center_y = detection['center_y']
+                depth_ = depth_frame[int(center_y)][int(center_x)]
+                depth_ = depth_ * depth_scale
+                x = center_x
+                y = center_y
+                if center_x == 0 and center_y == 0:
+                    print("abnormality ")
+                    exit(0)
+                x = 100 * (x - cx) * depth_ / fx  # multiply by 100 to convert to centimeters
+                y = 100 * (y - cy) * depth_ / fy
+                z = 100 * depth_
+                pubsub.publish('location', {'x': x, 'y': y, 'z': z})
+                print(f'object is at {x}, {y}, {z}')
+            mapping_ready_event.set()  # Signal that mapping is done
         except mp.queues.Empty:
             print("Object mapper: Timeout waiting for detections or depth frame")
         except Exception as e:
@@ -208,34 +181,22 @@ def object_mapper(pubsub, object_queue, depth_queue, camera_ready_event, detecti
 
 import vex_serial as vex
 def robotics_control(pubsub, location_queue, mapping_ready_event):
-    # time.sleep(5)
-    # try:
     robot = vex.VexCortex("/dev/ttyUSB0")
     control = vex.VexControl(robot)
     control.stop_drive()
-    # except Exception as e:
-    #     print(f"Robotics control: Error {e}")
-        # exit(0)
     while True:
         try:
             mapping_ready_event.wait()  # Wait for mapping to complete
-            location = None
             while not location_queue.empty():
-                # queue_size = location_queue.qsize()  # Get the approximate size of the queue
-                # print(f"Robotics control: location_queue size is {queue_size}")
                 location = location_queue.get(timeout=1)  # Get the most recent location
-            if location is not None:
-                mapping_ready_event.clear()  
                 print(f"Robotics control: Processing location {location}")
                 control.send_to_XY(location['x'], location['z'])
         except mp.queues.Empty:
-            # control.stop_drive()
+            control.stop_drive()
             print("Robotics control: Timeout waiting for location data")
         except Exception as e:
-            # control.stop_drive()
-            print(f"Robotics control: Error {e}")
-        # time.sleep(0.1)
-
+            control.stop_drive()
+            print(f"Error in robotics_control: {e}")
 
 def start_pipeline(queue_size=1):
     objectDetectionMethod = ObjectDetectionML
@@ -244,13 +205,9 @@ def start_pipeline(queue_size=1):
     camera_queue_color = pubsub.get_queue('camera/color')
     camera_queue_depth = pubsub.get_queue('camera/depth')
     object_detection_queue = pubsub.get_queue('object/detections')
-    location_queue = pubsub.get_queue('location', 1000)
+    location_queue = pubsub.get_queue('location')
     manager = mp.Manager()
-    # calib_data = camera.read_calibration_data()
-    # calibData = manager.dict(calib_data)
-    # print(calib_data['intrinsicsRs'])
-    # print(f"calib_data {type(calibData)}")
-    # exit(0)
+    intrinsicsRs = manager.dict(camera.read_calibration_data()['intrinsicsRs'])
 
     camera_ready_event = mp.Event()
     detection_ready_event = mp.Event()
@@ -258,7 +215,7 @@ def start_pipeline(queue_size=1):
 
     camera_proc = mp.Process(target=camera_process, args=(pubsub, camera_ready_event, detection_ready_event))
     object_detection_proc = mp.Process(target=object_detection, args=(pubsub, camera_queue_color, objectDetectionMethod, camera_ready_event, detection_ready_event))
-    object_mapper_proc = mp.Process(target=object_mapper, args=(pubsub, object_detection_queue, camera_queue_depth, camera_ready_event, detection_ready_event, mapping_ready_event))
+    object_mapper_proc = mp.Process(target=object_mapper, args=(pubsub, object_detection_queue, camera_queue_depth, intrinsicsRs, detection_ready_event, mapping_ready_event))
     robotics_control_proc = mp.Process(target=robotics_control, args=(pubsub, location_queue, mapping_ready_event))
 
     camera_proc.start()
@@ -272,4 +229,4 @@ def start_pipeline(queue_size=1):
     robotics_control_proc.join()
 
 if __name__ == "__main__":
-    start_pipeline(queue_size=1)
+    start_pipeline(queue_size=2)

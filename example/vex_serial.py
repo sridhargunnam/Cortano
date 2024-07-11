@@ -1057,6 +1057,7 @@ class RobotControl:
         self.right_motor = 9
         self.arm_motor = 2
         self.claw_motor = 1
+        self.ball_held = False
 
     def rotate_robot(self, value):
         if value > 160:
@@ -1124,17 +1125,23 @@ class RobotControl:
         self.robot.motors(motor_values)
 
     def move_arm(self, value):
-        if value > 140:
-            speed = 80
-            direction = -1  # up
+        if value < 116: #> 140:
+            speed = 50
+            direction = 1  # up
             logging.debug(f"Moving arm up: {speed}")
-        elif value < 116:
+            self.ball_held = True
+        elif value > 140 :#< 116:
             speed = 30
-            direction = 1  # down
+            direction = -1  # down
+            self.ball_held = False
             logging.debug(f"Moving arm down: {speed}")
         else:
-           direction = -1
-           speed = 0
+           if self.ball_held: #continue keeping it up
+              speed = 40
+              direction = 1  # up
+           else:
+               direction = -1 
+               speed = 0
 
         motor_values = self.robot.motor
         motor_values[self.arm_motor] = int(direction * speed)
@@ -1198,8 +1205,6 @@ def wireless_controller():
                 control.move_claw(abs_event.event.value)
             elif abs_event.event.code == 4:  # Right joystick up-down
                 control.move_arm(abs_event.event.value)
-        # time.sleep(0.05)
-        # control.stop_drive()
 
         # input argument is stop
     if len(sys.argv) > 1 and sys.argv[1] == "stop":

@@ -298,7 +298,7 @@ def main():
                             control.drive(['backward', 30, 0.7])
                             if control.robot.sensors()[2] == 1:
                                 print("Hurray!! ball held detected")
-                            grab_phase = True
+                            grab_phase = False
                         return grab_phase, entering_ball_hold_state
                         # # armPosition=ARM_POSITION.low, motor=2, error=20
                         # send_command('update_robot_move_arm', ['high', 2, 20])

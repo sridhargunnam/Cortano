@@ -7,6 +7,7 @@ import vex_serial as vex
 import landmarks
 
 
+
 class ObjectDetectionBase:
     def __init__(self):
         pass
@@ -173,19 +174,15 @@ class ATag:
     else:
       return None
 
-ROBOT_STATE = {"OBJECT_SCAN", "OBJECT_DETECTED", "REACHED_OBJECT_GRAB_LOC", "GRABBED_OBJ", "TARGET_TAG_FOUND", "MOVE_TO_TARGET", "DROP_BALL", "SAFE_LOCATION_TO_SCAN", "STUCK"}
-
 
 def main():
-    camRS = camera.RealSenseCamera(640, 360)
-    camDAI = camera.DepthAICamera(640, 360)
+    cam = camera.RealSenseCamera(640, 360)
     objectDetectionMethod = ObjectDetectionML()
     objectDetectionMethodAlternate = ObjectDetectionOpenCV()
     enable_opencv_when_ML_is_not_available = False 
     calib_data = camera.read_calibration_data()
     intrinsicsRs = calib_data['intrinsicsRs']
     rsCamToRobot = calib_data['rsCamToRobot']
-    daiCamToRobot = calib_data['daiCamToRobot']
     robot = vex.VexCortex("/dev/ttyUSB0")
     control = vex.VexControl(robot)
     control.stop_drive()
@@ -195,77 +192,59 @@ def main():
     random_dir = 'backward'
     drive_time = 0.05
     entering_ball_hold_state = False
-    entered_goal_state = False
-    orient_towards_goal = False
-
-
-    # robot_state = ROBOT_STATE
 
     #
-    camera_params = [ 
-        intrinsicsRs['fx'],
-        intrinsicsRs['fy'],
-        intrinsicsRs['cx'],
-        intrinsicsRs['cy'],
-        ]
-    atag = ATag(camera_params)
+    atag = ATag(intrinsicsRs)
     # detect the tag and get the pose
     if cfg.FIELD == "HOME" or cfg.FIELD == "GAME":
         tag_size = cfg.TAG_SIZE_3IN # centimeters
     elif cfg.FIELD == "BEDROOM":
         tag_size = cfg.TAG_SIZE_6IN
 
-    grab_phase = True
-    
+    grab_phase = False
+    #
     while True:
         drive_time = 0.05
-        color_frame_RS, depth_frame_RS = camRS.read()
-        color_frame_DAI, depth_frame_DAI = camDAI.read()
-        # camDAI.read()
-        if color_frame_RS is None or depth_frame_RS is None:
-            print('color_frame or depth frame is none in RS')
-            continue
-        if color_frame_RS is None or depth_frame_RS is None:
-            print('color_frame or depth frame is none in DAI')
-            continue
-        if grab_phase:
-            try:
-                detections = objectDetectionMethod.detect_objects(color_frame_RS)
+        try:
+            color_frame, depth_frame = cam.read()
+            if color_frame is None or depth_frame is None:
+                print('color_frame or depth frame is none')
+                continue
+            if grab_phase:
+                detections = objectDetectionMethod.detect_objects(color_frame)
                 if len(detections) == 0 and enable_opencv_when_ML_is_not_available:
-                    detections = objectDetectionMethodAlternate.detect_objects(color_frame_RS)
+                    detections = objectDetectionMethodAlternate.detect_objects(color_frame)
+                if len(detections) == 0:
+                    print("No detections, rotating clockwise.")
+                    control.rotateRobot([0.05, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                    detections = objectDetectionMethod.detect_objects(color_frame)
+
+                if len(detections) == 0:
+                    print("No detections, rotating counterclockwise.")
+                    control.rotateRobot([0.05, vex.ROTATION_DIRECTION["counter_clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
+                    detections = objectDetectionMethod.detect_objects(color_frame)
+
+                if len(detections) == 0:
+                    print("No detections, moving forward.")
+                    control.drive(['forward', 30, 0.7])
+                    detections = objectDetectionMethod.detect_objects(color_frame)
+
+                if len(detections) == 0:
+                    print("No detections, moving backward.")
+                    control.drive(['backward', 30, 0.7])
+                    detections = objectDetectionMethod.detect_objects(color_frame)
+
+            
+
                 # if len(detections) == 0:
-                #     print("No detections, rotating clockwise.")
+                #     print("No detections, rotating clockwise until we find an object.")
+                #     # while
                 #     control.rotateRobot([0.05, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
-                #     detections = objectDetectionMethod.detect_objects(color_frame_RS)
-
-                # if len(detections) == 0:
-                #     print("No detections, rotating counterclockwise.")
-                #     control.rotateRobot([0.05, vex.ROTATION_DIRECTION["counter_clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
-                #     detections = objectDetectionMethod.detect_objects(color_frame_RS)
-
-                # if len(detections) == 0:
-                #     print("No detections, moving forward.")
-                #     control.drive(['forward', 30, 0.7])
-                #     detections = objectDetectionMethod.detect_objects(color_frame_RS)
-
-                # if len(detections) == 0:
-                #     print("No detections, moving backward.")
-                #     control.drive(['backward', 30, 0.7])
-                #     detections = objectDetectionMethod.detect_objects(color_frame_RS)
-
-                while len(detections) == 0:
-                    print("No detections, rotating clockwise until we find an object.")
-                    control.rotateRobot([0.06, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
-                    import time
-                    time.sleep(0.03)
-                    color_frame_RS, depth_frame_RS = camRS.read()
-                    color_frame_DAI, depth_frame_DAI = camDAI.read()
-                    # while
-                    detections = objectDetectionMethod.detect_objects(color_frame_RS)
+                #     detections = objectDetectionMethod.detect_objects(color_frame)
                     
                     
                 for detection in detections:
-                    coordinates = get_object_wrt_robot(depth_frame_RS, intrinsicsRs, detection)
+                    coordinates = get_object_wrt_robot(depth_frame, intrinsicsRs, detection)
                     robot2rsCam = np.linalg.inv(rsCamToRobot)
                     object_pos_wrt_robot = robot2rsCam @ np.array([coordinates['x'], coordinates['y'], coordinates['z'], 1])
                     prev_object_pos_wrt_robot = object_pos_wrt_robot
@@ -278,28 +257,30 @@ def main():
                     def send_position_if_valid(x,y, entering_ball_hold_state, grab_phase):
                         # x, y = object_pos_wrt_robot
                         # Check if x is in the range of -5 to 5 and y is in the range of 15 to 20
-                        if not (-5 <= x <= 5 and y <= 15):
+                        if not (-8 <= x <= 8 and y <= 20):
                             if entering_ball_hold_state:
                                 entering_ball_hold_state = False
                                 control.claw([20, "open", 1, 0.8])
                                 control.claw([20, "open", 1, 0.8])
                             control.send_to_XY(x, y)
-                        elif (-5 <= x <= 5 and y <= 15):
+                        elif (-8 <= x <= 8 and y <= 20):
                             entering_ball_hold_state = True
                             print("Position is within the grab range. Initiating grab command")
-                            control.drive(['forward', 35, 1.3])
+                            control.drive(['forward', 30, 1.2])
                             control.rotateRobot([0.02, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
                             control.rotateRobot([0.02, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
                             control.claw([20, "open", 1, 0.8])
                             control.claw([20, "open", 1, 0.8])
-                            control.claw([20, "close", 1, 0.8])
                             control.claw([20, "close", 1, 0.8])
                             control.claw([20, "close", 1, 0.8])
                             control.drive(['backward', 30, 0.7])
                             if control.robot.sensors()[2] == 1:
                                 print("Hurray!! ball held detected")
-                            grab_phase = True
-                        return grab_phase, entering_ball_hold_state
+                                grab_phase = False 
+                            else:
+                                # the sensor is buggy. So there is a change that we caught the ball
+                                grab_phase = False 
+                        return (entering_ball_hold_state, grab_phase)
                         # # armPosition=ARM_POSITION.low, motor=2, error=20
                         # send_command('update_robot_move_arm', ['high', 2, 20])
                         # # send_command('update_robot_move_arm', ['low', 2, 20])
@@ -307,78 +288,25 @@ def main():
 
                         # Example usage
                         # object_pos_wrt_robot = [3, 18]  # Example position
-                    grab_phase, entering_ball_hold_state = send_position_if_valid(object_pos_wrt_robot[0], object_pos_wrt_robot[1], entering_ball_hold_state, grab_phase)
-                    orient_towards_goal = False
+                    entering_ball_hold_state, grab_phase = send_position_if_valid(object_pos_wrt_robot[0], object_pos_wrt_robot[1], entering_ball_hold_state, grab_phase)
 
-                    # control.send_to_XY(object_pos_wrt_robot[0], object_pos_wrt_robot[1])
-            except Exception as e:
-                print(f"Error in main loop: {e}")
-                control.stop_drive()
-                break
-            except KeyboardInterrupt:
-                print("Interrupted by user. Stopping drive.")
-                control.stop_drive()
-                break
-        else:
-            # tagRS, tag_idRS, Lm2CamRS = atag.getTagAndPose(color_frame_RS, tag_size)
-            tagDAI, tag_idDAI, Lm2CamDAI = atag.getTagAndPose(color_frame_DAI, tag_size)
-            while tagDAI is None and not orient_towards_goal:
-                    print("No detections, rotating clockwise until we find an landmark.")
-                    # while
-                    control.rotateRobot([0.06, vex.ROTATION_DIRECTION["clockwise"], vex.MINIMUM_INPLACE_ROTATION_SPEED])
-                    import time
-                    time.sleep(0.03)
-                    # color_frame_RS, depth_frame_RS = camRS.read()
-                    color_frame_DAI, depth_frame_DAI = camDAI.read()
-                    # detections = objectDetectionMethod.detect_objects(color_frame_RS)
-                    # tagRS, tag_idRS, Lm2CamRS = atag.getTagAndPose(color_frame_RS, tag_size)
-                    tagDAI, tag_idDAI, Lm2CamDAI = atag.getTagAndPose(color_frame_DAI, tag_size)
-                    if tagDAI is not None:
-                        orient_towards_goal = True
+            else:
+                ## april tag
+                tagRS, tag_idRS, Lm2CamRS = atag.getTagAndPose(color_frame, tag_size)
 
-            goal_position = [0,0]
-            angle_x_degrees = 0
-            # if tagRS is not None:
-            #     Robot2FieldRS = atag.getRobotPoseFromTagPose(tagRS, tag_idRS, Lm2CamRS, rsCamToRobot)
-            #     if Robot2FieldRS is not None:
-            #         print("tagRS  = ", tag_idRS)
-            #         print("Robot2FieldRS = ", Robot2FieldRS[0:3,3])
-            #         goal_position = -Robot2FieldRS[0:3,3][0] , Robot2FieldRS[0:3,3][1]
+                print("landmark to camera ", tag_idRS)
 
-            if tagDAI is not None:
-                Robot2FieldDAI = atag.getRobotPoseFromTagPose(tagDAI, tag_idDAI, Lm2CamDAI, daiCamToRobot)
-                if Robot2FieldDAI is not None:
-                    print("tagDAI  = ", tag_idDAI)
-                    print("Robot2FieldDAI = ", Robot2FieldDAI[0:3,3])
-                    goal_position = Robot2FieldDAI[0:3,3][0] , -Robot2FieldDAI[0:3,3][1]
-                    angle_x = np.arctan2(goal_position[0], goal_position[1])
-                    # Convert angle to degrees
-                    angle_x_degrees = np.degrees(angle_x)
+                ##
 
-                def send_position_if_valid_goal(x,y, angle_x_degrees, entered_goal_state):
-                    # x, y = object_pos_wrt_robot
-                    # Check if x is in the range of -5 to 5 and y is in the range of 15 to 20
-                    if not (abs(y) <= 20):
-                        control.send_to_XY_Theta_simple(x, abs(y), angle_x_degrees)
-                    else:
-                        if not entered_goal_state:
-                            entered_goal_state = True
-                            control.claw([20, "open", 1, 0.8])
-                            control.claw([20, "open", 1, 0.8])
-                            return entered_goal_state
-                    return entered_goal_state
-                entered_goal_state = send_position_if_valid_goal(goal_position[0], goal_position[1], angle_x_degrees, entered_goal_state)
-                if entered_goal_state:
-                    entered_goal_state = False
-                    entering_ball_hold_state = False
-                    grab_phase = True
-
-
-                    # print(Robot2FieldRS[:3,0], Robot2FieldRS[:3,1], Robot2FieldRS[:3,2])
-                # print("tag_idRS = ", tag_idRS)
-                # print("Lm2CamRS ", Lm2CamRS)
-                # np.linalg.inv(Lm2Cam) @ Cam2Robot
-            
+                # control.send_to_XY(object_pos_wrt_robot[0], object_pos_wrt_robot[1])
+        except Exception as e:
+            print(f"Error in main loop: {e}")
+            control.stop_drive()
+            break
+        except KeyboardInterrupt:
+            print("Interrupted by user. Stopping drive.")
+            control.stop_drive()
+            break
 
 if __name__ == "__main__":
     main()
